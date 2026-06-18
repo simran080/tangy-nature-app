@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tangy Nature">
+<title>Tangy Nature LLC</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --bg2: #161618;
+    --bg3: #1e1e21;
+    --bg4: #26262b;
+    --amber: #f5a623;
+    --amber2: #e8941a;
+    --amber-dim: rgba(245,166,35,0.12);
+    --amber-dim2: rgba(245,166,35,0.06);
+    --text: #f0ede8;
+    --text2: #a09d98;
+    --text3: #6a6866;
+    --green: #4caf7d;
+    --green-dim: rgba(76,175,125,0.12);
+    --red: #e05252;
+    --red-dim: rgba(224,82,82,0.12);
+    --blue: #5b9bd5;
+    --blue-dim: rgba(91,155,213,0.12);
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --nav-h: 64px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  .app { max-width: 430px; margin: 0 auto; min-height: 100vh; position: relative; }
+
+  /* NAV */
+  .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: rgba(14,14,15,0.95); border-top: 0.5px solid var(--border2); backdrop-filter: blur(20px); display: flex; z-index: 100; padding-bottom: var(--safe-bottom); }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 8px; cursor: pointer; border: none; background: none; color: var(--text3); font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; transition: color 0.15s; }
+  .nav-btn.active { color: var(--amber); }
+  .nav-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+  .nav-btn.active .nav-icon svg path, .nav-btn.active .nav-icon svg rect, .nav-btn.active .nav-icon svg circle { stroke: var(--amber); }
+
+  /* PAGES */
+  .page { display: none; padding: 0 0 calc(var(--nav-h) + var(--safe-bottom) + 16px); min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* HEADER */
+  .header { padding: 56px 20px 20px; }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; }
+  .header-label { font-size: 11px; font-weight: 500; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; margin-bottom: 4px; }
+  .header-title { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+  .header-subtitle { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .header-action { background: var(--amber); color: #000; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 0 16px 12px; }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; margin-bottom: 12px; }
+  .metric-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .metric-label { font-size: 11px; color: var(--text3); font-weight: 500; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .metric-value { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+  .metric-value.green { color: var(--green); }
+  .metric-value.amber { color: var(--amber); }
+  .metric-value.red { color: var(--red); }
+
+  /* SECTION */
+  .section-title { font-size: 11px; font-weight: 500; letter-spacing: 1.2px; color: var(--text3); text-transform: uppercase; padding: 0 16px; margin-bottom: 10px; margin-top: 20px; }
+
+  /* LIST ITEMS */
+  .list-item { background: var(--bg2); border-bottom: 0.5px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.1s; }
+  .list-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+  .list-item:last-child { border-bottom: none; border-radius: 0 0 var(--radius) var(--radius); }
+  .list-item:only-child { border-radius: var(--radius); }
+  .list-item:active { background: var(--bg3); }
+  .list-wrap { margin: 0 16px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .icon-camera { background: var(--blue-dim); }
+  .icon-lens { background: var(--amber-dim); }
+  .icon-acc { background: var(--green-dim); }
+  .icon-drone { background: var(--red-dim); }
+  .item-body { flex: 1; min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .item-right { text-align: right; flex-shrink: 0; }
+  .item-amount { font-size: 15px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .item-amount.green { color: var(--green); }
+  .item-amount.red { color: var(--red); }
+  .item-amount.amber { color: var(--amber); }
+  .item-badge { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 20px; margin-top: 4px; display: inline-block; }
+  .badge-sold { background: var(--green-dim); color: var(--green); }
+  .badge-unsold { background: var(--amber-dim); color: var(--amber); }
+  .badge-camera { background: var(--blue-dim); color: var(--blue); }
+  .badge-lens { background: var(--amber-dim); color: var(--amber); }
+  .badge-acc { background: var(--green-dim); color: var(--green); }
+
+  /* MODAL / SHEET */
+  .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; backdrop-filter: blur(4px); }
+  .sheet-overlay.open { display: block; }
+  .sheet { position: fixed; bottom: 0; left: 50%; transform: translate(-50%, 100%); width: 100%; max-width: 430px; background: var(--bg2); border-radius: 20px 20px 0 0; z-index: 201; padding: 0 0 calc(var(--safe-bottom) + 20px); max-height: 92vh; overflow-y: auto; transition: transform 0.3s ease; }
+  .sheet-handle { width: 36px; height: 4px; background: var(--bg4); border-radius: 2px; margin: 12px auto 0; }
+  .sheet-header { padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border); }
+  .sheet-title { font-size: 17px; font-weight: 600; }
+  .sheet-close { background: var(--bg4); border: none; color: var(--text2); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .sheet-body { padding: 20px; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text2); letter-spacing: 0.3px; margin-bottom: 6px; display: block; }
+  .form-input, .form-select, .form-textarea { width: 100%; background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; transition: border-color 0.15s; -webkit-appearance: none; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--amber); }
+  .form-select option { background: var(--bg3); }
+  .form-textarea { resize: none; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* BUTTONS */
+  .btn { width: 100%; padding: 14px; border-radius: var(--radius); border: none; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--amber); color: #000; }
+  .btn-secondary { background: var(--bg4); color: var(--text); }
+  .btn-danger { background: var(--red-dim); color: var(--red); border: 0.5px solid var(--red); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { flex: 1; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 48px 24px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 15px; color: var(--text2); }
+  .empty-sub { font-size: 13px; color: var(--text3); margin-top: 4px; }
+
+  /* SEARCH */
+  .search-wrap { padding: 0 16px 12px; }
+  .search-input { width: 100%; background: var(--bg2); border: 0.5px solid var(--border2); border-radius: 10px; padding: 10px 14px 10px 38px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; }
+  .search-input:focus { border-color: var(--amber); }
+  .search-wrap-inner { position: relative; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; pointer-events: none; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--border); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; background: var(--bg2); color: var(--text2); transition: all 0.15s; }
+  .tab.active { background: var(--amber); color: #000; border-color: var(--amber); }
+
+  /* PROFIT BAR */
+  .profit-bar { background: var(--bg3); border-radius: 4px; height: 4px; overflow: hidden; margin-top: 6px; }
+  .profit-fill { height: 100%; border-radius: 4px; background: var(--green); transition: width 0.3s; }
+
+  /* DIVIDER */
+  .divider { height: 0.5px; background: var(--border); margin: 0 16px; }
+
+  /* TOAST */
+  .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 10px 18px; font-size: 14px; font-weight: 500; z-index: 300; display: none; white-space: nowrap; }
+  .toast.show { display: block; animation: fadeInOut 2s ease forwards; }
+  @keyframes fadeInOut { 0%{opacity:0;transform:translateX(-50%) translateY(-8px)} 15%{opacity:1;transform:translateX(-50%) translateY(0)} 75%{opacity:1} 100%{opacity:0} }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* DETAIL VIEW */
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { font-size: 13px; color: var(--text2); }
+  .detail-val { font-size: 13px; font-weight: 500; text-align: right; max-width: 60%; }
+  .mono { font-family: 'DM Mono', monospace; }
+
+  .pwa-banner { background: var(--amber-dim); border: 0.5px solid var(--amber); border-radius: var(--radius); padding: 12px 16px; margin: 0 16px 16px; font-size: 13px; color: var(--amber); display: flex; gap: 10px; align-items: flex-start; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:20px;padding:32px 24px;width:100%;max-width:380px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:36px;margin-bottom:10px;">📷</div>
+      <div style="font-size:11px;font-weight:500;letter-spacing:1.5px;color:var(--amber);text-transform:uppercase;margin-bottom:4px;">Tangy Nature LLC</div>
+      <div style="font-size:22px;font-weight:600;">Sign In</div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:6px;">Email</label>
+      <input id="login-email" type="email" placeholder="you@email.com" style="width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;">
+    </div>
+    <div style="margin-bottom:22px;">
+      <label style="font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:6px;">Password</label>
+      <input id="login-password" type="password" placeholder="••••••••" style="width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="login-error" style="font-size:13px;color:var(--red);margin-bottom:14px;display:none;text-align:center;"></div>
+    <button onclick="doLogin()" id="login-btn" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--amber);color:#000;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign In</button>
+  </div>
+</div>
+
+<div class="app" id="main-app" style="display:none;">
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- GLOBAL LOADER -->
+  <div id="global-loader" style="display:none;position:fixed;inset:0;background:rgba(14,14,15,0.85);z-index:400;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+    <div style="width:36px;height:36px;border:3px solid var(--bg4);border-top-color:var(--amber);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+    <div style="font-size:13px;color:var(--text2);" id="loader-text">Loading…</div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div class="page active" id="page-dashboard">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-label">Tangy Nature LLC</div>
+          <div class="header-title">Dashboard</div>
+          <div class="header-subtitle" id="dash-date"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="role-badge" style="font-size:10px;font-weight:600;letter-spacing:1px;padding:3px 8px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);">USER</span>
+          <button onclick="signOut()" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text3);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Sign out</button>
+        </div>
+      </div>
+      <!-- Supabase status badge -->
+      <div id="db-status" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:20px;padding:5px 12px;">
+        <span id="db-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;"></span>
+        <span id="db-label" style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.3px;">Connecting…</span>
+      </div>
+    </div>
+    <div class="tabs" id="dash-year-tabs" style="margin-top:4px;"></div>
+    <div class="tabs" id="dash-quarter-tabs" style="margin-top:0;display:none;"></div>
+
+    <div id="pwa-hint" class="pwa-banner" style="display:none">
+      <span>📱</span>
+      <span>Add to Home Screen in Safari for the full app experience.</span>
+    </div>
+
+    <div class="card-grid" id="dash-metrics"></div>
+
+    <div class="section-title">Unsold Inventory</div>
+    <div class="list-wrap" id="dash-unsold"></div>
+
+    <div class="section-title">Recent Sales</div>
+    <div class="list-wrap" id="dash-recent-sales"></div>
+  </div>
+
+  <!-- SKU PAGE -->
+  <div class="page" id="page-sku">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-label">Catalog</div>
+          <div class="header-title">SKUs</div>
+        </div>
+        <button class="header-action" onclick="openSheet('sku-sheet')">+</button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-wrap-inner">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="sku-search" placeholder="Search products…" oninput="renderSKUs()">
+      </div>
+    </div>
+    <div class="tabs" id="sku-tabs">
+      <div class="tab active" data-filter="all" onclick="setSkuFilter(this)">All</div>
+      <div class="tab" data-filter="Camera" onclick="setSkuFilter(this)">Cameras</div>
+      <div class="tab" data-filter="Lens" onclick="setSkuFilter(this)">Lenses</div>
+      <div class="tab" data-filter="Accessory" onclick="setSkuFilter(this)">Accessories</div>
+    </div>
+    <div class="list-wrap" id="sku-list"></div>
+  </div>
+
+  <!-- PURCHASES PAGE -->
+  <div class="page" id="page-purchases">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-label">Inventory</div>
+          <div class="header-title">Purchases</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="showPage('linked')" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">🔗 Linked</button>
+          <button class="header-action" onclick="openSheet('purchase-sheet')">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-wrap-inner">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="purchase-search" placeholder="Search purchases…" oninput="renderPurchases()">
+      </div>
+    </div>
+    <div class="list-wrap" id="purchase-list"></div>
+  </div>
+
+  <!-- SALES PAGE -->
+  <div class="page" id="page-sales">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-label">Revenue</div>
+          <div class="header-title">Sales</div>
+        </div>
+        <button class="header-action" onclick="openSheet('sale-sheet')">+</button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-wrap-inner">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="sale-search" placeholder="Search sales…" oninput="renderSales()">
+      </div>
+    </div>
+    <div class="list-wrap" id="sale-list"></div>
+  </div>
+
+  <!-- EXPENSES PAGE -->
+  <div class="page" id="page-expenses">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-label">Overhead</div>
+          <div class="header-title">Expenses</div>
+        </div>
+        <button class="header-action" onclick="openExpenseSheet()">+</button>
+      </div>
+    </div>
+    <div class="card-grid" id="exp-metrics"></div>
+    <div class="tabs" id="exp-tabs">
+      <div class="tab active" data-filter="all" onclick="setExpFilter(this)">All</div>
+      <div class="tab" data-filter="Cam Accessories" onclick="setExpFilter(this)">Accessories</div>
+      <div class="tab" data-filter="Backdrop" onclick="setExpFilter(this)">Backdrops</div>
+      <div class="tab" data-filter="Shipping" onclick="setExpFilter(this)">Shipping</div>
+      <div class="tab" data-filter="Display Board" onclick="setExpFilter(this)">Display</div>
+      <div class="tab" data-filter="Others" onclick="setExpFilter(this)">Others</div>
+    </div>
+    <div class="list-wrap" id="expense-list"></div>
+  </div>
+
+
+  <!-- LINKED RECORDS PAGE -->
+  <div class="page" id="page-linked">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-label">Traceability</div>
+          <div class="header-title">Linked Records</div>
+          <div class="header-subtitle" id="linked-subtitle"></div>
+        </div>
+        <button onclick="showPage('purchases')" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">← Back</button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-wrap-inner">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="linked-search" placeholder="Search by product or ID…" oninput="renderLinked()">
+      </div>
+    </div>
+    <div class="tabs" id="linked-tabs">
+      <div class="tab active" data-filter="all" onclick="setLinkedFilter(this)">All</div>
+      <div class="tab" data-filter="sold" onclick="setLinkedFilter(this)">Sold</div>
+      <div class="tab" data-filter="unsold" onclick="setLinkedFilter(this)">Unsold</div>
+      <div class="tab" data-filter="trade" onclick="setLinkedFilter(this)">Trades</div>
+    </div>
+    <div id="linked-list" style="margin:0 16px 12px;"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-dashboard" onclick="showPage('dashboard')">
+      <div class="nav-icon"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#6a6866" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#6a6866" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#6a6866" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#6a6866" stroke-width="1.5"/></svg></div>
+      Dashboard
+    </button>
+    <button class="nav-btn" id="nav-sku" onclick="showPage('sku')">
+      <div class="nav-icon"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h7" stroke="#6a6866" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      Catalog
+    </button>
+    <button class="nav-btn" id="nav-purchases" onclick="showPage('purchases')">
+      <div class="nav-icon"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="#6a6866" stroke-width="1.5"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke="#6a6866" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      Purchases
+    </button>
+    <button class="nav-btn" id="nav-sales" onclick="showPage('sales')">
+      <div class="nav-icon"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="#6a6866" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      Sales
+    </button>
+    <button class="nav-btn" id="nav-expenses" onclick="showPage('expenses')">
+      <div class="nav-icon"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M9 14l2 2 4-4" stroke="#6a6866" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="5" width="18" height="14" rx="2" stroke="#6a6866" stroke-width="1.5"/></svg></div>
+      Expenses
+    </button>
+
+  </nav>
+</div>
+
+<!-- SKU SHEET -->
+<div class="sheet-overlay" id="sku-overlay" onclick="closeSheet('sku-sheet')"></div>
+<div class="sheet" id="sku-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="sku-sheet-title">New SKU</div>
+    <button class="sheet-close" onclick="closeSheet('sku-sheet')">✕</button>
+  </div>
+  <div class="sheet-body">
+    <input type="hidden" id="sku-edit-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Brand</label>
+        <input class="form-input" id="sku-brand" placeholder="Sony">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="sku-type">
+          <option value="Camera">Camera</option>
+          <option value="Lens">Lens</option>
+          <option value="Accessory">Accessory</option>
+          <option value="Drone">Drone</option>
+          <option value="Flash">Flash</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Product name</label>
+      <input class="form-input" id="sku-product" placeholder="Sony Alpha 7 III">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="sku-description" placeholder="Full-frame interchangeable lens camera">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Sensor</label>
+        <select class="form-select" id="sku-sensor">
+          <option value="">—</option>
+          <option value="Full Frame">Full Frame</option>
+          <option value="APS-C">APS-C</option>
+          <option value="Micro 4/3">Micro 4/3</option>
+          <option value="Medium Format">Medium Format</option>
+          <option value="1 inch">1 inch</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Megapixels</label>
+        <input class="form-input" id="sku-mp" type="number" placeholder="24.2">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Max FPS</label>
+        <input class="form-input" id="sku-fps" type="number" placeholder="10">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Video</label>
+        <input class="form-input" id="sku-video" placeholder="4K/30p">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Lens type</label>
+        <input class="form-input" id="sku-lens-type" placeholder="Standard Zoom">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Max aperture</label>
+        <input class="form-input" id="sku-aperture" type="number" step="0.1" placeholder="2.8">
+      </div>
+    </div>
+    <div class="btn-row" id="sku-btn-row">
+      <button class="btn btn-primary" onclick="saveSKU()">Save SKU</button>
+    </div>
+  </div>
+</div>
+
+<!-- PURCHASE SHEET -->
+<div class="sheet-overlay" id="purchase-overlay" onclick="closeSheet('purchase-sheet')"></div>
+<div class="sheet" id="purchase-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="purchase-sheet-title">Log Purchase</div>
+    <button class="sheet-close" onclick="closeSheet('purchase-sheet')">✕</button>
+  </div>
+  <div class="sheet-body">
+    <input type="hidden" id="purchase-edit-id">
+    <div class="form-group">
+      <label class="form-label">Product (SKU)</label>
+      <select class="form-select" id="purchase-sku"></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="purchase-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Source</label>
+        <select class="form-select" id="purchase-source">
+          <option>Facebook</option>
+          <option>eBay</option>
+          <option>Greentoe</option>
+          <option>PayPal</option>
+          <option>Family</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Price per unit ($)</label>
+        <input class="form-input" id="purchase-price" type="number" step="0.01" placeholder="0.00" oninput="calcPurchaseCost()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Qty</label>
+        <input class="form-input" id="purchase-qty" type="number" value="1" oninput="calcPurchaseCost()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Shipping ($)</label>
+        <input class="form-input" id="purchase-shipping" type="number" step="0.01" value="0" oninput="calcPurchaseCost()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gas ($)</label>
+        <input class="form-input" id="purchase-gas" type="number" step="0.01" value="0" oninput="calcPurchaseCost()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Payment via</label>
+        <select class="form-select" id="purchase-payment">
+          <option>Cash</option>
+          <option>Zelle</option>
+          <option>Venmo</option>
+          <option>PayPal F&F</option>
+          <option>PayPal G&S</option>
+          <option>Credit Card</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">State</label>
+        <input class="form-input" id="purchase-state" placeholder="MA" maxlength="2">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Acquisition Type</label>
+      <div style="display:flex;gap:8px;margin-bottom:4px;">
+        <button type="button" id="acq-cash" onclick="setAcqType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:#000;font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">💵 Cash Buy</button>
+        <button type="button" id="acq-trade" onclick="setAcqType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">🔄 Trade</button>
+      </div>
+      <input type="hidden" id="purchase-is-trade" value="0">
+    </div>
+    <div id="trade-link-group" style="display:none;" class="form-group">
+      <label class="form-label">Traded Item (link a Sale ID)</label>
+      <select class="form-select" id="purchase-trade-sale"><option value="">— Select sold item given in trade —</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Comments</label>
+      <textarea class="form-textarea" id="purchase-comments" placeholder="Optional notes…"></textarea>
+    </div>
+    <div class="card" style="margin:0 0 16px;padding:12px 16px;">
+      <div class="detail-row">
+        <span class="detail-key">Gross cost</span>
+        <span class="detail-val mono" id="p-gross">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Net cost (+ fees)</span>
+        <span class="detail-val mono amber" id="p-net">$0.00</span>
+      </div>
+    </div>
+    <div class="btn-row" id="purchase-btn-row">
+      <button class="btn btn-primary" onclick="savePurchase()">Log Purchase</button>
+    </div>
+  </div>
+</div>
+
+<!-- SALE SHEET -->
+<div class="sheet-overlay" id="sale-overlay" onclick="closeSheet('sale-sheet')"></div>
+<div class="sheet" id="sale-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="sale-sheet-title">Log Sale</div>
+    <button class="sheet-close" onclick="closeSheet('sale-sheet')">✕</button>
+  </div>
+  <div class="sheet-body">
+    <input type="hidden" id="sale-edit-id">
+    <div class="form-group">
+      <label class="form-label">Purchase (item being sold)</label>
+      <select class="form-select" id="sale-purchase" onchange="onSalePurchaseChange()"></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="sale-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Channel</label>
+        <select class="form-select" id="sale-source">
+          <option>Facebook</option>
+          <option>eBay</option>
+          <option>PayPal</option>
+          <option>Family</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Sale price ($)</label>
+        <input class="form-input" id="sale-price" type="number" step="0.01" placeholder="0.00" oninput="calcSaleProfit()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Buyer state</label>
+        <input class="form-input" id="sale-state" placeholder="NY" maxlength="2">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Shipping charged ($)</label>
+        <input class="form-input" id="sale-ship-charged" type="number" step="0.01" value="0" oninput="calcSaleProfit()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Shipping paid ($)</label>
+        <input class="form-input" id="sale-ship-paid" type="number" step="0.01" value="0" oninput="calcSaleProfit()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Platform fees (%)</label>
+        <input class="form-input" id="sale-fees-pct" type="number" step="0.1" value="0" placeholder="13.25 for eBay" oninput="calcSaleProfit()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fixed fee ($)</label>
+        <input class="form-input" id="sale-fees-fixed" type="number" step="0.01" value="0" oninput="calcSaleProfit()">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">G&A / Other costs ($)</label>
+      <input class="form-input" id="sale-ga" type="number" step="0.01" value="0" oninput="calcSaleProfit()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Comments</label>
+      <textarea class="form-textarea" id="sale-comments" placeholder="Optional notes…"></textarea>
+    </div>
+    <div class="card" style="margin:0 0 16px;padding:12px 16px;">
+      <div class="detail-row">
+        <span class="detail-key">Net cost basis</span>
+        <span class="detail-val mono" id="s-cost">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Gross sale</span>
+        <span class="detail-val mono" id="s-gross">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Net sale (after fees)</span>
+        <span class="detail-val mono" id="s-net">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Net profit</span>
+        <span class="detail-val mono" id="s-profit" style="font-size:16px;">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Margin</span>
+        <span class="detail-val mono" id="s-margin">0.0%</span>
+      </div>
+    </div>
+    <div class="btn-row" id="sale-btn-row">
+      <button class="btn btn-primary" onclick="saveSale()">Log Sale</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPENSE SHEET -->
+<div class="sheet-overlay" id="expense-overlay" onclick="closeSheet('expense-sheet')"></div>
+<div class="sheet" id="expense-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="expense-sheet-title">Log Expense</div>
+    <button class="sheet-close" onclick="closeSheet('expense-sheet')">✕</button>
+  </div>
+  <div class="sheet-body">
+    <input type="hidden" id="expense-edit-id">
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-select" id="expense-type">
+        <option>Cam Accessories</option>
+        <option>Backdrop</option>
+        <option>Display Board</option>
+        <option>Shipping</option>
+        <option>Others</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Product / Description</label>
+      <input class="form-input" id="expense-product" placeholder="e.g. Lens Cleaning Kit">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Source / Store</label>
+      <input class="form-input" id="expense-source" placeholder="Amazon, Walmart…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="expense-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Qty</label>
+        <input class="form-input" id="expense-qty" type="number" value="1" oninput="calcExpenseCost()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Unit price ($)</label>
+        <input class="form-input" id="expense-price" type="number" step="0.01" placeholder="0.00" oninput="calcExpenseCost()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Discount ($)</label>
+        <input class="form-input" id="expense-discount" type="number" step="0.01" value="0" oninput="calcExpenseCost()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tax rate (%)</label>
+        <input class="form-input" id="expense-tax" type="number" step="0.01" value="6.35" oninput="calcExpenseCost()">
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;">
+        <div style="width:100%;">
+          <label class="form-label">Net amount</label>
+          <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);padding:11px 14px;font-family:'DM Mono',monospace;font-size:15px;color:var(--amber);" id="exp-net-display">$0.00</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row" id="expense-btn-row">
+      <button class="btn btn-primary" onclick="saveExpense()">Log Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL SHEETS for view/delete -->
+<div class="sheet-overlay" id="detail-overlay" onclick="closeSheet('detail-sheet')"></div>
+<div class="sheet" id="detail-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="detail-title">Details</div>
+    <button class="sheet-close" onclick="closeSheet('detail-sheet')">✕</button>
+  </div>
+  <div class="sheet-body" id="detail-body"></div>
+</div>
+
+<script>
+// ─── SUPABASE CONFIG ──────────────────────────────────────
+const SUPABASE_URL = 'https://euulsabzjzrdrhmgzxfu.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1dWxzYWJ6anpyZHJobWd6eGZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTQzNzUsImV4cCI6MjA5MjgzMDM3NX0.MC7buyUzIJxTBGXfskAuypRIORnQ3GBvlPWtFq-B7k4';
+
+// ─── DB LAYER (Supabase) ──────────────────────────────────
+const DB = {
+  async _get(table, order) {
+    let url = `${SUPABASE_URL}/rest/v1/${table}?select=*`;
+    if (order) url += `&order=${order}`;
+    const res = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async _upsert(table, row) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(row)
+    });
+    if (!res.ok) throw new Error(await res.text());
+  },
+  async _delete(table, id) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }
+    });
+    if (!res.ok) throw new Error(await res.text());
+  },
+  async getSkus()      { return this._get('skus', 'brand.asc'); },
+  async getPurchases() { return this._get('purchases', 'date.desc'); },
+  async getSales()     { return this._get('sales', 'date.desc'); },
+  async getExpenses()  { return this._get('expenses', 'date.desc'); },
+  async saveSku(row)      { return this._upsert('skus', row); },
+  async savePurchase(row) { return this._upsert('purchases', row); },
+  async saveSale(row)     { return this._upsert('sales', row); },
+  async saveExpense(row)  { return this._upsert('expenses', row); },
+  async deleteSku(id)      { return this._delete('skus', id); },
+  async deletePurchase(id) { return this._delete('purchases', id); },
+  async deleteSale(id)     { return this._delete('sales', id); },
+  async deleteExpense(id)  { return this._delete('expenses', id); },
+};
+
+// ─── LOCAL CACHE (populated on each page load) ─────────────
+let _skus = [], _purchases = [], _sales = [], _expenses = [];
+
+async function loadAll() {
+  showLoader(true);
+  setDbStatus('loading');
+  try {
+    [_skus, _purchases, _sales, _expenses] = await Promise.all([
+      DB.getSkus(), DB.getPurchases(), DB.getSales(), DB.getExpenses()
+    ]);
+    setDbStatus('ok');
+  } catch(e) {
+    toast('⚠️ Could not connect to database');
+    setDbStatus('error');
+    console.error(e);
+  }
+  showLoader(false);
+}
+
+function setDbStatus(state) {
+  const dot = document.getElementById('db-dot');
+  const label = document.getElementById('db-label');
+  if (!dot || !label) return;
+  if (state === 'ok') {
+    dot.style.background = 'var(--green)';
+    dot.style.boxShadow = '0 0 6px var(--green)';
+    label.style.color = 'var(--green)';
+    label.textContent = `Supabase · ${_skus.length} SKUs · ${_purchases.length} purchases · ${_sales.length} sales`;
+  } else if (state === 'loading') {
+    dot.style.background = 'var(--amber)';
+    dot.style.boxShadow = '0 0 6px var(--amber)';
+    label.style.color = 'var(--amber)';
+    label.textContent = 'Fetching from Supabase…';
+  } else {
+    dot.style.background = 'var(--red)';
+    dot.style.boxShadow = 'none';
+    label.style.color = 'var(--red)';
+    label.textContent = 'Supabase unreachable';
+  }
+}
+
+function showLoader(on) {
+  let el = document.getElementById('global-loader');
+  if (el) el.style.display = on ? 'flex' : 'none';
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function fmt(n) { return '$' + (+n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function fmtDate(d) { if (!d) return '—'; const dt = new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function typeIcon(t) { return t==='Camera'?'📷':t==='Lens'?'🔭':t==='Drone'?'🚁':'🔧'; }
+function typeClass(t) { return t==='Camera'?'icon-camera':t==='Lens'?'icon-lens':t==='Drone'?'icon-drone':'icon-acc'; }
+
+// ─── NAVIGATION ───────────────────────────────────────────
+let currentPage = 'dashboard';
+async function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  currentPage = page;
+  await loadAll();
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'sku') renderSKUs();
+  if (page === 'purchases') renderPurchases();
+  if (page === 'sales') renderSales();
+  if (page === 'expenses') renderExpenses();
+  if (page === 'linked') renderLinked();
+}
+
+// ─── SHEETS ───────────────────────────────────────────────
+function openSheet(id) {
+  const name = id.replace('-sheet','');
+  document.getElementById(name+'-overlay').classList.add('open');
+  document.getElementById(id).style.transform = 'translate(-50%, 0)';
+  if (id === 'purchase-sheet') populatePurchaseSKUSelect();
+  if (id === 'sale-sheet') populateSalePurchaseSelect();
+  if (id === 'sku-sheet') {
+    document.getElementById('sku-sheet-title').textContent = 'New SKU';
+    document.getElementById('sku-edit-id').value = '';
+    clearSkuForm();
+    document.getElementById('sku-btn-row').innerHTML = '<button class="btn btn-primary" onclick="saveSKU()">Save SKU</button>';
+  }
+  if (id === 'purchase-sheet') {
+    document.getElementById('purchase-sheet-title').textContent = 'Log Purchase';
+    document.getElementById('purchase-edit-id').value = '';
+    document.getElementById('purchase-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('purchase-btn-row').innerHTML = '<button class="btn btn-primary" onclick="savePurchase()">Log Purchase</button>';
+    setAcqType('cash');
+  }
+  if (id === 'sale-sheet') {
+    document.getElementById('sale-sheet-title').textContent = 'Log Sale';
+    document.getElementById('sale-edit-id').value = '';
+    document.getElementById('sale-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('sale-btn-row').innerHTML = '<button class="btn btn-primary" onclick="saveSale()">Log Sale</button>';
+    calcSaleProfit();
+  }
+}
+function closeSheet(id) {
+  const name = id.replace('-sheet','');
+  document.getElementById(name+'-overlay').classList.remove('open');
+  document.getElementById(id).style.transform = 'translate(-50%, 100%)';
+}
+
+// ─── TOAST ─────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show';
+  setTimeout(() => t.className = 'toast', 2100);
+}
+
+// ─── UNSOLD TOGGLE ────────────────────────────────────────
+let unsoldExpanded = false;
+let recentSalesExpanded = false;
+
+function toggleUnsoldList() {
+  unsoldExpanded = !unsoldExpanded;
+  const rows = document.querySelectorAll('.unsold-row');
+  const btn = document.getElementById('unsold-toggle');
+  const preview = 3;
+  const hidden = rows.length - preview;
+  rows.forEach((r, i) => {
+    if (i >= preview) r.style.display = unsoldExpanded ? 'flex' : 'none';
+  });
+  if (btn) {
+    btn.innerHTML = unsoldExpanded
+      ? `Show less ‹`
+      : `Show ${hidden} more · ${btn.dataset.total || ''} tied up total ›`;
+  }
+}
+
+function toggleRecentSales() {
+  recentSalesExpanded = !recentSalesExpanded;
+  const rows = document.querySelectorAll('.recent-sale-row');
+  const btn = document.getElementById('sales-toggle');
+  const preview = 3;
+  const hidden = rows.length - preview;
+  rows.forEach((r, i) => {
+    if (i >= preview) r.style.display = recentSalesExpanded ? 'flex' : 'none';
+  });
+  if (btn) {
+    btn.innerHTML = recentSalesExpanded ? `Show less ‹` : `Show ${hidden} more ›`;
+  }
+}
+
+// ─── DASHBOARD ─────────────────────────────────────────────
+let dashYear = 'all';
+let dashQuarter = 'all';
+
+function setDashYear(el, year) {
+  document.querySelectorAll('#dash-year-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  dashYear = year;
+  dashQuarter = 'all';
+  renderQuarterTabs();
+  renderDashboardMetrics();
+}
+
+function setDashQuarter(el, quarter) {
+  document.querySelectorAll('#dash-quarter-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  dashQuarter = quarter;
+  renderDashboardMetrics();
+}
+
+function renderQuarterTabs() {
+  const qtEl = document.getElementById('dash-quarter-tabs');
+  if (dashYear === 'all') {
+    qtEl.style.display = 'none';
+    return;
+  }
+  // Check which quarters have data for selected year
+  const allSales = _sales;
+  const quartersWithData = new Set(
+    allSales.filter(s => s.date && s.date.startsWith(dashYear))
+      .map(s => 'Q' + Math.ceil(parseInt(s.date.slice(5,7)) / 3))
+  );
+  if (quartersWithData.size === 0) { qtEl.style.display = 'none'; return; }
+  qtEl.style.display = 'flex';
+  qtEl.innerHTML = `<div class="tab ${dashQuarter==='all'?'active':''}" onclick="setDashQuarter(this,'all')">Full Year</div>`
+    + ['Q1','Q2','Q3','Q4'].filter(q => quartersWithData.has(q))
+      .map(q => `<div class="tab ${dashQuarter===q?'active':''}" onclick="setDashQuarter(this,'${q}')">${q}</div>`).join('');
+}
+
+function renderDashboard() {
+  unsoldExpanded = false;
+  recentSalesExpanded = false;
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  // Build year tabs from available sales data
+  const allSales = _sales;
+  const years = [...new Set(allSales.map(s => s.date ? s.date.slice(0,4) : null).filter(Boolean))].sort().reverse();
+  const tabsEl = document.getElementById('dash-year-tabs');
+  tabsEl.innerHTML = `<div class="tab ${dashYear==='all'?'active':''}" onclick="setDashYear(this,'all')">All Time</div>`
+    + years.map(y => `<div class="tab ${dashYear===y?'active':''}" onclick="setDashYear(this,'${y}')">${y}</div>`).join('');
+
+  renderQuarterTabs();
+  renderDashboardMetrics();
+}
+
+function getQuarterMonths(q) {
+  return { Q1:['01','02','03'], Q2:['04','05','06'], Q3:['07','08','09'], Q4:['10','11','12'] }[q] || [];
+}
+
+function renderDashboardMetrics() {
+  const purchases = _purchases;
+  const allSales = _sales;
+  const skus = _skus;
+  const allExpenses = _expenses;
+
+  // Filter by year then quarter
+  let sales = dashYear === 'all' ? allSales : allSales.filter(s => s.date && s.date.startsWith(dashYear));
+  let expenses = dashYear === 'all' ? allExpenses : allExpenses.filter(e => e.date && e.date.startsWith(dashYear));
+  if (dashYear !== 'all' && dashQuarter !== 'all') {
+    const months = getQuarterMonths(dashQuarter);
+    sales = sales.filter(s => s.date && months.includes(s.date.slice(5,7)));
+    expenses = expenses.filter(e => e.date && months.includes(e.date.slice(5,7)));
+  }
+
+  const totalCost = sales.reduce((s,s2) => s + (+s2.netCost||0), 0);
+  const totalRevenue = sales.reduce((s,s2) => s + (+s2.netSale||0), 0);
+  const totalProfit = sales.reduce((s,s2) => s + (+s2.profit||0), 0);
+  const totalExpenses = expenses.reduce((s,e) => s + (+e.netAmount||0), 0);
+  const revToProfitPct = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
+  const soldIds = new Set(allSales.map(s=>s.purchaseId));
+  const unsoldPurchases = purchases.filter(p => !soldIds.has(p.id) && !p.sold);
+  const tiedUp = unsoldPurchases.reduce((s,p) => s + (+p.netCost||0), 0);
+
+  // Avg days to sell
+  const daysArr = sales.map(s => {
+    const purchase = purchases.find(p => p.id === s.purchaseId);
+    if (!purchase || !purchase.date || !s.date) return null;
+    return Math.round((new Date(s.date) - new Date(purchase.date)) / (1000*60*60*24));
+  }).filter(d => d !== null && d >= 0);
+  const avgDays = daysArr.length > 0 ? Math.round(daysArr.reduce((a,b)=>a+b,0) / daysArr.length) : null;
+  const avgDaysColor = avgDays === null ? 'var(--text)' : +avgDays <= 3 ? 'var(--green)' : +avgDays <= 14 ? 'var(--amber)' : 'var(--red)';
+
+  document.getElementById('dash-metrics').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">TOTAL COST</div>
+      <div class="metric-value">${fmt(totalCost)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">TOTAL REVENUE</div>
+      <div class="metric-value">${fmt(totalRevenue)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">TOTAL PROFIT</div>
+      <div class="metric-value ${totalProfit>=0?'green':'red'}">${fmt(totalProfit)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">REVENUE TO PROFIT</div>
+      <div class="metric-value ${revToProfitPct>=0?'green':'red'}">${revToProfitPct.toFixed(1)}%</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">ITEMS SOLD</div>
+      <div class="metric-value amber">${sales.length}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">AVG DAYS TO SELL</div>
+      <div class="metric-value" style="color:${avgDaysColor};">${avgDays !== null ? avgDays + 'd' : '—'}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">EXPENSES</div>
+      <div class="metric-value red">${fmt(totalExpenses)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">TIED-UP CAPITAL</div>
+      <div class="metric-value">${fmt(tiedUp)}</div>
+    </div>
+  `;
+
+  const unsoldEl = document.getElementById('dash-unsold');
+  if (unsoldPurchases.length === 0) {
+    unsoldEl.innerHTML = '<div class="empty"><div class="empty-text">No unsold inventory</div></div>';
+  } else {
+    const tiedUpTotal = unsoldPurchases.reduce((s,p)=>s+(+p.netCost||0),0);
+    const preview = 3;
+    const rows = unsoldPurchases.map((p,i) => {
+      const sku = skus.find(s=>s.id===p.skuId)||{};
+      return `<div class="list-item unsold-row" style="${i >= preview ? 'display:none' : ''}" data-unsold-idx="${i}" onclick="viewPurchaseDetail('${p.id}')">
+        <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
+        <div class="item-body">
+          <div class="item-name">${sku.product||'Unknown'}</div>
+          <div class="item-sub">${fmtDate(p.date)} · ${p.source||''}</div>
+        </div>
+        <div class="item-right">
+          <div class="item-amount amber">${fmt(p.netCost)}</div>
+          <div class="item-badge badge-unsold">Unsold</div>
+        </div>
+      </div>`;
+    }).join('');
+    const remaining = unsoldPurchases.length - preview;
+    const toggleBtn = remaining > 0
+      ? `<div id="unsold-toggle" onclick="toggleUnsoldList()" style="padding:12px 16px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:var(--amber);border-top:0.5px solid var(--border);">
+          Show ${remaining} more · ${fmt(tiedUpTotal)} tied up total ›
+        </div>`
+      : '';
+    unsoldEl.innerHTML = rows + toggleBtn;
+  }
+
+  const recentEl = document.getElementById('dash-recent-sales');
+  const recent = [...sales].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (recent.length === 0) {
+    recentEl.innerHTML = '<div class="empty"><div class="empty-text">No sales yet</div></div>';
+  } else {
+    const salesPreview = 3;
+    const salesRows = recent.map((s, i) => {
+      const purchase = purchases.find(p=>p.id===s.purchaseId)||{};
+      const sku = skus.find(sk=>sk.id===purchase.skuId)||{};
+      const profit = +s.profit||0;
+      const daysToSell = (purchase.date && s.date)
+        ? Math.round((new Date(s.date) - new Date(purchase.date)) / (1000*60*60*24))
+        : null;
+      const daysLabel = daysToSell === null ? '—'
+        : daysToSell === 0 ? 'Same day'
+        : daysToSell === 1 ? '1 day'
+        : `${daysToSell} days`;
+      const daysColor = daysToSell === null ? 'var(--text3)'
+        : daysToSell <= 3 ? 'var(--green)'
+        : daysToSell <= 14 ? 'var(--amber)'
+        : 'var(--red)';
+      return `<div class="list-item recent-sale-row" style="${i >= salesPreview ? 'display:none' : ''};align-items:flex-start;padding:14px 16px;" data-sale-idx="${i}" onclick="viewSaleDetail('${s.id}')">
+        <div class="item-icon ${typeClass(sku.type||'')}" style="margin-top:2px;">${typeIcon(sku.type||'')}</div>
+        <div class="item-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div class="item-name">${sku.product||'Unknown'}</div>
+            <div style="font-size:11px;font-weight:600;color:${daysColor};background:var(--bg3);border-radius:20px;padding:2px 8px;white-space:nowrap;">⏱ ${daysLabel}</div>
+          </div>
+          <div class="item-sub">${fmtDate(purchase.date)} → ${fmtDate(s.date)} · ${s.source||''}</div>
+          <div style="display:flex;gap:10px;margin-top:8px;">
+            <div style="flex:1;background:var(--bg3);border-radius:6px;padding:6px 8px;">
+              <div style="font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-bottom:2px;">COST</div>
+              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text2);">${fmt(s.netCost)}</div>
+            </div>
+            <div style="flex:1;background:var(--bg3);border-radius:6px;padding:6px 8px;">
+              <div style="font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-bottom:2px;">SALE</div>
+              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);">${fmt(s.netSale)}</div>
+            </div>
+            <div style="flex:1;background:var(--bg3);border-radius:6px;padding:6px 8px;">
+              <div style="font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-bottom:2px;">PROFIT</div>
+              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:${profit>=0?'var(--green)':'var(--red)'};">${fmt(profit)}</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    const salesRemaining = recent.length - salesPreview;
+    const salesToggleBtn = salesRemaining > 0
+      ? `<div id="sales-toggle" onclick="toggleRecentSales()" style="padding:12px 16px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:var(--amber);border-top:0.5px solid var(--border);">
+          Show ${salesRemaining} more ›
+        </div>`
+      : '';
+    recentEl.innerHTML = salesRows + salesToggleBtn;
+  }
+}
+
+function renderDashboard() {
+  unsoldExpanded = false;
+  recentSalesExpanded = false;
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  // Build year tabs from available sales data
+  const allSales = _sales;
+  const years = [...new Set(allSales.map(s => s.date ? s.date.slice(0,4) : null).filter(Boolean))].sort().reverse();
+  const tabsEl = document.getElementById('dash-year-tabs');
+  tabsEl.innerHTML = `<div class="tab ${dashYear==='all'?'active':''}" onclick="setDashYear(this,'all')">All Time</div>`
+    + years.map(y => `<div class="tab ${dashYear===y?'active':''}" onclick="setDashYear(this,'${y}')">${y}</div>`).join('');
+
+  // PWA hint for Safari
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  document.getElementById('pwa-hint').style.display = (isIOS && !isStandalone) ? 'flex' : 'none';
+
+  renderDashboardMetrics();
+}
+
+// ─── SKU CATALOG ───────────────────────────────────────────
+let skuFilter = 'all';
+function setSkuFilter(el) {
+  document.querySelectorAll('#sku-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  skuFilter = el.dataset.filter;
+  renderSKUs();
+}
+function renderSKUs() {
+  const q = (document.getElementById('sku-search').value||'').toLowerCase();
+  let skus = _skus.filter(s => {
+    const match = !q || (s.product+s.brand+s.type).toLowerCase().includes(q);
+    const filter = skuFilter === 'all' || s.type === skuFilter;
+    return match && filter;
+  });
+  const el = document.getElementById('sku-list');
+  if (skus.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📷</div><div class="empty-text">No SKUs yet</div><div class="empty-sub">Tap + to add your first product</div></div>';
+    return;
+  }
+  el.innerHTML = skus.map(s => `
+    <div class="list-item" onclick="editSKU('${s.id}')">
+      <div class="item-icon ${typeClass(s.type)}">${typeIcon(s.type)}</div>
+      <div class="item-body">
+        <div class="item-name">${s.product}</div>
+        <div class="item-sub">${s.brand} · ${s.sensor||''} ${s.mp?s.mp+'MP':''}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-badge ${s.type==='Camera'?'badge-camera':s.type==='Lens'?'badge-lens':'badge-acc'}">${s.type}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function clearSkuForm() {
+  ['sku-brand','sku-product','sku-description','sku-mp','sku-fps','sku-video','sku-lens-type','sku-aperture'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('sku-type').value='Camera';
+  document.getElementById('sku-sensor').value='';
+}
+async function saveSKU() {
+  const product = document.getElementById('sku-product').value.trim();
+  const brand = document.getElementById('sku-brand').value.trim();
+  if (!product || !brand) { toast('Please fill in brand and product name'); return; }
+  const editId = document.getElementById('sku-edit-id').value;
+  const sku = {
+    id: editId || uid(),
+    brand, type: document.getElementById('sku-type').value,
+    product, description: document.getElementById('sku-description').value.trim(),
+    sensor: document.getElementById('sku-sensor').value,
+    mp: document.getElementById('sku-mp').value,
+    fps: document.getElementById('sku-fps').value,
+    video: document.getElementById('sku-video').value,
+    lensType: document.getElementById('sku-lens-type').value,
+    aperture: document.getElementById('sku-aperture').value,
+  };
+  try {
+    await DB.saveSku(sku);
+    await loadAll();
+    closeSheet('sku-sheet');
+    renderSKUs();
+    toast(editId ? 'SKU updated' : 'SKU added');
+  } catch(e) { toast('❌ Save failed: ' + e.message); }
+}
+function editSKU(id) {
+  const sku = _skus.find(s=>s.id===id);
+  if (!sku) return;
+  document.getElementById('sku-sheet-title').textContent = 'Edit SKU';
+  document.getElementById('sku-edit-id').value = id;
+  document.getElementById('sku-brand').value = sku.brand||'';
+  document.getElementById('sku-type').value = sku.type||'Camera';
+  document.getElementById('sku-product').value = sku.product||'';
+  document.getElementById('sku-description').value = sku.description||'';
+  document.getElementById('sku-sensor').value = sku.sensor||'';
+  document.getElementById('sku-mp').value = sku.mp||'';
+  document.getElementById('sku-fps').value = sku.fps||'';
+  document.getElementById('sku-video').value = sku.video||'';
+  document.getElementById('sku-lens-type').value = sku.lensType||'';
+  document.getElementById('sku-aperture').value = sku.aperture||'';
+  document.getElementById('sku-btn-row').innerHTML = `
+    <button class="btn btn-danger" onclick="deleteSKU('${id}')">Delete</button>
+    <button class="btn btn-primary" onclick="saveSKU()">Update</button>
+  `;
+  document.getElementById('sku-overlay').classList.add('open');
+  document.getElementById('sku-sheet').style.transform = 'translate(-50%, 0)';
+}
+async function deleteSKU(id) {
+  if (!confirm('Delete this SKU?')) return;
+  try { await DB.deleteSku(id); await loadAll(); closeSheet('sku-sheet'); renderSKUs(); toast('SKU deleted'); } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ─── PURCHASES ─────────────────────────────────────────────
+function setAcqType(type) {
+  const isTrade = type === 'trade';
+  document.getElementById('purchase-is-trade').value = isTrade ? '1' : '0';
+  const cashBtn = document.getElementById('acq-cash');
+  const tradeBtn = document.getElementById('acq-trade');
+  if (isTrade) {
+    cashBtn.style.cssText = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;';
+    tradeBtn.style.cssText = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--blue);background:var(--blue-dim);color:var(--blue);font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;';
+    document.getElementById('trade-link-group').style.display = 'block';
+    populateTradeSaleSelect();
+  } else {
+    cashBtn.style.cssText = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:#000;font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;';
+    tradeBtn.style.cssText = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;';
+    document.getElementById('trade-link-group').style.display = 'none';
+  }
+}
+function populateTradeSaleSelect() {
+  const skus = _skus;
+  const purchases = _purchases;
+  const sales = [..._sales].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const sel = document.getElementById('purchase-trade-sale');
+  sel.innerHTML = '<option value="">— Select the item you gave in the trade —</option>' +
+    sales.map(s => {
+      const p = purchases.find(x=>x.id===s.purchaseId)||{};
+      const sku = skus.find(x=>x.id===p.skuId)||{};
+      return `<option value="${s.id}">${s.id} · ${sku.product||'Unknown'} · ${fmtDate(s.date)} · ${fmt(s.netSale)}</option>`;
+    }).join('');
+}
+function populatePurchaseSKUSelect() {
+  const sel = document.getElementById('purchase-sku');
+  const skus = _skus;
+  sel.innerHTML = skus.length
+    ? skus.map(s=>`<option value="${s.id}">${s.brand} – ${s.product}</option>`).join('')
+    : '<option value="">No SKUs yet — add one first</option>';
+}
+function calcPurchaseCost() {
+  const price = +document.getElementById('purchase-price').value||0;
+  const qty = +document.getElementById('purchase-qty').value||1;
+  const ship = +document.getElementById('purchase-shipping').value||0;
+  const gas = +document.getElementById('purchase-gas').value||0;
+  const gross = price * qty;
+  const net = gross + ship + gas;
+  document.getElementById('p-gross').textContent = fmt(gross);
+  document.getElementById('p-net').textContent = fmt(net);
+}
+async function savePurchase() {
+  const skuId = document.getElementById('purchase-sku').value;
+  const price = +document.getElementById('purchase-price').value;
+  if (!skuId || !price) { toast('Please select a product and enter a price'); return; }
+  const qty = +document.getElementById('purchase-qty').value||1;
+  const ship = +document.getElementById('purchase-shipping').value||0;
+  const gas = +document.getElementById('purchase-gas').value||0;
+  const gross = price * qty;
+  const net = gross + ship + gas;
+  const editId = document.getElementById('purchase-edit-id').value;
+  const isTrade = document.getElementById('purchase-is-trade').value === '1';
+  const tradeSaleId = isTrade ? document.getElementById('purchase-trade-sale').value : '';
+  const p = {
+    id: editId || uid(),
+    skuId, date: document.getElementById('purchase-date').value,
+    source: document.getElementById('purchase-source').value,
+    state: document.getElementById('purchase-state').value.toUpperCase(),
+    qty, pricePerPiece: price, grossCost: gross,
+    shipping: ship, gas,
+    netCost: net,
+    paymentVia: document.getElementById('purchase-payment').value,
+    comments: document.getElementById('purchase-comments').value,
+    isTrade, tradeSaleId,
+  };
+  try {
+    await DB.savePurchase(p);
+    await loadAll();
+    closeSheet('purchase-sheet');
+    renderPurchases();
+    toast(editId ? 'Purchase updated' : 'Purchase logged');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+function renderPurchases() {
+  const q = (document.getElementById('purchase-search').value||'').toLowerCase();
+  const skus = _skus;
+  const sales = _sales;
+  const soldIds = new Set(sales.map(s=>s.purchaseId));
+  let purchases = [..._purchases].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (q) purchases = purchases.filter(p=>{
+    const sku = skus.find(s=>s.id===p.skuId)||{};
+    return (sku.product+sku.brand+p.source+p.paymentVia).toLowerCase().includes(q);
+  });
+  const el = document.getElementById('purchase-list');
+  if (purchases.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No purchases yet</div><div class="empty-sub">Tap + to log your first purchase</div></div>';
+    return;
+  }
+  el.innerHTML = purchases.map(p => {
+    const sku = skus.find(s=>s.id===p.skuId)||{};
+    const sold = soldIds.has(p.id) || p.sold;
+    return `<div class="list-item" onclick="viewPurchaseDetail('${p.id}')">
+      <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
+      <div class="item-body">
+        <div class="item-name">${sku.product||'Unknown product'}</div>
+        <div class="item-sub">${fmtDate(p.date)} · ${p.source||''} · ${p.paymentVia||''}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-amount">${fmt(p.netCost)}</div>
+        <div class="item-badge ${sold?'badge-sold':'badge-unsold'}">${sold?'Sold':'Unsold'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function viewPurchaseDetail(id) {
+  const p = _purchases.find(x=>x.id===id);
+  if (!p) return;
+  const sku = _skus.find(s=>s.id===p.skuId)||{};
+  const sale = _sales.find(s=>s.purchaseId===id);
+  const isTrade = p.isTrade;
+  const tradeSaleId = p.tradeSaleId||'';
+  document.getElementById('detail-title').textContent = sku.product||'Purchase';
+  const saleBlock = sale ? `
+    <div style="margin:16px 0 8px;padding:12px 14px;background:var(--green-dim);border-radius:var(--radius-sm);border:0.5px solid var(--green);">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--green);margin-bottom:8px;">LINKED SALE · ${sale.id}</div>
+      <div class="detail-row" style="border-color:rgba(76,175,125,0.2)"><span class="detail-key">Sale date</span><span class="detail-val">${fmtDate(sale.date)}</span></div>
+      <div class="detail-row" style="border-color:rgba(76,175,125,0.2)"><span class="detail-key">Channel</span><span class="detail-val">${sale.source||'—'} · ${sale.state||'—'}</span></div>
+      <div class="detail-row" style="border-color:rgba(76,175,125,0.2)"><span class="detail-key">Sale price</span><span class="detail-val mono">${fmt(sale.unitPrice)}</span></div>
+      <div class="detail-row" style="border-color:rgba(76,175,125,0.2)"><span class="detail-key">Net sale</span><span class="detail-val mono">${fmt(sale.netSale)}</span></div>
+      <div class="detail-row" style="border-bottom:none"><span class="detail-key">Net profit</span><span class="detail-val mono" style="color:${(+sale.profit||0)>=0?'var(--green)':'var(--red)'};font-size:15px;">${fmt(sale.profit)}</span></div>
+    </div>` : '';
+  const tradeBlock = isTrade && tradeSaleId ? `
+    <div style="margin:4px 0 8px;padding:10px 14px;background:var(--blue-dim);border-radius:var(--radius-sm);border:0.5px solid var(--blue);">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:4px;">🔄 TRADE — given item: ${tradeSaleId}</div>
+    </div>` : '';
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Purchase ID</span><span class="detail-val mono" style="color:var(--amber)">${p.id}</span></div>
+    <div class="detail-row"><span class="detail-key">Brand / Type</span><span class="detail-val">${sku.brand||'—'} · ${sku.type||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(p.date)}</span></div>
+    <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${p.source||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">State</span><span class="detail-val">${p.state||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Qty</span><span class="detail-val">${p.qty||1}</span></div>
+    <div class="detail-row"><span class="detail-key">Price/unit</span><span class="detail-val mono">${fmt(p.pricePerPiece)}</span></div>
+    <div class="detail-row"><span class="detail-key">Shipping</span><span class="detail-val mono">${fmt(p.shipping)}</span></div>
+    <div class="detail-row"><span class="detail-key">Gas</span><span class="detail-val mono">${fmt(p.gas)}</span></div>
+    <div class="detail-row"><span class="detail-key">Net cost</span><span class="detail-val mono" style="color:var(--amber);font-size:15px;">${fmt(p.netCost)}</span></div>
+    <div class="detail-row"><span class="detail-key">Payment</span><span class="detail-val">${p.paymentVia||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Acquisition</span><span class="detail-val"><span class="item-badge" style="${isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${isTrade?'🔄 Trade':'💵 Cash Buy'}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="item-badge ${sale?'badge-sold':'badge-unsold'}">${sale?'Sold':'Unsold'}</span></span></div>
+    ${p.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${p.comments}</span></div>`:''}
+    ${tradeBlock}
+    ${saleBlock}
+    <div style="margin-top:20px;" class="btn-row">
+      ${canWrite() ? `<button class="btn btn-secondary" onclick="editPurchase('${id}')">Edit</button>` : ''}
+      ${!sale
+        ? (canWrite() ? '<button class="btn btn-primary" onclick="closeSheet(\'detail-sheet\');openSaleForPurchase(\'' + id + '\')">Log Sale →</button>' : '')
+        : '<button class="btn btn-secondary" onclick="closeSheet(\'detail-sheet\');viewSaleDetail(\'' + (sale.id) + '\')">View Sale →</button>'}
+    </div>
+    ${!sale && canDelete() ? '<div style="margin-top:10px;"><button class="btn btn-danger" onclick="deletePurchase(\'' + id + '\')">Delete Purchase</button></div>' : ''}
+  `;
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-sheet').style.transform = 'translate(-50%, 0)';
+}
+function editPurchase(id) {
+  const p = _purchases.find(x=>x.id===id);
+  if (!p) return;
+  closeSheet('detail-sheet');
+  populatePurchaseSKUSelect();
+  document.getElementById('purchase-sheet-title').textContent = 'Edit Purchase';
+  document.getElementById('purchase-edit-id').value = id;
+  document.getElementById('purchase-sku').value = p.skuId;
+  document.getElementById('purchase-date').value = p.date;
+  document.getElementById('purchase-source').value = p.source;
+  document.getElementById('purchase-price').value = p.pricePerPiece;
+  document.getElementById('purchase-qty').value = p.qty||1;
+  document.getElementById('purchase-shipping').value = p.shipping||0;
+  document.getElementById('purchase-gas').value = p.gas||0;
+  document.getElementById('purchase-payment').value = p.paymentVia;
+  document.getElementById('purchase-state').value = p.state||'';
+  document.getElementById('purchase-comments').value = p.comments||'';
+  calcPurchaseCost();
+  document.getElementById('purchase-btn-row').innerHTML = `
+    <button class="btn btn-secondary" onclick="deletePurchase('${id}')">Delete</button>
+    <button class="btn btn-primary" onclick="savePurchase()">Update</button>
+  `;
+  document.getElementById('purchase-overlay').classList.add('open');
+  document.getElementById('purchase-sheet').style.transform = 'translate(-50%, 0)';
+}
+async function deletePurchase(id) {
+  if (!confirm('Delete this purchase? Any linked sale will also be removed.')) return;
+  try {
+    const linked = _sales.filter(s=>s.purchaseId===id);
+    for (const s of linked) await DB.deleteSale(s.id);
+    await DB.deletePurchase(id);
+    await loadAll();
+    closeSheet('detail-sheet');
+    closeSheet('purchase-sheet');
+    renderPurchases();
+    toast('Purchase deleted');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ─── SALES ─────────────────────────────────────────────────
+function populateSalePurchaseSelect(preselect) {
+  const skus = _skus;
+  const soldIds = new Set(_sales.filter(s=>!preselect||s.purchaseId!==preselect).map(s=>s.purchaseId));
+  const available = _purchases.filter(p=>!soldIds.has(p.id) && !p.sold);
+  const sel = document.getElementById('sale-purchase');
+  sel.innerHTML = available.length
+    ? available.map(p=>{
+        const sku = skus.find(s=>s.id===p.skuId)||{};
+        return `<option value="${p.id}" ${p.id===preselect?'selected':''}>${sku.product||'Unknown'} (${fmtDate(p.date)} · ${fmt(p.netCost)})</option>`;
+      }).join('')
+    : '<option value="">No unsold purchases available</option>';
+  onSalePurchaseChange();
+}
+function openSaleForPurchase(purchaseId) {
+  openSheet('sale-sheet');
+  populateSalePurchaseSelect(purchaseId);
+  document.getElementById('sale-purchase').value = purchaseId;
+  onSalePurchaseChange();
+}
+function onSalePurchaseChange() {
+  calcSaleProfit();
+}
+function calcSaleProfit() {
+  const purchaseId = document.getElementById('sale-purchase').value;
+  const purchase = _purchases.find(p=>p.id===purchaseId)||{};
+  const cost = +purchase.netCost||0;
+  const price = +document.getElementById('sale-price').value||0;
+  const shipCharged = +document.getElementById('sale-ship-charged').value||0;
+  const shipPaid = +document.getElementById('sale-ship-paid').value||0;
+  const feesPct = (+document.getElementById('sale-fees-pct').value||0) / 100;
+  const feesFixed = +document.getElementById('sale-fees-fixed').value||0;
+  const ga = +document.getElementById('sale-ga').value||0;
+  const gross = price + shipCharged;
+  const fees = gross * feesPct + feesFixed;
+  const net = gross - fees - shipPaid - ga;
+  const profit = net - cost;
+  const margin = cost > 0 ? (profit / cost * 100) : 0;
+  document.getElementById('s-cost').textContent = fmt(cost);
+  document.getElementById('s-gross').textContent = fmt(gross);
+  document.getElementById('s-net').textContent = fmt(net);
+  const profitEl = document.getElementById('s-profit');
+  profitEl.textContent = fmt(profit);
+  profitEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+  const marginEl = document.getElementById('s-margin');
+  marginEl.textContent = margin.toFixed(1) + '%';
+  marginEl.style.color = margin >= 0 ? 'var(--green)' : 'var(--red)';
+}
+async function saveSale() {
+  const purchaseId = document.getElementById('sale-purchase').value;
+  const price = +document.getElementById('sale-price').value;
+  if (!purchaseId || !price) { toast('Please select a purchase and enter a sale price'); return; }
+  const purchase = _purchases.find(p=>p.id===purchaseId)||{};
+  const cost = +purchase.netCost||0;
+  const shipCharged = +document.getElementById('sale-ship-charged').value||0;
+  const shipPaid = +document.getElementById('sale-ship-paid').value||0;
+  const feesPct = (+document.getElementById('sale-fees-pct').value||0)/100;
+  const feesFixed = +document.getElementById('sale-fees-fixed').value||0;
+  const ga = +document.getElementById('sale-ga').value||0;
+  const gross = price + shipCharged;
+  const fees = gross * feesPct + feesFixed;
+  const net = gross - fees - shipPaid - ga;
+  const profit = net - cost;
+  const editId = document.getElementById('sale-edit-id').value;
+  const s = {
+    id: editId || uid(),
+    purchaseId, skuId: purchase.skuId,
+    date: document.getElementById('sale-date').value,
+    source: document.getElementById('sale-source').value,
+    state: document.getElementById('sale-state').value.toUpperCase(),
+    unitPrice: price, grossSale: gross, fees, feesPct, feesFixed,
+    shippingCharged: shipCharged, shippingPaid: shipPaid, ga,
+    netSale: net, netCost: cost, profit,
+    margin: cost > 0 ? profit/cost : 0,
+    comments: document.getElementById('sale-comments').value,
+  };
+  try {
+    await DB.saveSale(s);
+    await loadAll();
+    closeSheet('sale-sheet');
+    renderSales();
+    toast(editId ? 'Sale updated' : 'Sale logged — ' + fmt(profit) + ' profit');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+function renderSales() {
+  const q = (document.getElementById('sale-search').value||'').toLowerCase();
+  const skus = _skus;
+  const purchases = _purchases;
+  let sales = [..._sales].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (q) sales = sales.filter(s=>{
+    const p = purchases.find(x=>x.id===s.purchaseId)||{};
+    const sku = skus.find(x=>x.id===p.skuId)||{};
+    return (sku.product+sku.brand+s.source).toLowerCase().includes(q);
+  });
+  const el = document.getElementById('sale-list');
+  if (sales.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No sales yet</div><div class="empty-sub">Tap + to log your first sale</div></div>';
+    return;
+  }
+  el.innerHTML = sales.map(s => {
+    const purchase = purchases.find(p=>p.id===s.purchaseId)||{};
+    const sku = skus.find(sk=>sk.id===purchase.skuId)||{};
+    const profit = +s.profit||0;
+    return `<div class="list-item" onclick="viewSaleDetail('${s.id}')">
+      <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
+      <div class="item-body">
+        <div class="item-name">${sku.product||'Unknown'}</div>
+        <div class="item-sub">${fmtDate(s.date)} · ${s.source||''} · ${s.state||''}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-amount ${profit>=0?'green':'red'}">${fmt(profit)}</div>
+        <div style="font-size:11px;color:var(--text3);">${((+s.margin||0)*100).toFixed(1)}% margin</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function viewSaleDetail(id) {
+  const s = _sales.find(x=>x.id===id);
+  if (!s) return;
+  const purchase = _purchases.find(p=>p.id===s.purchaseId)||{};
+  const sku = _skus.find(sk=>sk.id===purchase.skuId)||{};
+  const profit = +s.profit||0;
+  document.getElementById('detail-title').textContent = sku.product||'Sale';
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(s.date)}</span></div>
+    <div class="detail-row"><span class="detail-key">Channel</span><span class="detail-val">${s.source||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Buyer state</span><span class="detail-val">${s.state||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Sale price</span><span class="detail-val mono">${fmt(s.unitPrice)}</span></div>
+    <div class="detail-row"><span class="detail-key">Shipping charged</span><span class="detail-val mono">${fmt(s.shippingCharged)}</span></div>
+    <div class="detail-row"><span class="detail-key">Shipping paid</span><span class="detail-val mono">${fmt(s.shippingPaid)}</span></div>
+    <div class="detail-row"><span class="detail-key">Platform fees</span><span class="detail-val mono">${fmt(s.fees)}</span></div>
+    <div class="detail-row"><span class="detail-key">G&A</span><span class="detail-val mono">${fmt(s.ga)}</span></div>
+    <div class="detail-row"><span class="detail-key">Net cost basis</span><span class="detail-val mono">${fmt(s.netCost)}</span></div>
+    <div class="detail-row"><span class="detail-key">Net sale</span><span class="detail-val mono">${fmt(s.netSale)}</span></div>
+    <div class="detail-row"><span class="detail-key">Net profit</span><span class="detail-val mono" style="color:${profit>=0?'var(--green)':'var(--red)'};font-size:16px;">${fmt(profit)}</span></div>
+    <div class="detail-row"><span class="detail-key">Margin</span><span class="detail-val mono" style="color:${profit>=0?'var(--green)':'var(--red)'};">${((+s.margin||0)*100).toFixed(1)}%</span></div>
+    ${s.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${s.comments}</span></div>`:''}
+    <div style="margin-top:20px;" class="btn-row">
+      ${canDelete() ? `<button class="btn btn-danger" onclick="deleteSale('${id}')">Delete Sale</button>` : ''}
+    </div>
+  `;
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-sheet').style.transform = 'translate(-50%, 0)';
+}
+async function deleteSale(id) {
+  if (!confirm('Delete this sale?')) return;
+  try { await DB.deleteSale(id); await loadAll(); closeSheet('detail-sheet'); renderSales(); toast('Sale deleted'); } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ─── EXPENSES ─────────────────────────────────────────────
+const expCategoryIcon = { 'Cam Accessories':'🔧', 'Backdrop':'🖼️', 'Display Board':'📋', 'Shipping':'📦', 'Others':'💡' };
+let expFilter = 'all';
+function setExpFilter(el) {
+  document.querySelectorAll('#exp-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  expFilter = el.dataset.filter;
+  renderExpenses();
+}
+function calcExpenseCost() {
+  const price = +document.getElementById('expense-price').value||0;
+  const qty = +document.getElementById('expense-qty').value||1;
+  const discount = +document.getElementById('expense-discount').value||0;
+  const taxRate = (+document.getElementById('expense-tax').value||0)/100;
+  const gross = (price * qty) - discount;
+  const net = gross + (gross * taxRate);
+  document.getElementById('exp-net-display').textContent = fmt(net);
+}
+function openExpenseSheet() {
+  document.getElementById('expense-sheet-title').textContent = 'Log Expense';
+  document.getElementById('expense-edit-id').value = '';
+  document.getElementById('expense-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('expense-qty').value = 1;
+  document.getElementById('expense-price').value = '';
+  document.getElementById('expense-discount').value = 0;
+  document.getElementById('expense-tax').value = 6.35;
+  document.getElementById('expense-product').value = '';
+  document.getElementById('expense-source').value = '';
+  document.getElementById('exp-net-display').textContent = '$0.00';
+  document.getElementById('expense-btn-row').innerHTML = '<button class="btn btn-primary" onclick="saveExpense()">Log Expense</button>';
+  document.getElementById('expense-overlay').classList.add('open');
+  document.getElementById('expense-sheet').style.transform = 'translate(-50%, 0)';
+}
+async function saveExpense() {
+  const product = document.getElementById('expense-product').value.trim();
+  const price = +document.getElementById('expense-price').value;
+  if (!product || !price) { toast('Please fill in product and price'); return; }
+  const qty = +document.getElementById('expense-qty').value||1;
+  const discount = +document.getElementById('expense-discount').value||0;
+  const taxRate = (+document.getElementById('expense-tax').value||0)/100;
+  const gross = (price * qty) - discount;
+  const taxAmount = gross * taxRate;
+  const net = gross + taxAmount;
+  const editId = document.getElementById('expense-edit-id').value;
+  const e = {
+    id: editId || uid(),
+    type: document.getElementById('expense-type').value,
+    product, source: document.getElementById('expense-source').value,
+    date: document.getElementById('expense-date').value,
+    price, qty, discount, taxRate, grossAmount: gross, taxAmount, netAmount: net,
+  };
+  try {
+    await DB.saveExpense(e);
+    await loadAll();
+    closeSheet('expense-sheet');
+    renderExpenses();
+    toast(editId ? 'Expense updated' : 'Expense logged');
+  } catch(e2) { toast('❌ ' + e2.message); }
+}
+function renderExpenses() {
+  let expenses = [..._expenses].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (expFilter !== 'all') expenses = expenses.filter(e=>e.type===expFilter);
+  const allExpenses = _expenses;
+  const totalNet = allExpenses.reduce((s,e)=>s+(+e.netAmount||0),0);
+  const totalGross = allExpenses.reduce((s,e)=>s+(+e.grossAmount||0),0);
+  const totalTax = allExpenses.reduce((s,e)=>s+(+e.taxAmount||0),0);
+  document.getElementById('exp-metrics').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">TOTAL SPENT</div>
+      <div class="metric-value red">${fmt(totalNet)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">TAX PAID</div>
+      <div class="metric-value">${fmt(totalTax)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">ITEMS</div>
+      <div class="metric-value amber">${allExpenses.length}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">PRE-TAX TOTAL</div>
+      <div class="metric-value">${fmt(totalGross)}</div>
+    </div>
+  `;
+  const el = document.getElementById('expense-list');
+  if (expenses.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">No expenses yet</div><div class="empty-sub">Tap + to log your first expense</div></div>';
+    return;
+  }
+  el.innerHTML = expenses.map(e => `
+    <div class="list-item" onclick="viewExpenseDetail('${e.id}')">
+      <div class="item-icon icon-acc">${expCategoryIcon[e.type]||'💡'}</div>
+      <div class="item-body">
+        <div class="item-name">${e.product}</div>
+        <div class="item-sub">${e.type} · ${e.source||'—'} · ${fmtDate(e.date)}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-amount red">${fmt(e.netAmount)}</div>
+        <div style="font-size:11px;color:var(--text3);">qty ${e.qty||1}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function viewExpenseDetail(id) {
+  const e = _expenses.find(x=>x.id===id);
+  if (!e) return;
+  document.getElementById('detail-title').textContent = e.product;
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${e.type}</span></div>
+    <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${e.source||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(e.date)}</span></div>
+    <div class="detail-row"><span class="detail-key">Unit price</span><span class="detail-val mono">${fmt(e.price)}</span></div>
+    <div class="detail-row"><span class="detail-key">Qty</span><span class="detail-val">${e.qty||1}</span></div>
+    <div class="detail-row"><span class="detail-key">Discount</span><span class="detail-val mono">${fmt(e.discount)}</span></div>
+    <div class="detail-row"><span class="detail-key">Gross amount</span><span class="detail-val mono">${fmt(e.grossAmount)}</span></div>
+    <div class="detail-row"><span class="detail-key">Tax (${((+e.taxRate||0)*100).toFixed(2)}%)</span><span class="detail-val mono">${fmt(e.taxAmount)}</span></div>
+    <div class="detail-row"><span class="detail-key">Net amount</span><span class="detail-val mono" style="color:var(--red);font-size:16px;">${fmt(e.netAmount)}</span></div>
+    <div style="margin-top:20px;" class="btn-row">
+      ${canWrite() ? `<button class="btn btn-secondary" onclick="editExpense('${id}')">Edit</button>` : ''}
+      ${canDelete() ? `<button class="btn btn-danger" onclick="deleteExpense('${id}')">Delete</button>` : ''}
+    </div>
+  `;
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-sheet').style.transform = 'translate(-50%, 0)';
+}
+function editExpense(id) {
+  const e = _expenses.find(x=>x.id===id);
+  if (!e) return;
+  closeSheet('detail-sheet');
+  document.getElementById('expense-sheet-title').textContent = 'Edit Expense';
+  document.getElementById('expense-edit-id').value = id;
+  document.getElementById('expense-type').value = e.type;
+  document.getElementById('expense-product').value = e.product;
+  document.getElementById('expense-source').value = e.source||'';
+  document.getElementById('expense-date').value = e.date||'';
+  document.getElementById('expense-qty').value = e.qty||1;
+  document.getElementById('expense-price').value = e.price;
+  document.getElementById('expense-discount').value = e.discount||0;
+  document.getElementById('expense-tax').value = ((+e.taxRate||0)*100).toFixed(2);
+  calcExpenseCost();
+  document.getElementById('expense-btn-row').innerHTML = `
+    <button class="btn btn-danger" onclick="deleteExpense('${id}')">Delete</button>
+    <button class="btn btn-primary" onclick="saveExpense()">Update</button>
+  `;
+  document.getElementById('expense-overlay').classList.add('open');
+  document.getElementById('expense-sheet').style.transform = 'translate(-50%, 0)';
+}
+async function deleteExpense(id) {
+  if (!confirm('Delete this expense?')) return;
+  try { await DB.deleteExpense(id); await loadAll(); closeSheet('detail-sheet'); closeSheet('expense-sheet'); renderExpenses(); toast('Expense deleted'); } catch(e) { toast('❌ ' + e.message); }
+}
+
+
+
+
+// ─── AUTH ──────────────────────────────────────────────────
+let _authToken = null;
+let _userRole = 'user'; // 'dba' | 'admin' | 'user'
+let _userEmail = '';
+
+function parseRole(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return (payload.user_metadata && payload.user_metadata.role) || 'user';
+  } catch { return 'user'; }
+}
+
+function canWrite() { return _userRole === 'dba' || _userRole === 'admin'; }
+function canDelete() { return _userRole === 'dba'; }
+
+function applyRoleUI() {
+  // Show/hide all add buttons
+  document.querySelectorAll('.header-action').forEach(btn => {
+    btn.style.display = canWrite() ? 'flex' : 'none';
+  });
+  // Role badge in sign-out area
+  const badge = document.getElementById('role-badge');
+  if (badge) {
+    const colors = { dba:'var(--red)', admin:'var(--amber)', user:'var(--blue)' };
+    badge.textContent = _userRole.toUpperCase();
+    badge.style.color = colors[_userRole] || 'var(--text2)';
+    badge.style.borderColor = colors[_userRole] || 'var(--border)';
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  if (!email || !password) { showLoginError('Please enter email and password.'); return; }
+  btn.textContent = 'Signing in…'; btn.disabled = true; errEl.style.display = 'none';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { apikey: ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+    _authToken = data.access_token;
+    _userRole = parseRole(_authToken);
+    _userEmail = email;
+    localStorage.setItem('tn_auth_token', _authToken);
+    showApp();
+  } catch(e) {
+    showLoginError(e.message);
+    btn.textContent = 'Sign In'; btn.disabled = false;
+  }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+async function checkSession() {
+  const stored = localStorage.getItem('tn_auth_token');
+  if (!stored) return false;
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${stored}` }
+  });
+  if (res.ok) {
+    _authToken = stored;
+    _userRole = parseRole(stored);
+    return true;
+  }
+  localStorage.removeItem('tn_auth_token');
+  return false;
+}
+
+function signOut() {
+  localStorage.removeItem('tn_auth_token');
+  _authToken = null;
+  _userRole = 'user';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-email').value = '';
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  applyRoleUI();
+  init();
+}
+
+// Override DB to use auth token
+const _origGet = DB._get.bind(DB);
+DB._get = function(table, order) {
+  let url = `${SUPABASE_URL}/rest/v1/${table}?select=*`;
+  if (order) url += `&order=${order}`;
+  return fetch(url, { headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}` } })
+    .then(r => r.ok ? r.json() : r.text().then(t => { throw new Error(t); }));
+};
+DB._upsert = function(table, row) {
+  return fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(row)
+  }).then(r => { if (!r.ok) return r.text().then(t => { throw new Error(t); }); });
+};
+DB._delete = function(table, id) {
+  return fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}` }
+  }).then(r => { if (!r.ok) return r.text().then(t => { throw new Error(t); }); });
+};
+
+// ─── INIT ─────────────────────────────────────────────────
+async function init() {
+  await loadAll();
+  renderDashboard();
+}
+
+(async () => {
+  const valid = await checkSession();
+  if (valid) showApp();
+  // else login screen is already visible
+})();
+
+
+
+
+// ─── LINKED RECORDS ────────────────────────────────────────
+let linkedFilter = 'all';
+function setLinkedFilter(el) {
+  document.querySelectorAll('#linked-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  linkedFilter = el.dataset.filter;
+  renderLinked();
+}
+function renderLinked() {
+  const q = (document.getElementById('linked-search').value||'').toLowerCase();
+  const skus = _skus;
+  const purchases = _purchases;
+  const sales = _sales;
+  const saleByPurchase = {};
+  sales.forEach(s => { saleByPurchase[s.purchaseId] = s; });
+
+  let rows = [...purchases].sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  // filter
+  rows = rows.filter(p => {
+    const sku = skus.find(s=>s.id===p.skuId)||{};
+    const sale = saleByPurchase[p.id];
+    const sold = !!sale;
+    if (linkedFilter === 'sold' && !sold) return false;
+    if (linkedFilter === 'unsold' && sold) return false;
+    if (linkedFilter === 'trade' && !p.isTrade) return false;
+    if (q) {
+      const text = (sku.product+sku.brand+p.id+(sale?sale.id:'')+p.comments).toLowerCase();
+      if (!text.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const sold = rows.filter(p=>saleByPurchase[p.id]).length;
+  const unsold = rows.filter(p=>!saleByPurchase[p.id]).length;
+  document.getElementById('linked-subtitle').textContent = `${rows.length} records · ${sold} sold · ${unsold} unsold`;
+
+  const el = document.getElementById('linked-list');
+  if (rows.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🔗</div><div class="empty-text">No records found</div></div>';
+    return;
+  }
+
+  el.innerHTML = rows.map(p => {
+    const sku = skus.find(s=>s.id===p.skuId)||{};
+    const sale = saleByPurchase[p.id];
+    const profit = sale ? +sale.profit||0 : null;
+    const tradeIcon = p.isTrade ? '🔄 ' : '';
+    return `
+    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;" onclick="viewPurchaseDetail('${p.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;">${tradeIcon}${sku.product||'Unknown'}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${sku.brand||''} · ${sku.type||''}</div>
+        </div>
+        <span class="item-badge ${sale?'badge-sold':'badge-unsold'}">${sale?'Sold':'Unsold'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px;">
+        <div><span style="color:var(--text3);">Purchase</span> <span style="font-family:'DM Mono',monospace;color:var(--amber);">${p.id}</span></div>
+        <div><span style="color:var(--text3);">Sale</span> <span style="font-family:'DM Mono',monospace;color:${sale?'var(--green)':'var(--text3)'};">${sale?sale.id:'—'}</span></div>
+        <div><span style="color:var(--text3);">Cost</span> <span style="font-family:'DM Mono',monospace;">${'$'+(+p.netCost||0).toFixed(0)}</span></div>
+        <div><span style="color:var(--text3);">Profit</span> <span style="font-family:'DM Mono',monospace;color:${profit===null?'var(--text3)':profit>=0?'var(--green)':'var(--red)'};">${profit===null?'—':'$'+profit.toFixed(0)}</span></div>
+        <div><span style="color:var(--text3);">Bought</span> <span>${fmtDate(p.date)}</span></div>
+        <div><span style="color:var(--text3);">Sold</span> <span>${sale?fmtDate(sale.date):'—'}</span></div>
+      </div>
+      ${p.tradeSaleId?`<div style="margin-top:8px;font-size:11px;color:var(--blue);background:var(--blue-dim);padding:5px 8px;border-radius:6px;">🔄 Traded: gave <span style="font-family:'DM Mono',monospace;">${p.tradeSaleId}</span></div>`:''}
+      ${p.comments&&p.comments!='nan'?`<div style="margin-top:6px;font-size:11px;color:var(--text3);font-style:italic;">${p.comments.slice(0,80)}${p.comments.length>80?'…':''}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+renderDashboard();
+</script>
+</div><!-- end main-app -->
+</body>
+</html>
