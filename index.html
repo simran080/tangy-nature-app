@@ -315,10 +315,21 @@
     </div>
     <div class="tabs" id="sale-tabs">
       <div class="tab active" data-filter="all" onclick="setSaleFilter(this)">All</div>
+      <div class="tab" data-filter="paypal" onclick="setSaleFilter(this)">💸 Pending PayPal</div>
       <div class="tab" data-filter="profit" onclick="setSaleFilter(this)">Profit+</div>
       <div class="tab" data-filter="loss" onclick="setSaleFilter(this)">Loss</div>
       <div class="tab" data-filter="facebook" onclick="setSaleFilter(this)">Facebook</div>
       <div class="tab" data-filter="ebay" onclick="setSaleFilter(this)">eBay</div>
+    </div>
+    <div id="paypal-summary" style="display:none;margin:0 16px 12px;background:var(--bg2);border:0.5px solid var(--amber);border-radius:var(--radius);padding:14px 16px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--amber);margin-bottom:6px;">💸 PENDING PAYPAL TRANSFER</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:22px;font-weight:600;color:var(--green);" id="paypal-total">$0.00</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;" id="paypal-count">0 sales pending</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);text-align:right;line-height:1.5;">Tap a sale below<br>to release funds</div>
+      </div>
     </div>
     <div id="sale-count" style="font-size:12px;color:var(--text3);padding:0 16px 8px;"></div>
     <div class="list-wrap" id="sale-list" style="overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 280px);"></div>
@@ -738,6 +749,34 @@
   </div>
 </div>
 
+<!-- EDIT SALE TRADES SHEET -->
+<div class="sheet-overlay" id="sale-trades-overlay" onclick="closeSheet('sale-trades-sheet')"></div>
+<div class="sheet" id="sale-trades-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">Edit Trades</div>
+    <button class="sheet-close" onclick="closeSheet('sale-trades-sheet')">✕</button>
+  </div>
+  <div class="sheet-body">
+    <input type="hidden" id="trade-edit-sale-id">
+    <div class="form-group">
+      <label class="form-label">Mark as trade</label>
+      <div style="display:flex;gap:8px;">
+        <button id="te-cash" onclick="setTradeEditType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:#000;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">💵 Cash Sale</button>
+        <button id="te-trade" onclick="setTradeEditType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">🔄 Trade</button>
+      </div>
+    </div>
+    <div class="form-group" id="te-trade-group" style="display:none;">
+      <label class="form-label">Purchases received in this trade</label>
+      <div id="te-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+      <select class="form-select" id="te-purchase-select" onchange="addTeChip()">
+        <option value="">+ Add unsold purchase received…</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="saveEditSaleTrades()" style="margin-top:8px;">Save Trade Links</button>
+  </div>
+</div>
+
 <!-- EXPENSE SHEET -->
 <div class="sheet-overlay" id="expense-overlay" onclick="closeSheet('expense-sheet')"></div>
 <div class="sheet" id="expense-sheet">
@@ -905,6 +944,28 @@ function showLoader(on) {
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function nextSkuId() {
+  const nums = _skus.map(s => parseInt(s.id) || 0);
+  const max = nums.length ? Math.max(...nums) : 0;
+  const next = max + 1;
+  return next < 10 ? '0' + next : String(next);
+}
+
+function nextSaleId() {
+  const nums = _sales.map(s => {
+    const m = String(s.id).match(/^S?(\d+)$/i);
+    return m ? parseInt(m[1]) : 0;
+  });
+  const max = nums.length ? Math.max(...nums) : 0;
+  return 'S' + String(max + 1).padStart(3, '0');
+}
+
+function nextPurchaseId() {
+  const nums = _purchases.map(p => parseInt(p.id) || 0);
+  const max = nums.length ? Math.max(...nums) : 0;
+  return String(max + 1);
+}
 function fmt(n) { return '$' + (+n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function typeIcon(t) { return t==='Camera'?'📷':t==='Lens'?'🔭':t==='Drone'?'🚁':'🔧'; }
@@ -1225,7 +1286,7 @@ async function saveSKU() {
   if (!product || !brand) { toast('Please fill in brand and product name'); return; }
   const editId = document.getElementById('sku-edit-id').value;
   const sku = {
-    id: editId || uid(),
+    id: editId || nextSkuId(),
     brand, type: document.getElementById('sku-type').value,
     product, description: document.getElementById('sku-description').value.trim(),
     sensor: document.getElementById('sku-sensor').value,
@@ -1338,10 +1399,14 @@ function removeTradePurchase(id) {
 }
 
 function populateTradePurchaseSelect() {
-  const purchases = [..._purchases].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const soldIds = new Set(_sales.map(s => s.purchaseId));
+  const unsold = [..._purchases]
+    .filter(p => !soldIds.has(p.id) && !p.sold && !_selectedTradePurchaseIds.includes(p.id))
+    .sort((a,b) => new Date(b.date) - new Date(a.date));
   const sel = document.getElementById('sale-trade-purchase');
-  sel.innerHTML = '<option value="">+ Add a purchase received in trade…</option>' +
-    purchases.filter(p => !_selectedTradePurchaseIds.includes(p.id)).map(p => {
+  if (!sel) return;
+  sel.innerHTML = '<option value="">+ Add an unsold purchase received in trade…</option>' +
+    unsold.map(p => {
       const sku = _skus.find(s=>s.id===p.skuId)||{};
       return `<option value="${p.id}">${p.id} · ${sku.product||'Unknown'} · ${fmtDate(p.date)} · ${fmt(p.netCost)}</option>`;
     }).join('');
@@ -1433,7 +1498,7 @@ async function savePurchase() {
   const isTrade = document.getElementById('purchase-is-trade').value === '1';
   const tradeSaleId = isTrade ? document.getElementById('purchase-trade-sale').value : '';
   const p = {
-    id: editId || uid(),
+    id: editId || nextPurchaseId(),
     skuId, date: document.getElementById('purchase-date').value,
     source: document.getElementById('purchase-source').value,
     state: document.getElementById('purchase-state').value.toUpperCase(),
@@ -1685,7 +1750,7 @@ async function saveSale() {
   const profit = net - cost;
   const editId = document.getElementById('sale-edit-id').value;
   const s = {
-    id: editId || uid(),
+    id: editId || nextSaleId(),
     purchaseId, skuId: purchase.skuId,
     date: document.getElementById('sale-date').value,
     source: document.getElementById('sale-source').value,
@@ -1728,11 +1793,24 @@ function renderSales() {
     return (sku.product+sku.brand+s.source).toLowerCase().includes(q);
   });
 
+  // PayPal summary — always computed from ALL sales regardless of filter
+  const allPending = _sales.filter(s => !s.paypalReleased && (+s.profit||0) > 0);
+  const pendingTotal = allPending.reduce((t,s) => t+(+s.profit||0), 0);
+  const summaryEl = document.getElementById('paypal-summary');
+  const totalEl = document.getElementById('paypal-total');
+  const countEl2 = document.getElementById('paypal-count');
+  if (summaryEl && totalEl && countEl2) {
+    summaryEl.style.display = saleFilter === 'paypal' ? 'block' : 'none';
+    totalEl.textContent = fmt(pendingTotal);
+    countEl2.textContent = `${allPending.length} sale${allPending.length!==1?'s':''} pending`;
+  }
+
   // Filter
   if (saleFilter === 'profit')   sales = sales.filter(s => (+s.profit||0) > 0);
   if (saleFilter === 'loss')     sales = sales.filter(s => (+s.profit||0) < 0);
   if (saleFilter === 'facebook') sales = sales.filter(s => (s.source||'').toLowerCase().includes('facebook'));
   if (saleFilter === 'ebay')     sales = sales.filter(s => (s.source||'').toLowerCase().includes('ebay'));
+  if (saleFilter === 'paypal')   sales = sales.filter(s => !s.paypalReleased && (+s.profit||0) > 0);
 
   // Count
   const countEl = document.getElementById('sale-count');
@@ -1740,7 +1818,9 @@ function renderSales() {
 
   const el = document.getElementById('sale-list');
   if (sales.length === 0) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No sales found</div><div class="empty-sub">Try a different filter or search</div></div>';
+    el.innerHTML = saleFilter === 'paypal'
+      ? '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">All profits sent to PayPal!</div></div>'
+      : '<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No sales found</div><div class="empty-sub">Try a different filter or search</div></div>';
     return;
   }
   el.innerHTML = sales.map(s => {
@@ -1758,6 +1838,7 @@ function renderSales() {
         <div style="display:flex;gap:4px;justify-content:flex-end;margin-top:4px;">
           <div style="font-size:11px;color:var(--text3);">${((+s.margin||0)*100).toFixed(1)}% margin</div>
           ${s.isTrade?'<div class="item-badge" style="background:var(--blue-dim);color:var(--blue);">Trade</div>':''}
+          ${s.paypalReleased?'<div class="item-badge" style="background:var(--green-dim);color:var(--green);">PayPal ✓</div>':''}
         </div>
       </div>
     </div>`;
@@ -1769,8 +1850,27 @@ function viewSaleDetail(id) {
   const purchase = _purchases.find(p=>p.id===s.purchaseId)||{};
   const sku = _skus.find(sk=>sk.id===purchase.skuId)||{};
   const profit = +s.profit||0;
+
+  // Build trade block
+  let tradeBlock = '';
+  if (s.isTrade) {
+    const linkedIds = (() => { try { return JSON.parse(s.tradePurchaseIds||'[]'); } catch { return s.tradePurchaseId ? [s.tradePurchaseId] : []; } })();
+    const chips = linkedIds.map(pid => {
+      const lp = _purchases.find(p=>p.id===pid)||{};
+      const lsku = _skus.find(sk=>sk.id===lp.skuId)||{};
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-dim);border:0.5px solid var(--blue);color:var(--blue);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:500;margin:2px;">${lsku.product||pid}</span>`;
+    }).join('');
+    tradeBlock = `<div style="background:var(--blue-dim);border:0.5px solid var(--blue);border-radius:var(--radius-sm);padding:10px 12px;margin:8px 0;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:6px;">🔄 TRADE — received:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips||'<span style="font-size:12px;color:var(--blue);opacity:0.7;">No items linked</span>'}</div>
+    </div>`;
+  }
+
   document.getElementById('detail-title').textContent = sku.product||'Sale';
   document.getElementById('detail-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Sale ID</span><span class="detail-val mono">${s.id}</span></div>
+    <div class="detail-row"><span class="detail-key">Type</span><span class="detail-val"><span class="item-badge" style="${s.isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${s.isTrade?'🔄 Trade':'💵 Cash'}</span></span></div>
+    ${tradeBlock}
     <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(s.date)}</span></div>
     <div class="detail-row"><span class="detail-key">Channel</span><span class="detail-val">${s.source||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Buyer state</span><span class="detail-val">${s.state||'—'}</span></div>
@@ -1785,12 +1885,130 @@ function viewSaleDetail(id) {
     <div class="detail-row"><span class="detail-key">Margin</span><span class="detail-val mono" style="color:${profit>=0?'var(--green)':'var(--red)'};">${((+s.margin||0)*100).toFixed(1)}%</span></div>
     ${s.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${s.comments}</span></div>`:''}
     <div style="margin-top:20px;" class="btn-row">
-      ${canDelete() ? `<button class="btn btn-danger" onclick="deleteSale('${id}')">Delete Sale</button>` : ''}
+      ${canWrite() && !s.paypalReleased ? `<button class="btn btn-primary" style="background:var(--green);color:#fff;" onclick="releaseToPaypal('${id}')">💸 Release to PayPal</button>` : ''}
+      ${s.paypalReleased ? `<div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--green);font-weight:500;text-align:center;flex:1;">✅ Profit sent to PayPal</div>` : ''}
+      ${canWrite() ? `<button class="btn btn-secondary" onclick="openEditSaleTrades('${id}')">🔄 Trades</button>` : ''}
+      ${canDelete() ? `<button class="btn btn-danger" onclick="deleteSale('${id}')">Delete</button>` : ''}
     </div>
   `;
   document.getElementById('detail-overlay').classList.add('open');
   document.getElementById('detail-sheet').style.transform = 'translate(-50%, 0)';
 }
+let _teIds = []; // trade edit chip IDs
+
+function openEditSaleTrades(saleId) {
+  closeSheet('detail-sheet');
+  const s = _sales.find(x=>x.id===saleId)||{};
+  document.getElementById('trade-edit-sale-id').value = saleId;
+  // Init from existing trade data
+  try { _teIds = JSON.parse(s.tradePurchaseIds||'[]'); } catch { _teIds = s.tradePurchaseId ? [s.tradePurchaseId] : []; }
+  setTradeEditType(s.isTrade ? 'trade' : 'cash');
+  renderTeChips();
+  populateTeSelect();
+  document.getElementById('sale-trades-overlay').classList.add('open');
+  document.getElementById('sale-trades-sheet').style.transform = 'translate(-50%, 0)';
+}
+
+function setTradeEditType(type) {
+  const isTrade = type === 'trade';
+  const cashBtn = document.getElementById('te-cash');
+  const tradeBtn = document.getElementById('te-trade');
+  const group = document.getElementById('te-trade-group');
+  if (isTrade) {
+    cashBtn.style.cssText = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;';
+    tradeBtn.style.cssText = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--blue);background:var(--blue-dim);color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;';
+    group.style.display = 'block';
+    populateTeSelect();
+  } else {
+    cashBtn.style.cssText = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:#000;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;';
+    tradeBtn.style.cssText = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;';
+    group.style.display = 'none';
+    _teIds = [];
+    renderTeChips();
+  }
+}
+
+function populateTeSelect() {
+  const soldIds = new Set(_sales.map(s => s.purchaseId));
+  const unsold = [..._purchases]
+    .filter(p => !soldIds.has(p.id) && !p.sold && !_teIds.includes(p.id))
+    .sort((a,b) => new Date(b.date) - new Date(a.date));
+  const sel = document.getElementById('te-purchase-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">+ Add unsold purchase received…</option>' +
+    unsold.map(p => {
+      const sku = _skus.find(s=>s.id===p.skuId)||{};
+      return `<option value="${p.id}">${p.id} · ${sku.product||'Unknown'} · ${fmtDate(p.date)} · ${fmt(p.netCost)}</option>`;
+    }).join('');
+}
+
+function addTeChip() {
+  const sel = document.getElementById('te-purchase-select');
+  const id = sel.value;
+  if (!id || _teIds.includes(id)) return;
+  _teIds.push(id);
+  renderTeChips();
+  populateTeSelect();
+  sel.value = '';
+}
+
+function removeTeChip(id) {
+  _teIds = _teIds.filter(x => x !== id);
+  renderTeChips();
+  populateTeSelect();
+}
+
+function renderTeChips() {
+  const el = document.getElementById('te-chips');
+  if (!el) return;
+  if (_teIds.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = _teIds.map(id => {
+    const p = _purchases.find(x=>x.id===id)||{};
+    const sku = _skus.find(x=>x.id===p.skuId)||{};
+    const label = sku.product ? sku.product.split(' ').slice(0,3).join(' ') : id;
+    return `<div style="display:inline-flex;align-items:center;gap:5px;background:var(--blue-dim);border:0.5px solid var(--blue);color:var(--blue);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:500;">
+      ${label}<span onclick="removeTeChip('${id}')" style="cursor:pointer;font-size:14px;line-height:1;opacity:0.7;">×</span>
+    </div>`;
+  }).join('');
+}
+
+async function saveEditSaleTrades() {
+  const saleId = document.getElementById('trade-edit-sale-id').value;
+  const s = _sales.find(x=>x.id===saleId);
+  if (!s) return;
+  const cashBtn = document.getElementById('te-cash');
+  const isTrade = cashBtn.style.background !== 'var(--amber)' && cashBtn.style.background !== 'rgb(245, 166, 35)';
+  // Check the trade button styling instead
+  const tradeBtn = document.getElementById('te-trade');
+  const isTradeMode = tradeBtn.style.color === 'var(--blue)' || tradeBtn.style.borderColor === 'var(--blue)';
+  const updated = {
+    ...s,
+    isTrade: isTradeMode,
+    tradePurchaseIds: JSON.stringify(_teIds),
+    tradePurchaseId: _teIds[0]||'',
+  };
+  try {
+    await DB.saveSale(updated);
+    await loadAll();
+    closeSheet('sale-trades-sheet');
+    toast('Trade links saved');
+    viewSaleDetail(saleId);
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function releaseToPaypal(id) {
+  const s = _sales.find(x=>x.id===id);
+  if (!s) return;
+  if (!confirm(`Release ${fmt(+s.profit||0)} profit to PayPal for this sale?`)) return;
+  try {
+    await DB.saveSale({...s, paypalReleased: true});
+    await loadAll();
+    closeSheet('detail-sheet');
+    renderSales();
+    toast('💸 Profit released to PayPal');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
 async function deleteSale(id) {
   if (!confirm('Delete this sale?')) return;
   try { await DB.deleteSale(id); await loadAll(); closeSheet('detail-sheet'); renderSales(); toast('Sale deleted'); } catch(e) { toast('❌ ' + e.message); }
