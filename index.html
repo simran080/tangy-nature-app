@@ -225,11 +225,6 @@
     <div class="tabs" id="dash-year-tabs" style="margin-top:4px;"></div>
     <div class="tabs" id="dash-quarter-tabs" style="margin-top:0;display:none;"></div>
 
-    <div id="pwa-hint" class="pwa-banner" style="display:none">
-      <span>📱</span>
-      <span>Add to Home Screen in Safari for the full app experience.</span>
-    </div>
-
     <div class="card-grid" id="dash-metrics"></div>
 
     <div class="section-title">Unsold Inventory</div>
@@ -1242,10 +1237,6 @@ function renderDashboard() {
   tabsEl.innerHTML = `<div class="tab ${dashYear==='all'?'active':''}" onclick="setDashYear(this,'all')">All Time</div>`
     + years.map(y => `<div class="tab ${dashYear===y?'active':''}" onclick="setDashYear(this,'${y}')">${y}</div>`).join('');
 
-  // PWA hint for Safari
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.navigator.standalone;
-  document.getElementById('pwa-hint').style.display = (isIOS && !isStandalone) ? 'flex' : 'none';
 
   renderDashboardMetrics();
 }
@@ -2421,7 +2412,7 @@ function renderSummary() {
   if (['Camera','Lens','Accessory'].includes(summaryFilter))
     rows = rows.filter(r => r.sku.type === summaryFilter);
 
-  rows.sort((a,b) => b.qtyRemaining - a.qtyRemaining || (a.sku.product||'').localeCompare(b.sku.product||''));
+  rows.sort((a,b) => parseInt(a.sku.id) - parseInt(b.sku.id));
 
   const countEl = document.getElementById('summary-count');
   if (countEl) countEl.textContent = `${rows.length} ${rows.length === 1 ? 'product' : 'products'}`;
