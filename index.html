@@ -530,9 +530,12 @@
   </div>
   <div class="sheet-body">
     <input type="hidden" id="purchase-edit-id">
-    <div class="form-group">
+    <div class="form-group" style="position:relative;">
       <label class="form-label">Product (SKU)</label>
-      <select class="form-select" id="purchase-sku"></select>
+      <input class="form-input" id="purchase-sku-search" placeholder="Search products…" autocomplete="off"
+        oninput="filterSkuDropdown()" onfocus="filterSkuDropdown()" onblur="setTimeout(()=>hideSkuDropdown(),200)">
+      <input type="hidden" id="purchase-sku">
+      <div id="sku-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);z-index:50;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);"></div>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -1368,11 +1371,44 @@ function renderTradeChips(containerId, ids, removeFn) {
   }).join('');
 }
 function populatePurchaseSKUSelect() {
-  const sel = document.getElementById('purchase-sku');
-  const skus = _skus;
-  sel.innerHTML = skus.length
-    ? skus.map(s=>`<option value="${s.id}">${s.brand} – ${s.product}</option>`).join('')
-    : '<option value="">No SKUs yet — add one first</option>';
+  // Now a typeahead — just clear the search field when opening
+  document.getElementById('purchase-sku-search').value = '';
+  document.getElementById('purchase-sku').value = '';
+  document.getElementById('sku-dropdown').style.display = 'none';
+}
+
+function filterSkuDropdown() {
+  const q = document.getElementById('purchase-sku-search').value.toLowerCase();
+  const dropdown = document.getElementById('sku-dropdown');
+  const matches = _skus.filter(s =>
+    !q || (s.product+s.brand+s.type).toLowerCase().includes(q)
+  );
+  if (matches.length === 0) {
+    dropdown.style.display = 'none';
+    return;
+  }
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = matches.map(s => {
+    const label = (s.brand + ' – ' + s.product).replace(/"/g, '&quot;');
+    return `<div onclick="selectSku('${s.id}', &quot;${label}&quot;)"
+      style="padding:11px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);font-size:14px;"
+      onmousedown="event.preventDefault()"
+      onmouseover="this.style.background='var(--bg4)'"
+      onmouseout="this.style.background=''">
+      <div style="font-weight:500;color:var(--text);">${s.product}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;">${s.brand} · ${s.type} · SKU ${s.id}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectSku(id, label) {
+  document.getElementById('purchase-sku').value = id;
+  document.getElementById('purchase-sku-search').value = label;
+  document.getElementById('sku-dropdown').style.display = 'none';
+}
+
+function hideSkuDropdown() {
+  document.getElementById('sku-dropdown').style.display = 'none';
 }
 function calcPurchaseCost() {
   const price = +document.getElementById('purchase-price').value||0;
@@ -1528,6 +1564,9 @@ function editPurchase(id) {
   document.getElementById('purchase-sheet-title').textContent = 'Edit Purchase';
   document.getElementById('purchase-edit-id').value = id;
   document.getElementById('purchase-sku').value = p.skuId;
+  // Pre-fill typeahead label
+  const skuForEdit = _skus.find(s=>s.id===p.skuId)||{};
+  document.getElementById('purchase-sku-search').value = skuForEdit.product ? skuForEdit.brand+' – '+skuForEdit.product : p.skuId;
   document.getElementById('purchase-date').value = p.date;
   document.getElementById('purchase-source').value = p.source;
   document.getElementById('purchase-price').value = p.pricePerPiece;
