@@ -603,6 +603,17 @@
       </div>
     </div>
     <div class="form-group">
+      <label class="form-label">Item Condition</label>
+      <select class="form-select" id="purchase-condition">
+        <option value="">— Select condition —</option>
+        <option value="Like New">Like New</option>
+        <option value="Excellent">Excellent</option>
+        <option value="Good">Good</option>
+        <option value="Well Used">Well Used</option>
+        <option value="Heavily Used">Heavily Used</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label class="form-label">Acquisition Type</label>
       <div style="display:flex;gap:8px;margin-bottom:4px;">
         <button type="button" id="acq-cash" onclick="setAcqType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:#000;font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">💵 Cash Buy</button>
@@ -1008,6 +1019,7 @@ function openSheet(id) {
     document.getElementById('purchase-date').value = new Date().toISOString().slice(0,10);
     document.getElementById('purchase-btn-row').innerHTML = '<button class="btn btn-primary" onclick="savePurchase()">Log Purchase</button>';
     setAcqType('cash');
+    document.getElementById('purchase-condition').value = '';
   }
   if (id === 'sale-sheet') {
     document.getElementById('sale-sheet-title').textContent = 'Log Sale';
@@ -1496,7 +1508,6 @@ async function savePurchase() {
   const net = gross + ship + gas;
   const editId = document.getElementById('purchase-edit-id').value;
   const isTrade = document.getElementById('purchase-is-trade').value === '1';
-  const tradeSaleId = isTrade ? document.getElementById('purchase-trade-sale').value : '';
   const p = {
     id: editId || nextPurchaseId(),
     skuId, date: document.getElementById('purchase-date').value,
@@ -1506,8 +1517,9 @@ async function savePurchase() {
     shipping: ship, gas,
     netCost: net,
     paymentVia: document.getElementById('purchase-payment').value,
+    condition: document.getElementById('purchase-condition').value,
     comments: document.getElementById('purchase-comments').value,
-    isTrade, tradeSaleId: _selectedTradeSaleIds[0]||'',
+    isTrade,
     tradeSaleIds: JSON.stringify(_selectedTradeSaleIds),
   };
   try {
@@ -1568,6 +1580,7 @@ function renderPurchases() {
           <div class="item-badge ${sold?'badge-sold':'badge-unsold'}">${sold?'Sold':'Unsold'}</div>
           ${p.isTrade?'<div class="item-badge" style="background:var(--blue-dim);color:var(--blue);">Trade</div>':''}
         </div>
+        ${p.condition?`<div style="font-size:10px;font-weight:600;color:${['like new','excellent'].includes((p.condition||'').toLowerCase())?'var(--green)':p.condition.toLowerCase()==='good'?'var(--amber)':['well used','heavily used'].includes((p.condition||'').toLowerCase())?'var(--red)':'var(--red)'};margin-top:3px;text-align:right;">${p.condition}</div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -1578,7 +1591,7 @@ function viewPurchaseDetail(id) {
   const sku = _skus.find(s=>s.id===p.skuId)||{};
   const sale = _sales.find(s=>s.purchaseId===id);
   const isTrade = p.isTrade;
-  const tradeSaleId = p.tradeSaleId||'';
+  const tradeSaleIds = (() => { try { return JSON.parse(p.tradeSaleIds||'[]'); } catch { return []; } })();
   document.getElementById('detail-title').textContent = sku.product||'Purchase';
   const saleBlock = sale ? `
     <div style="margin:16px 0 8px;padding:12px 14px;background:var(--green-dim);border-radius:var(--radius-sm);border:0.5px solid var(--green);">
@@ -1589,9 +1602,10 @@ function viewPurchaseDetail(id) {
       <div class="detail-row" style="border-color:rgba(76,175,125,0.2)"><span class="detail-key">Net sale</span><span class="detail-val mono">${fmt(sale.netSale)}</span></div>
       <div class="detail-row" style="border-bottom:none"><span class="detail-key">Net profit</span><span class="detail-val mono" style="color:${(+sale.profit||0)>=0?'var(--green)':'var(--red)'};font-size:15px;">${fmt(sale.profit)}</span></div>
     </div>` : '';
-  const tradeBlock = isTrade && tradeSaleId ? `
+  const tradeBlock = isTrade && tradeSaleIds.length ? `
     <div style="margin:4px 0 8px;padding:10px 14px;background:var(--blue-dim);border-radius:var(--radius-sm);border:0.5px solid var(--blue);">
-      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:4px;">🔄 TRADE — given item: ${tradeSaleId}</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:6px;">🔄 TRADE — sales given away:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">${tradeSaleIds.map(sid=>`<span style="background:rgba(91,155,213,0.2);color:var(--blue);border-radius:20px;padding:2px 8px;font-size:12px;font-weight:500;">${sid}</span>`).join('')}</div>
     </div>` : '';
   document.getElementById('detail-body').innerHTML = `
     <div class="detail-row"><span class="detail-key">Purchase ID</span><span class="detail-val mono" style="color:var(--amber)">${p.id}</span></div>
@@ -1605,6 +1619,7 @@ function viewPurchaseDetail(id) {
     <div class="detail-row"><span class="detail-key">Gas</span><span class="detail-val mono">${fmt(p.gas)}</span></div>
     <div class="detail-row"><span class="detail-key">Net cost</span><span class="detail-val mono" style="color:var(--amber);font-size:15px;">${fmt(p.netCost)}</span></div>
     <div class="detail-row"><span class="detail-key">Payment</span><span class="detail-val">${p.paymentVia||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Condition</span><span class="detail-val">${p.condition ? `<span style="font-weight:600;color:${['like new','excellent'].includes((p.condition||'').toLowerCase())?'var(--green)':['good','well used'].includes((p.condition||'').toLowerCase())?'var(--amber)':'var(--red)'}">${p.condition}</span>` : '—'}</span></div>
     <div class="detail-row"><span class="detail-key">Acquisition</span><span class="detail-val"><span class="item-badge" style="${isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${isTrade?'🔄 Trade':'💵 Cash Buy'}</span></span></div>
     <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="item-badge ${sale?'badge-sold':'badge-unsold'}">${sale?'Sold':'Unsold'}</span></span></div>
     ${p.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${p.comments}</span></div>`:''}
@@ -1641,6 +1656,7 @@ function editPurchase(id) {
   document.getElementById('purchase-payment').value = p.paymentVia;
   document.getElementById('purchase-state').value = p.state||'';
   document.getElementById('purchase-comments').value = p.comments||'';
+  document.getElementById('purchase-condition').value = p.condition||'';
   calcPurchaseCost();
   document.getElementById('purchase-btn-row').innerHTML = `
     <button class="btn btn-secondary" onclick="deletePurchase('${id}')">Delete</button>
@@ -1760,7 +1776,6 @@ async function saveSale() {
     netSale: net, netCost: cost, profit,
     margin: cost > 0 ? profit/cost : 0,
     isTrade: _saleIsTrade,
-    tradePurchaseId: _selectedTradePurchaseIds[0]||'',
     tradePurchaseIds: JSON.stringify(_selectedTradePurchaseIds),
     comments: document.getElementById('sale-comments').value,
   };
@@ -1827,6 +1842,8 @@ function renderSales() {
     const purchase = purchases.find(p=>p.id===s.purchaseId)||{};
     const sku = skus.find(sk=>sk.id===purchase.skuId)||{};
     const profit = +s.profit||0;
+    const cond = purchase.condition||'';
+    const condColor = ['like new','excellent'].includes(cond.toLowerCase()) ? 'var(--green)' : ['good','well used'].includes(cond.toLowerCase()) ? 'var(--amber)' : cond ? 'var(--red)' : 'var(--text3)';
     return `<div class="list-item" onclick="viewSaleDetail('${s.id}')">
       <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
       <div class="item-body">
@@ -1835,8 +1852,9 @@ function renderSales() {
       </div>
       <div class="item-right">
         <div class="item-amount ${profit>=0?'green':'red'}">${fmt(profit)}</div>
-        <div style="display:flex;gap:4px;justify-content:flex-end;margin-top:4px;">
-          <div style="font-size:11px;color:var(--text3);">${((+s.margin||0)*100).toFixed(1)}% margin</div>
+        <div style="display:flex;gap:4px;justify-content:flex-end;margin-top:4px;align-items:center;">
+          <div style="font-size:11px;color:var(--text3);">${((+s.margin||0)*100).toFixed(1)}%</div>
+          ${cond ? `<div style="font-size:10px;font-weight:600;color:${condColor};">${cond.toUpperCase()}</div>` : ''}
           ${s.isTrade?'<div class="item-badge" style="background:var(--blue-dim);color:var(--blue);">Trade</div>':''}
           ${s.paypalReleased?'<div class="item-badge" style="background:var(--green-dim);color:var(--green);">PayPal ✓</div>':''}
         </div>
@@ -1867,8 +1885,11 @@ function viewSaleDetail(id) {
   }
 
   document.getElementById('detail-title').textContent = sku.product||'Sale';
+  const cond = purchase.condition||'';
+  const condColor = ['like new','excellent'].includes(cond.toLowerCase()) ? 'var(--green)' : ['good','well used'].includes(cond.toLowerCase()) ? 'var(--amber)' : cond ? 'var(--red)' : 'var(--text2)';
   document.getElementById('detail-body').innerHTML = `
     <div class="detail-row"><span class="detail-key">Sale ID</span><span class="detail-val mono">${s.id}</span></div>
+    <div class="detail-row"><span class="detail-key">Item condition</span><span class="detail-val">${cond ? `<span style="font-weight:600;color:${condColor};">${cond}</span>` : '—'}</span></div>
     <div class="detail-row"><span class="detail-key">Type</span><span class="detail-val"><span class="item-badge" style="${s.isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${s.isTrade?'🔄 Trade':'💵 Cash'}</span></span></div>
     ${tradeBlock}
     <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(s.date)}</span></div>
@@ -1985,7 +2006,6 @@ async function saveEditSaleTrades() {
     ...s,
     isTrade: isTradeMode,
     tradePurchaseIds: JSON.stringify(_teIds),
-    tradePurchaseId: _teIds[0]||'',
   };
   try {
     await DB.saveSale(updated);
@@ -2366,7 +2386,7 @@ function renderLinked() {
         <div><span style="color:var(--text3);">Bought</span> <span>${fmtDate(p.date)}</span></div>
         <div><span style="color:var(--text3);">Sold</span> <span>${sale?fmtDate(sale.date):'—'}</span></div>
       </div>
-      ${p.tradeSaleId?`<div style="margin-top:8px;font-size:11px;color:var(--blue);background:var(--blue-dim);padding:5px 8px;border-radius:6px;">🔄 Traded: gave <span style="font-family:'DM Mono',monospace;">${p.tradeSaleId}</span></div>`:''}
+      ${(()=>{try{const ids=JSON.parse(p.tradeSaleIds||'[]');return ids.length?`<div style="margin-top:8px;font-size:11px;color:var(--blue);background:var(--blue-dim);padding:5px 8px;border-radius:6px;">🔄 Traded: ${ids.join(', ')}</div>`:''}catch{return ''}})()}
       ${p.comments&&p.comments!='nan'?`<div style="margin-top:6px;font-size:11px;color:var(--text3);font-style:italic;">${p.comments.slice(0,80)}${p.comments.length>80?'…':''}</div>`:''}
     </div>`;
   }).join('');
