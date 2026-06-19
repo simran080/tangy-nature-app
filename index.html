@@ -952,30 +952,50 @@ function showLoader(on) {
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
+// Extracts numeric part from any SKU ID format (e.g. "06", "6", "TN-00006" → 6)
+function skuIdNum(id) {
+  const m = String(id||'').match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+// Normalizes any SKU ID format to canonical "TN-00006" form for comparison
+function normalizeSkuId(id) {
+  if (!id) return '';
+  return 'TN-' + String(skuIdNum(id)).padStart(5, '0');
+}
+
 function nextSkuId() {
-  const nums = _skus.map(s => parseInt(s.id) || 0);
-  const max = nums.length ? Math.max(...nums) : 0;
-  const next = max + 1;
-  return next < 10 ? '0' + next : String(next);
+  const max = _skus.length ? Math.max(..._skus.map(s => skuIdNum(s.id))) : 0;
+  return 'TN-' + String(max + 1).padStart(5, '0');
 }
 
+// Extracts numeric part from any Sale ID format (e.g. "S076", "S-00076" → 76)
+function saleIdNum(id) {
+  const m = String(id||'').match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+// Normalizes any Sale ID format to canonical "S-00076" form for comparison
+function normalizeSaleId(id) {
+  if (!id) return '';
+  return 'S-' + String(saleIdNum(id)).padStart(5, '0');
+}
 function nextSaleId() {
-  const nums = _sales.map(s => {
-    const m = String(s.id).match(/^S?(\d+)$/i);
-    return m ? parseInt(m[1]) : 0;
-  });
-  const max = nums.length ? Math.max(...nums) : 0;
-  return 'S' + String(max + 1).padStart(3, '0');
+  const max = _sales.length ? Math.max(..._sales.map(s => saleIdNum(s.id))) : 0;
+  return 'S-' + String(max + 1).padStart(5, '0');
 }
 
+// Extracts numeric part from any Purchase ID format (e.g. "P064", "P-00064" → 64)
+function purchaseIdNum(id) {
+  const m = String(id||'').match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+// Normalizes any Purchase ID format to canonical "P-00064" form for comparison
+function normalizePurchaseId(id) {
+  if (!id) return '';
+  return 'P-' + String(purchaseIdNum(id)).padStart(5, '0');
+}
 function nextPurchaseId() {
-  const nums = _purchases.map(p => {
-    const m = String(p.id).match(/^P?(\d+)$/i);
-    return m ? parseInt(m[1]) : 0;
-  });
-  const max = nums.length ? Math.max(...nums) : 0;
-  const next = max + 1;
-  return 'P' + String(next).padStart(3, '0');
+  const max = _purchases.length ? Math.max(..._purchases.map(p => purchaseIdNum(p.id))) : 0;
+  return 'P-' + String(max + 1).padStart(5, '0');
 }
 function fmt(n) { return '$' + (+n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
@@ -1155,8 +1175,8 @@ function renderDashboardMetrics() {
   const totalProfit = sales.reduce((s,s2) => s + (+s2.profit||0), 0);
   const totalExpenses = expenses.reduce((s,e) => s + (+e.netAmount||0), 0);
   const revToProfitPct = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
-  const soldIds = new Set(allSales.map(s=>s.purchaseId));
-  const unsoldPurchases = purchases.filter(p => !soldIds.has(p.id) && !p.sold);
+  const soldIds = new Set(allSales.map(s=>normalizePurchaseId(s.purchaseId)));
+  const unsoldPurchases = purchases.filter(p => !soldIds.has(normalizePurchaseId(p.id)) && !p.sold);
   const tiedUp = unsoldPurchases.reduce((s,p) => s + (+p.netCost||0), 0);
 
   // Avg days to sell
@@ -1208,7 +1228,7 @@ function renderDashboardMetrics() {
     unsoldEl.innerHTML = '<div class="empty"><div class="empty-text">No unsold inventory</div></div>';
   } else {
     unsoldEl.innerHTML = unsoldPurchases.map(p => {
-      const sku = skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
+      const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
       return `<div class="list-item" onclick="viewPurchaseDetail('${p.id}')">
         <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
         <div class="item-body">
@@ -1402,7 +1422,7 @@ function populateTradeSaleSelect() {
   sel.innerHTML = '<option value="">+ Add a sale given in trade…</option>' +
     sales.filter(s => !_selectedTradeSaleIds.includes(s.id)).map(s => {
       const p = _purchases.find(x=>x.id===s.purchaseId)||{};
-      const sku = _skus.find(x=>parseInt(x.id)===parseInt(p.skuId))||{};
+      const sku = _skus.find(x=>normalizeSkuId(x.id)===normalizeSkuId(p.skuId))||{};
       return `<option value="${s.id}">${s.id} · ${sku.product||'Unknown'} · ${fmtDate(s.date)} · ${fmt(s.netSale)}</option>`;
     }).join('');
 }
@@ -1440,15 +1460,15 @@ function removeTradePurchase(id) {
 }
 
 function populateTradePurchaseSelect() {
-  const soldIds = new Set(_sales.map(s => s.purchaseId));
+  const soldIds = new Set(_sales.map(s => normalizePurchaseId(s.purchaseId)));
   const unsold = [..._purchases]
-    .filter(p => !soldIds.has(p.id) && !p.sold && !_selectedTradePurchaseIds.includes(p.id))
+    .filter(p => !soldIds.has(normalizePurchaseId(p.id)) && !p.sold && !_selectedTradePurchaseIds.map(normalizePurchaseId).includes(normalizePurchaseId(p.id)))
     .sort((a,b) => new Date(b.date) - new Date(a.date));
   const sel = document.getElementById('sale-trade-purchase');
   if (!sel) return;
   sel.innerHTML = '<option value="">+ Add an unsold purchase received in trade…</option>' +
     unsold.map(p => {
-      const sku = _skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
+      const sku = _skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
       return `<option value="${p.id}">${p.id} · ${sku.product||'Unknown'} · ${fmtDate(p.date)} · ${fmt(p.netCost)}</option>`;
     }).join('');
 }
@@ -1464,7 +1484,7 @@ function renderTradeChips(containerId, ids, removeFn) {
     let label = id;
     if (sale) {
       const p = _purchases.find(x=>x.id===sale.purchaseId)||{};
-      const sku = _skus.find(x=>parseInt(x.id)===parseInt(p.skuId))||{};
+      const sku = _skus.find(x=>normalizeSkuId(x.id)===normalizeSkuId(p.skuId))||{};
       label = sku.product ? sku.product.split(' ').slice(0,3).join(' ') : id;
     } else if (purchase) {
       const sku = _skus.find(x=>x.id===purchase.skuId)||{};
@@ -1573,18 +1593,18 @@ function renderPurchases() {
   const q = (document.getElementById('purchase-search').value||'').toLowerCase();
   const skus = _skus;
   const sales = _sales;
-  const soldIds = new Set(sales.map(s=>s.purchaseId));
+  const soldIds = new Set(sales.map(s=>normalizePurchaseId(s.purchaseId)));
   let purchases = [..._purchases].sort((a,b)=>new Date(b.date)-new Date(a.date));
 
   // Apply search
   if (q) purchases = purchases.filter(p=>{
-    const sku = skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
+    const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
     return (sku.product+sku.brand+p.source+p.paymentVia).toLowerCase().includes(q);
   });
 
   // Apply sold/unsold/trade filter
-  if (purchaseFilter === 'sold')   purchases = purchases.filter(p => soldIds.has(p.id) || p.sold);
-  if (purchaseFilter === 'unsold') purchases = purchases.filter(p => !soldIds.has(p.id) && !p.sold);
+  if (purchaseFilter === 'sold')   purchases = purchases.filter(p => soldIds.has(normalizePurchaseId(p.id)) || p.sold);
+  if (purchaseFilter === 'unsold') purchases = purchases.filter(p => !soldIds.has(normalizePurchaseId(p.id)) && !p.sold);
   if (purchaseFilter === 'trade')  purchases = purchases.filter(p => p.isTrade);
 
   // Update count label
@@ -1597,8 +1617,8 @@ function renderPurchases() {
     return;
   }
   el.innerHTML = purchases.map(p => {
-    const sku = skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
-    const sold = soldIds.has(p.id) || p.sold;
+    const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
+    const sold = soldIds.has(normalizePurchaseId(p.id)) || p.sold;
     return `<div class="list-item" onclick="viewPurchaseDetail('${p.id}')">
       <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
       <div class="item-body">
@@ -1619,8 +1639,8 @@ function renderPurchases() {
 function viewPurchaseDetail(id) {
   const p = _purchases.find(x=>x.id===id);
   if (!p) return;
-  const sku = _skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
-  const sale = _sales.find(s=>s.purchaseId===id);
+  const sku = _skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
+  const sale = _sales.find(s=>normalizePurchaseId(s.purchaseId)===normalizePurchaseId(id));
   const isTrade = p.isTrade;
   const tradeSaleIds = (() => { try { return JSON.parse(p.tradeSaleIds||'[]'); } catch { return []; } })();
   document.getElementById('detail-title').textContent = sku.product||'Purchase';
@@ -1676,7 +1696,7 @@ function editPurchase(id) {
   document.getElementById('purchase-edit-id').value = id;
   document.getElementById('purchase-sku').value = p.skuId;
   // Pre-fill typeahead label
-  const skuForEdit = _skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
+  const skuForEdit = _skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
   document.getElementById('purchase-sku-search').value = skuForEdit.product ? skuForEdit.brand+' – '+skuForEdit.product : p.skuId;
   document.getElementById('purchase-date').value = p.date;
   document.getElementById('purchase-source').value = p.source;
@@ -1699,7 +1719,7 @@ function editPurchase(id) {
 async function deletePurchase(id) {
   if (!confirm('Delete this purchase? Any linked sale will also be removed.')) return;
   try {
-    const linked = _sales.filter(s=>s.purchaseId===id);
+    const linked = _sales.filter(s=>normalizePurchaseId(s.purchaseId)===normalizePurchaseId(id));
     for (const s of linked) await DB.deleteSale(s.id);
     await DB.deletePurchase(id);
     await loadAll();
@@ -1735,12 +1755,12 @@ function setSaleType(type) {
 
 function populateSalePurchaseSelect(preselect) {
   const skus = _skus;
-  const soldIds = new Set(_sales.filter(s=>!preselect||s.purchaseId!==preselect).map(s=>s.purchaseId));
-  const available = _purchases.filter(p=>!soldIds.has(p.id) && !p.sold);
+  const soldIds = new Set(_sales.filter(s=>!preselect||normalizePurchaseId(s.purchaseId)!==normalizePurchaseId(preselect)).map(s=>normalizePurchaseId(s.purchaseId)));
+  const available = _purchases.filter(p=>!soldIds.has(normalizePurchaseId(p.id)) && !p.sold);
   const sel = document.getElementById('sale-purchase');
   sel.innerHTML = available.length
     ? available.map(p=>{
-        const sku = skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
+        const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
         return `<option value="${p.id}" ${p.id===preselect?'selected':''}>${sku.product||'Unknown'} (${fmtDate(p.date)} · ${fmt(p.netCost)})</option>`;
       }).join('')
     : '<option value="">No unsold purchases available</option>';
@@ -1835,7 +1855,7 @@ function renderSales() {
   // Search
   if (q) sales = sales.filter(s=>{
     const p = purchases.find(x=>x.id===s.purchaseId)||{};
-    const sku = skus.find(x=>parseInt(x.id)===parseInt(p.skuId))||{};
+    const sku = skus.find(x=>normalizeSkuId(x.id)===normalizeSkuId(p.skuId))||{};
     return (sku.product+sku.brand+s.source).toLowerCase().includes(q);
   });
 
@@ -1981,15 +2001,15 @@ function setTradeEditType(type) {
 }
 
 function populateTeSelect() {
-  const soldIds = new Set(_sales.map(s => s.purchaseId));
+  const soldIds = new Set(_sales.map(s => normalizePurchaseId(s.purchaseId)));
   const unsold = [..._purchases]
-    .filter(p => !soldIds.has(p.id) && !p.sold && !_teIds.includes(p.id))
+    .filter(p => !soldIds.has(normalizePurchaseId(p.id)) && !p.sold && !_teIds.map(normalizePurchaseId).includes(normalizePurchaseId(p.id)))
     .sort((a,b) => new Date(b.date) - new Date(a.date));
   const sel = document.getElementById('te-purchase-select');
   if (!sel) return;
   sel.innerHTML = '<option value="">+ Add unsold purchase received…</option>' +
     unsold.map(p => {
-      const sku = _skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
+      const sku = _skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
       return `<option value="${p.id}">${p.id} · ${sku.product||'Unknown'} · ${fmtDate(p.date)} · ${fmt(p.netCost)}</option>`;
     }).join('');
 }
@@ -2016,7 +2036,7 @@ function renderTeChips() {
   if (_teIds.length === 0) { el.innerHTML = ''; return; }
   el.innerHTML = _teIds.map(id => {
     const p = _purchases.find(x=>x.id===id)||{};
-    const sku = _skus.find(x=>parseInt(x.id)===parseInt(p.skuId))||{};
+    const sku = _skus.find(x=>normalizeSkuId(x.id)===normalizeSkuId(p.skuId))||{};
     const label = sku.product ? sku.product.split(' ').slice(0,3).join(' ') : id;
     return `<div style="display:inline-flex;align-items:center;gap:5px;background:var(--blue-dim);border:0.5px solid var(--blue);color:var(--blue);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:500;">
       ${label}<span onclick="removeTeChip('${id}')" style="cursor:pointer;font-size:14px;line-height:1;opacity:0.7;">×</span>
@@ -2374,7 +2394,7 @@ function renderLinked() {
 
   // filter
   rows = rows.filter(p => {
-    const sku = skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
+    const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
     const sale = saleByPurchase[p.id];
     const sold = !!sale;
     if (linkedFilter === 'sold' && !sold) return false;
@@ -2398,7 +2418,7 @@ function renderLinked() {
   }
 
   el.innerHTML = rows.map(p => {
-    const sku = skus.find(s=>parseInt(s.id)===parseInt(p.skuId))||{};
+    const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
     const sale = saleByPurchase[p.id];
     const profit = sale ? +sale.profit||0 : null;
     const tradeIcon = p.isTrade ? '🔄 ' : '';
@@ -2436,12 +2456,12 @@ function setSummaryFilter(el) {
 
 function renderSummary() {
   const q = (document.getElementById('summary-search').value||'').toLowerCase();
-  const soldIds = new Set(_sales.map(s => s.purchaseId));
+  const soldIds = new Set(_sales.map(s => normalizePurchaseId(s.purchaseId)));
 
   let rows = _skus.map(sku => {
     const purchases = _purchases.filter(p => parseInt(p.skuId) === parseInt(sku.id));
     const qtyPurchased = purchases.reduce((s, p) => s + (+p.qty||1), 0);
-    const sold = purchases.filter(p => soldIds.has(p.id) || p.sold);
+    const sold = purchases.filter(p => soldIds.has(normalizePurchaseId(p.id)) || p.sold);
     const qtySold = sold.reduce((s, p) => s + (+p.qty||1), 0);
     const qtyRemaining = qtyPurchased - qtySold;
     return { sku, qtyPurchased, qtySold, qtyRemaining };
@@ -2454,7 +2474,7 @@ function renderSummary() {
   if (['Camera','Lens','Accessory'].includes(summaryFilter))
     rows = rows.filter(r => r.sku.type === summaryFilter);
 
-  rows.sort((a,b) => parseInt(a.sku.id) - parseInt(b.sku.id));
+  rows.sort((a,b) => skuIdNum(a.sku.id) - skuIdNum(b.sku.id));
 
   const countEl = document.getElementById('summary-count');
   if (countEl) countEl.textContent = `${rows.length} ${rows.length === 1 ? 'product' : 'products'}`;
