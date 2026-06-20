@@ -480,10 +480,6 @@
       <label class="form-label">Product name</label>
       <input class="form-input" id="sku-product" placeholder="Sony Alpha 7 III">
     </div>
-    <div class="form-group">
-      <label class="form-label">Description</label>
-      <input class="form-input" id="sku-description" placeholder="Full-frame interchangeable lens camera">
-    </div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Sensor</label>
@@ -1335,7 +1331,7 @@ function renderSKUs() {
   `).join('');
 }
 function clearSkuForm() {
-  ['sku-brand','sku-product','sku-description','sku-mp','sku-fps','sku-video','sku-lens-type','sku-aperture'].forEach(id=>{
+  ['sku-brand','sku-product','sku-mp','sku-fps','sku-video','sku-lens-type','sku-aperture'].forEach(id=>{
     document.getElementById(id).value='';
   });
   document.getElementById('sku-type').value='Camera';
@@ -1349,7 +1345,7 @@ async function saveSKU() {
   const sku = {
     id: editId || nextSkuId(),
     brand, type: document.getElementById('sku-type').value,
-    product, description: document.getElementById('sku-description').value.trim(),
+    product,
     sensor: document.getElementById('sku-sensor').value,
     mp: document.getElementById('sku-mp').value,
     fps: document.getElementById('sku-fps').value,
@@ -1373,7 +1369,6 @@ function editSKU(id) {
   document.getElementById('sku-brand').value = sku.brand||'';
   document.getElementById('sku-type').value = sku.type||'Camera';
   document.getElementById('sku-product').value = sku.product||'';
-  document.getElementById('sku-description').value = sku.description||'';
   document.getElementById('sku-sensor').value = sku.sensor||'';
   document.getElementById('sku-mp').value = sku.mp||'';
   document.getElementById('sku-fps').value = sku.fps||'';
