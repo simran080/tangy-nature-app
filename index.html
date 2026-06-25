@@ -2605,6 +2605,7 @@ function qtRenderResults(res) {
         <div>Items processed: <b style="color:var(--text2);">${res.debug.items_processed}</b></div>
         <div>Items added to quote: <b style="color:${res.debug.items_ok>0?'var(--green)':'var(--red)'};">${res.debug.items_ok}</b></div>
         <div>Price lines found: <b style="color:${res.debug.quote_lines_found>0?'var(--green)':'var(--red)'};">${res.debug.quote_lines_found}</b></div>
+        <div style="margin-top:8px;padding:6px;background:var(--bg3);border-radius:4px;font-family:'DM Mono',monospace;word-break:break-all;white-space:pre-wrap;max-height:200px;overflow-y:auto;">${JSON.stringify(res,null,2)}</div>
         ${(res.quote_lines||res.items_added||[]).length ? (res.quote_lines||res.items_added).map(i=>`<div style="margin-top:4px;padding:6px 8px;background:var(--bg3);border-radius:6px;font-size:11px;">
           <div><b>${i.query||i.name||'—'}</b> · ${i.condition||'—'}</div>
           <div style="color:${i.keh_sell_price||i.ok?'var(--green)':'var(--red)'};">
