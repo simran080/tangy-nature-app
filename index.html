@@ -2598,7 +2598,21 @@ async function qtGetQuote() {
 function qtRenderResults(res) {
   const el = document.getElementById('qt-results');
   if (!res || !res.found) {
-    el.innerHTML = `<div style="background:var(--red-dim);border:0.5px solid var(--red);border-radius:var(--radius);padding:14px;color:var(--red);font-size:13px;margin-bottom:16px;">⚠️ ${res&&res.error||'No results returned'}</div>`;
+    const debug = res?.debug ? `
+      <div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.8;">
+        <div>Items requested: <b style="color:var(--text2);">${res.debug.items_requested}</b></div>
+        <div>Items processed: <b style="color:var(--text2);">${res.debug.items_processed}</b></div>
+        <div>Items added to quote: <b style="color:${res.debug.items_ok>0?'var(--green)':'var(--red)'};">${res.debug.items_ok}</b></div>
+        <div>Price lines found: <b style="color:${res.debug.quote_lines_found>0?'var(--green)':'var(--red)'};">${res.debug.quote_lines_found}</b></div>
+        ${res.items_added?.length ? res.items_added.map(i=>`<div style="margin-top:4px;padding:6px 8px;background:var(--bg3);border-radius:6px;">
+          <div>${i.query} · ${i.condition}</div>
+          <div style="color:${i.ok?'var(--green)':'var(--red)'};">Added: ${i.ok?'✓ Yes':'✗ No'}${i.error?' — '+i.error:''}</div>
+          <div>Matched: ${i.matched||'—'}</div>
+        </div>`).join('') : ''}
+      </div>` : '';
+    el.innerHTML = `<div style="background:var(--red-dim);border:0.5px solid var(--red);border-radius:var(--radius);padding:14px;color:var(--red);font-size:13px;margin-bottom:16px;">
+      ⚠️ ${res?.error||'No results returned'}${debug}
+    </div>`;
     return;
   }
   const lines = res.quote_lines || [];
