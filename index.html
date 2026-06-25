@@ -2600,17 +2600,25 @@ function qtRenderResults(res) {
   if (!res || !res.found) {
     const debug = res?.debug ? `
       <div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.8;">
+        ${res.keh_reachable !== undefined ? `<div>KEH reachable: <b style="color:${res.keh_reachable?'var(--green)':'var(--red)'};">${res.keh_reachable?'✓ Yes':'✗ No'}</b> — ${res.keh_test_title||''}</div>` : ''}
         <div>Items requested: <b style="color:var(--text2);">${res.debug.items_requested}</b></div>
         <div>Items processed: <b style="color:var(--text2);">${res.debug.items_processed}</b></div>
         <div>Items added to quote: <b style="color:${res.debug.items_ok>0?'var(--green)':'var(--red)'};">${res.debug.items_ok}</b></div>
         <div>Price lines found: <b style="color:${res.debug.quote_lines_found>0?'var(--green)':'var(--red)'};">${res.debug.quote_lines_found}</b></div>
-        ${res.items_added?.length ? res.items_added.map(i=>`<div style="margin-top:4px;padding:6px 8px;background:var(--bg3);border-radius:6px;">
-          <div>${i.query} · ${i.condition}</div>
-          <div style="color:${i.ok?'var(--green)':'var(--red)'};">Added: ${i.ok?'✓ Yes':'✗ No'}${i.error?' — '+i.error:''}</div>
-          <div>Matched: ${i.matched||'—'}</div>
-          ${i.pageH1?`<div>Page heading: ${i.pageH1}</div>`:''}
-          ${i.allInputs?.length?`<div style="margin-top:4px;">Inputs found on page:<br>${i.allInputs.map(inp=>`· ${inp.type||'text'} id="${inp.id}" name="${inp.name}" placeholder="${inp.placeholder}"`).join('<br>')}</div>`:'<div style="color:var(--red);">No inputs found on page at all</div>'}
-        </div>`).join('') : ''}
+        ${(res.quote_lines||res.items_added||[]).length ? (res.quote_lines||res.items_added).map(i=>`<div style="margin-top:4px;padding:6px 8px;background:var(--bg3);border-radius:6px;font-size:11px;">
+          <div><b>${i.query||i.name||'—'}</b> · ${i.condition||'—'}</div>
+          <div style="color:${i.keh_sell_price||i.ok?'var(--green)':'var(--red)'};">
+            ${i.keh_sell_price ? '✓ KEH sell: $'+i.keh_sell_price : (i.ok?'✓ Added':'✗ No price')}
+            ${i.error?' — '+i.error:''}
+          </div>
+          ${i.matched?`<div>Matched: ${i.matched}</div>`:''}
+          ${i.product_url?`<div style="word-break:break-all;color:var(--text3);">${i.product_url}</div>`:''}
+          ${i.grades_found?`<div>Grades: ${JSON.stringify(i.grades_found)}</div>`:''}
+          ${i.allInputs?.length?`<div>Inputs: ${i.allInputs.map(inp=>`id="${inp.id}" placeholder="${inp.placeholder}"`).join(' | ')}</div>`:''}
+          ${i.allInputs?.length===0?'<div style="color:var(--red);">No inputs on page</div>':''}
+          ${i.pageH1?`<div>Page: ${i.pageH1}</div>`:''}
+          ${i.pageTitle?`<div>Title: ${i.pageTitle}</div>`:''}
+        </div>`).join('') : '<div style="color:var(--text3);margin-top:4px;">No item details returned</div>'}
       </div>` : '';
     el.innerHTML = `<div style="background:var(--red-dim);border:0.5px solid var(--red);border-radius:var(--radius);padding:14px;color:var(--red);font-size:13px;margin-bottom:16px;">
       ⚠️ ${res?.error||'No results returned'}${debug}
