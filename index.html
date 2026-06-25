@@ -2608,6 +2608,8 @@ function qtRenderResults(res) {
           <div>${i.query} · ${i.condition}</div>
           <div style="color:${i.ok?'var(--green)':'var(--red)'};">Added: ${i.ok?'✓ Yes':'✗ No'}${i.error?' — '+i.error:''}</div>
           <div>Matched: ${i.matched||'—'}</div>
+          ${i.pageH1?`<div>Page heading: ${i.pageH1}</div>`:''}
+          ${i.allInputs?.length?`<div style="margin-top:4px;">Inputs found on page:<br>${i.allInputs.map(inp=>`· ${inp.type||'text'} id="${inp.id}" name="${inp.name}" placeholder="${inp.placeholder}"`).join('<br>')}</div>`:'<div style="color:var(--red);">No inputs found on page at all</div>'}
         </div>`).join('') : ''}
       </div>` : '';
     el.innerHTML = `<div style="background:var(--red-dim);border:0.5px solid var(--red);border-radius:var(--radius);padding:14px;color:var(--red);font-size:13px;margin-bottom:16px;">
