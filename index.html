@@ -2499,8 +2499,11 @@ function renderSummary() {
 }
 
 // ─── QUOTE TOOL ────────────────────────────────────────────
-const EDGE_FN_URL = 'https://euulsabzjzrdrhmgzxfu.supabase.co/functions/v1/keh-quote';
-const COND_LABEL_QT = {'Like New Minus':'Like New','Excellent Plus':'Excellent','Excellent':'Good','Bargain':'Well Used'};
+const QT_URL = 'http://localhost:8766';
+const COND_LABEL_QT = {
+  'Like New Minus':'Like New','Excellent Plus':'Excellent+',
+  'Excellent':'Excellent','Bargain':'Bargain'
+};
 let _qtItems = [];
 let _qtNextId = 1;
 let _qtDdTimer = null;
@@ -2510,11 +2513,25 @@ function openQuoteTool() {
   document.getElementById('quote-overlay').style.display = 'block';
   setTimeout(() => { document.getElementById('quote-sheet').style.transform = 'translate(-50%, 0)'; }, 10);
   setTimeout(() => document.getElementById('qt-input').focus(), 350);
+  checkQtServer();
 }
 function closeQuoteTool() {
   document.getElementById('quote-sheet').style.transform = 'translate(-50%, 100%)';
   setTimeout(() => { document.getElementById('quote-overlay').style.display = 'none'; }, 300);
 }
+
+// Check if local Python server is running
+async function checkQtServer() {
+  const hint = document.getElementById('qt-server-hint');
+  try {
+    const res = await fetch(`${QT_URL}/api/db/search?q=test`, { signal: AbortSignal.timeout(2000) });
+    if (res.ok) { hint.style.display = 'none'; return true; }
+  } catch {}
+  hint.style.display = 'block';
+  return false;
+}
+
+// Autocomplete — calls Python server's /api/db/search (searches Supabase skus table)
 function qtSearchDb() {
   clearTimeout(_qtDdTimer);
   const v = document.getElementById('qt-input').value.trim();
@@ -2522,21 +2539,38 @@ function qtSearchDb() {
   if (v.length < 2) { dd.style.display = 'none'; return; }
   _qtDdTimer = setTimeout(async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/skus?select=id,product,brand&product=ilike.*${encodeURIComponent(v)}*&limit=8`, {
-        headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}` }
-      });
+      const res = await fetch(`${QT_URL}/api/db/search?q=${encodeURIComponent(v)}`,
+        { signal: AbortSignal.timeout(3000) });
       const data = await res.json();
       if (!data.length) { dd.style.display = 'none'; return; }
-      dd.innerHTML = data.map((s,i) => `<div class="qt-dd-item" data-idx="${i}"
+      dd.innerHTML = data.map((s, i) => `<div class="qt-dd-item" data-idx="${i}"
         style="padding:10px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);font-size:13px;"
-        onmousedown="event.preventDefault()" onmouseover="qtDdHover(${i})" onclick="qtPickDd('${s.product.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
-        <span style="font-weight:500;color:var(--text);">${s.product}</span>
-        <span style="font-size:11px;color:var(--text3);margin-left:6px;">${s.brand} · ${s.id}</span>
+        onmousedown="event.preventDefault()" onmouseover="qtDdHover(${i})"
+        onclick="qtPickDd('${(s.product_name||'').replace(/'/g,"\'")}')">
+        <span style="font-weight:500;color:var(--text);">${s.product_name||''}</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:6px;">${s.brand||''} · ${s.sku||''}</span>
       </div>`).join('');
       dd.style.display = 'block'; _qtDdIdx = -1;
-    } catch { dd.style.display = 'none'; }
+    } catch {
+      // Server not running — fall back to Supabase
+      try {
+        const res2 = await fetch(`${SUPABASE_URL}/rest/v1/skus?select=id,product,brand&product=ilike.*${encodeURIComponent(v)}*&limit=8`,
+          { headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}` } });
+        const data2 = await res2.json();
+        if (!data2.length) { dd.style.display = 'none'; return; }
+        dd.innerHTML = data2.map((s, i) => `<div class="qt-dd-item" data-idx="${i}"
+          style="padding:10px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);font-size:13px;"
+          onmousedown="event.preventDefault()" onmouseover="qtDdHover(${i})"
+          onclick="qtPickDd('${(s.product||'').replace(/'/g,"\'")}')">
+          <span style="font-weight:500;color:var(--text);">${s.product||''}</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:6px;">${s.brand||''} · ${s.id||''}</span>
+        </div>`).join('');
+        dd.style.display = 'block'; _qtDdIdx = -1;
+      } catch { dd.style.display = 'none'; }
+    }
   }, 200);
 }
+
 function qtDdHover(idx) {
   _qtDdIdx = idx;
   [...document.querySelectorAll('.qt-dd-item')].forEach((el,i) => el.style.background = i===idx?'var(--bg4)':'');
@@ -2550,7 +2584,7 @@ function qtKeyDown(e) {
   const open = document.getElementById('qt-dropdown').style.display !== 'none' && items.length;
   if (e.key === 'ArrowDown' && open) { e.preventDefault(); qtDdHover(Math.min(_qtDdIdx+1, items.length-1)); }
   else if (e.key === 'ArrowUp' && open) { e.preventDefault(); qtDdHover(Math.max(_qtDdIdx-1, 0)); }
-  else if (e.key === 'Enter') { if (open && _qtDdIdx >= 0) { e.preventDefault(); qtPickDd(items[_qtDdIdx].dataset.name); } else qtAddItem(); }
+  else if (e.key === 'Enter') { if (open && _qtDdIdx >= 0) { e.preventDefault(); qtPickDd(items[_qtDdIdx].querySelector('span').textContent); } else qtAddItem(); }
   else if (e.key === 'Escape') { document.getElementById('qt-dropdown').style.display = 'none'; }
 }
 function qtAddItem() {
@@ -2575,94 +2609,128 @@ function qtRenderQueue() {
       <button onclick="qtRemoveItem(${i.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 2px;line-height:1;">✕</button>
     </div>`).join('') + '</div>';
 }
+
 async function qtGetQuote() {
   if (!_qtItems.length) return;
   const btn = document.getElementById('qt-get-btn');
   const resultsEl = document.getElementById('qt-results');
-  btn.disabled = true; btn.textContent = 'Fetching…';
+  const hint = document.getElementById('qt-server-hint');
+
+  // Check server first
+  const serverOk = await checkQtServer();
+  if (!serverOk) {
+    hint.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Fetching KEH prices…';
   resultsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:14px;">
     <div style="width:28px;height:28px;border:3px solid var(--bg4);border-top-color:var(--amber);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px;"></div>
-    Getting live KEH prices…<br><span style="font-size:12px;color:var(--text3);margin-top:6px;display:block;">~20–30 seconds</span>
+    Getting live KEH prices…<br>
+    <span style="font-size:12px;color:var(--text3);margin-top:6px;display:block;">First quote ~25s (Chromium launch). Subsequent ~15s.</span>
   </div>`;
+
   try {
-    const res = await fetch(EDGE_FN_URL, {
+    const res = await fetch(`${QT_URL}/api/quote`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_authToken}` },
-      body: JSON.stringify({ items: _qtItems.map(i => ({ query: i.query, condition: i.condition })) })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: _qtItems.map(i => ({ query: i.query, condition: i.condition })) }),
     });
     qtRenderResults(await res.json());
   } catch(e) {
-    resultsEl.innerHTML = `<div style="background:var(--red-dim);border:0.5px solid var(--red);border-radius:var(--radius);padding:14px;color:var(--red);font-size:13px;margin-bottom:16px;">❌ ${e.message||'Edge Function not reachable. Check deployment.'}</div>`;
-  } finally { btn.disabled = false; btn.textContent = 'Get Quote'; btn.style.opacity = '1'; }
+    resultsEl.innerHTML = `<div style="background:var(--red-dim);border:0.5px solid var(--red);border-radius:var(--radius);padding:14px;color:var(--red);font-size:13px;margin-bottom:16px;">
+      ❌ ${e.message||'Could not reach Python server. Is it running?'}
+    </div>`;
+    hint.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Get Quote'; btn.style.opacity = '1';
+  }
 }
+
 function qtRenderResults(res) {
   const el = document.getElementById('qt-results');
   if (!res || !res.found) {
-    const debug = res?.debug ? `
-      <div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.8;">
-        ${res.keh_reachable !== undefined ? `<div>KEH reachable: <b style="color:${res.keh_reachable?'var(--green)':'var(--red)'};">${res.keh_reachable?'✓ Yes':'✗ No'}</b> — ${res.keh_test_title||''}</div>` : ''}
-        <div>Items requested: <b style="color:var(--text2);">${res.debug.items_requested}</b></div>
-        <div>Items processed: <b style="color:var(--text2);">${res.debug.items_processed}</b></div>
-        <div>Items added to quote: <b style="color:${res.debug.items_ok>0?'var(--green)':'var(--red)'};">${res.debug.items_ok}</b></div>
-        <div>Price lines found: <b style="color:${res.debug.quote_lines_found>0?'var(--green)':'var(--red)'};">${res.debug.quote_lines_found}</b></div>
-        <div style="margin-top:8px;padding:6px;background:var(--bg3);border-radius:4px;font-family:'DM Mono',monospace;word-break:break-all;white-space:pre-wrap;max-height:200px;overflow-y:auto;">${JSON.stringify(res,null,2)}</div>
-        ${(res.quote_lines||res.items_added||[]).length ? (res.quote_lines||res.items_added).map(i=>`<div style="margin-top:4px;padding:6px 8px;background:var(--bg3);border-radius:6px;font-size:11px;">
-          <div><b>${i.query||i.name||'—'}</b> · ${i.condition||'—'}</div>
-          <div style="color:${i.keh_sell_price||i.ok?'var(--green)':'var(--red)'};">
-            ${i.keh_sell_price ? '✓ KEH sell: $'+i.keh_sell_price : (i.ok?'✓ Added':'✗ No price')}
-            ${i.error?' — '+i.error:''}
-          </div>
-          ${i.matched?`<div>Matched: ${i.matched}</div>`:''}
-          ${i.product_url?`<div style="word-break:break-all;color:var(--text3);">${i.product_url}</div>`:''}
-          ${i.grades_found?`<div>Grades: ${JSON.stringify(i.grades_found)}</div>`:''}
-          ${i.allInputs?.length?`<div>Inputs: ${i.allInputs.map(inp=>`id="${inp.id}" placeholder="${inp.placeholder}"`).join(' | ')}</div>`:''}
-          ${i.allInputs?.length===0?'<div style="color:var(--red);">No inputs on page</div>':''}
-          ${i.pageH1?`<div>Page: ${i.pageH1}</div>`:''}
-          ${i.pageTitle?`<div>Title: ${i.pageTitle}</div>`:''}
-        </div>`).join('') : '<div style="color:var(--text3);margin-top:4px;">No item details returned</div>'}
-      </div>` : '';
     el.innerHTML = `<div style="background:var(--red-dim);border:0.5px solid var(--red);border-radius:var(--radius);padding:14px;color:var(--red);font-size:13px;margin-bottom:16px;">
-      ⚠️ ${res?.error||'No results returned'}${debug}
+      ⚠️ ${res?.error||'No results returned from KEH'}
+      ${res?.items_failed?.length ? '<br><span style="font-size:11px;">Failed: '+res.items_failed.map(f=>f.query+' ('+f.error+')').join(', ')+'</span>' : ''}
     </div>`;
     return;
   }
   const lines = res.quote_lines || [];
-  const $ = v => v ? '$'+Math.round(v).toLocaleString() : '—';
-  el.innerHTML = `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;">
-    <div style="padding:10px 14px;background:var(--bg3);border-bottom:0.5px solid var(--border);font-size:11px;font-weight:600;letter-spacing:1px;color:var(--text3);text-transform:uppercase;">Live Quote — ${lines.length} item(s)</div>
-    ${lines.map(l => {
-      const name = l.matched || l.name || l.query || '—';
-      return `<div style="padding:12px 14px;border-bottom:0.5px solid var(--border);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:13px;font-weight:500;color:var(--text);flex:1;margin-right:8px;">${name}</div>
-          <div style="font-size:10px;font-weight:600;background:var(--blue-dim);color:var(--blue);padding:2px 7px;border-radius:4px;">${COND_LABEL_QT[l.condition]||l.condition||'—'}</div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <div style="background:var(--bg3);border-radius:6px;padding:7px 10px;">
-            <div style="font-size:9px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">KEH Trade-In</div>
-            <div style="font-size:14px;font-weight:600;color:var(--text);">${$(l.price)}</div>
+  const totals = res.totals || {};
+  const $ = v => v != null ? '$'+Math.round(v).toLocaleString() : '—';
+  el.innerHTML = `
+    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;">
+      <div style="padding:10px 14px;background:var(--bg3);border-bottom:0.5px solid var(--border);font-size:11px;font-weight:600;letter-spacing:1px;color:var(--text3);text-transform:uppercase;">
+        KEH Quote · ${lines.length} item${lines.length!==1?'s':''}
+      </div>
+      ${lines.map(l => {
+        const name = l.matched || l.name || l.query || '—';
+        const cond = COND_LABEL_QT[l.condition] || l.condition || '—';
+        return `<div style="padding:12px 14px;border-bottom:0.5px solid var(--border);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:500;color:var(--text);flex:1;margin-right:8px;">${name}</div>
+            <div style="font-size:10px;font-weight:600;background:var(--blue-dim);color:var(--blue);padding:2px 7px;border-radius:4px;white-space:nowrap;">${cond}</div>
           </div>
-          <div style="background:var(--amber-dim);border-radius:6px;padding:7px 10px;border:0.5px solid var(--amber);">
-            <div style="font-size:9px;color:var(--amber);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">TN Trade-In</div>
-            <div style="font-size:14px;font-weight:600;color:var(--amber);">${$(l.tn_trade_in_price)}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div style="background:var(--bg3);border-radius:6px;padding:7px 10px;">
+              <div style="font-size:9px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">KEH Trade-In</div>
+              <div style="font-size:14px;font-weight:600;color:var(--text);">${$(l.price)}</div>
+            </div>
+            <div style="background:var(--amber-dim);border-radius:6px;padding:7px 10px;border:0.5px solid var(--amber);">
+              <div style="font-size:9px;color:var(--amber);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">TN Trade-In</div>
+              <div style="font-size:14px;font-weight:600;color:var(--amber);">${$(l.tn_trade_in_price)}</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:6px;padding:7px 10px;">
+              <div style="font-size:9px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">KEH Sell</div>
+              <div style="font-size:14px;font-weight:600;color:var(--text);">${$(l.keh_sell_price)}</div>
+            </div>
+            <div style="background:var(--green-dim);border-radius:6px;padding:7px 10px;">
+              <div style="font-size:9px;color:var(--green);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">TN Sell</div>
+              <div style="font-size:14px;font-weight:600;color:var(--green);">${$(l.tn_sell_price)}</div>
+            </div>
           </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:7px 10px;">
-            <div style="font-size:9px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">KEH Sell</div>
-            <div style="font-size:14px;font-weight:600;color:var(--text);">${$(l.keh_sell_price)}</div>
-          </div>
-          <div style="background:var(--green-dim);border-radius:6px;padding:7px 10px;">
-            <div style="font-size:9px;color:var(--green);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">TN Sell</div>
-            <div style="font-size:14px;font-weight:600;color:var(--green);">${$(l.tn_sell_price)}</div>
-          </div>
-        </div>
-      </div>`;
-    }).join('')}
-    ${lines.length > 1 ? `<div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;background:var(--bg3);">
-      <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;">Total TN Trade-In</span>
-      <span style="font-size:16px;font-weight:600;color:var(--amber);">$${Math.round(lines.reduce((s,l)=>s+(l.tn_trade_in_price||0),0)).toLocaleString()}</span>
-    </div>` : ''}
-  </div>`;
+          ${l.in_db===false?`<div style="margin-top:6px;text-align:right;">
+            <button onclick="qtSaveProduct('${(l.matched||l.name||'').replace(/'/g,"\'")}',this)"
+              style="font-size:11px;padding:3px 8px;background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif;">
+              + Save to Catalog
+            </button>
+          </div>`:''}
+        </div>`;
+      }).join('')}
+      ${lines.length > 1 && totals.tn_trade_in ? `
+        <div style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg3);">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;align-self:center;">Total TN Trade-In</div>
+          <div style="font-size:16px;font-weight:600;color:var(--amber);text-align:right;">${totals.tn_trade_in}</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;align-self:center;">Total TN Sell</div>
+          <div style="font-size:16px;font-weight:600;color:var(--green);text-align:right;">${totals.tn_sell||'—'}</div>
+        </div>` : ''}
+    </div>`;
 }
+
+async function qtSaveProduct(name, btn) {
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const res = await fetch(`${QT_URL}/api/db/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_name: name }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      btn.textContent = '✓ Saved as ' + data.sku;
+      btn.style.color = 'var(--green)';
+      await loadAll();
+    } else {
+      btn.textContent = '✗ ' + (data.error||'Failed');
+      btn.disabled = false;
+    }
+  } catch(e) {
+    btn.textContent = '✗ Server offline';
+    btn.disabled = false;
+  }
+}
+
 function showQuoteFab() {
   const fab = document.getElementById('quote-fab');
   if (fab) fab.style.display = 'flex';
@@ -2706,9 +2774,9 @@ renderDashboard();
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <select id="qt-cond" class="form-select" style="flex:1;">
           <option value="Like New Minus">Like New</option>
-          <option value="Excellent Plus" selected>Excellent</option>
-          <option value="Excellent">Good</option>
-          <option value="Bargain">Well Used</option>
+          <option value="Excellent Plus" selected>Excellent+</option>
+          <option value="Excellent">Excellent</option>
+          <option value="Bargain">Bargain</option>
         </select>
         <button onclick="qtAddItem()" style="background:var(--amber);color:#000;border:none;border-radius:10px;padding:11px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">+ Add</button>
       </div>
@@ -2721,6 +2789,12 @@ renderDashboard();
         style="width:100%;padding:13px;border-radius:var(--radius);border:none;background:var(--amber);color:#000;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;opacity:0.4;transition:opacity 0.15s;">
         Get Quote
       </button>
+
+      <!-- Server status hint -->
+      <div id="qt-server-hint" style="display:none;margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text3);line-height:1.6;text-align:center;">
+        ⚠️ Python server not running<br>
+        <span style="color:var(--text2);">Run: <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">python3 Tangy_Nature_Quote.py</code></span>
+      </div>
     </div>
 
     <!-- Results -->
