@@ -886,11 +886,13 @@ const DB = {
     });
     if (!res.ok) throw new Error(await res.text());
   },
-  async getSkus()      { return this._get('skus', 'id.asc'); },
+  async getSkus()          { return this._get('skus', 'id.asc'); },
+  async getProductDetails(){ return this._get('product_details', 'id.asc'); },
   async getPurchases() { return this._get('purchases', 'date.desc'); },
   async getSales()     { return this._get('sales', 'date.desc'); },
   async getExpenses()  { return this._get('expenses', 'date.desc'); },
-  async saveSku(row)      { return this._upsert('skus', row); },
+  async saveSku(row)      { return this._upsert('skus', { id: row.id, brand: row.brand, type: row.type, product: row.product }); },
+  async saveProductDetails(row) { return this._upsert('product_details', { id: row.id, sensor: row.sensor, mp: row.mp, fps: row.fps, video: row.video, lensType: row.lensType, aperture: row.aperture }); },
   async savePurchase(row) { return this._upsert('purchases', row); },
   async saveSale(row)     { return this._upsert('sales', row); },
   async saveExpense(row)  { return this._upsert('expenses', row); },
@@ -907,9 +909,11 @@ async function loadAll() {
   showLoader(true);
   setDbStatus('loading');
   try {
-    [_skus, _purchases, _sales, _expenses] = await Promise.all([
-      DB.getSkus(), DB.getPurchases(), DB.getSales(), DB.getExpenses()
+    const [rawSkus, details, purchases, sales, expenses] = await Promise.all([
+      DB.getSkus(), DB.getProductDetails(), DB.getPurchases(), DB.getSales(), DB.getExpenses()
     ]);
+    _skus = rawSkus.map(s => ({ ...s, ...(details.find(d => d.id === s.id) || {}) }));
+    [_purchases, _sales, _expenses] = [purchases, sales, expenses];
     setDbStatus('ok');
   } catch(e) {
     toast('⚠️ Could not connect to database');
@@ -1355,6 +1359,7 @@ async function saveSKU() {
   };
   try {
     await DB.saveSku(sku);
+    await DB.saveProductDetails(sku);
     await loadAll();
     closeSheet('sku-sheet');
     renderSKUs();
