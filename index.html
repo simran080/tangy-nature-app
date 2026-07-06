@@ -421,6 +421,28 @@
     </div>
   </div>
 
+  <!-- PRICING PAGE -->
+  <div class="page" id="page-pricing">
+    <div class="header">
+      <div class="header-label">Historical</div>
+      <div class="header-title">Price Guide</div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-wrap-inner">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="pricing-search" placeholder="Search by product or brand…" oninput="renderPricing()">
+      </div>
+    </div>
+    <div class="tabs" id="pricing-tabs">
+      <div class="tab active" data-filter="all" onclick="setPricingFilter(this)">All</div>
+      <div class="tab" data-filter="Camera" onclick="setPricingFilter(this)">Cameras</div>
+      <div class="tab" data-filter="Lens" onclick="setPricingFilter(this)">Lenses</div>
+      <div class="tab" data-filter="Accessory" onclick="setPricingFilter(this)">Accessories</div>
+    </div>
+    <div id="pricing-count" style="font-size:12px;color:var(--text3);padding:0 16px 8px;"></div>
+    <div id="pricing-list" style="padding:0 16px 100px;"></div>
+  </div>
+
   <!-- BOTTOM NAV -->
   <nav class="nav" style="overflow-x:auto;scrollbar-width:none;">
     <button class="nav-btn active" id="nav-dashboard" onclick="showPage('dashboard')">
@@ -446,6 +468,10 @@
     <button class="nav-btn" id="nav-summary" onclick="showPage('summary')">
       <div class="nav-icon"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M3 3h18v4H3zM3 10h18v4H3zM3 17h18v4H3z" stroke="#6a6866" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
       Summary
+    </button>
+    <button class="nav-btn" id="nav-pricing" onclick="showPage('pricing')">
+      <div class="nav-icon"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="#6a6866" stroke-width="1.5" stroke-linecap="round"/><circle cx="19" cy="5" r="2.5" stroke="#6a6866" stroke-width="1.5"/></svg></div>
+      Pricing
     </button>
   </nav>
 </div>
@@ -1018,6 +1044,7 @@ async function showPage(page) {
   if (page === 'expenses') renderExpenses();
   if (page === 'linked') renderLinked();
   if (page === 'summary') renderSummary();
+  if (page === 'pricing') renderPricing();
 }
 
 // ─── SHEETS ───────────────────────────────────────────────
@@ -2500,6 +2527,120 @@ function renderSummary() {
       <td style="padding:10px 12px;text-align:center;font-size:14px;font-weight:600;font-family:'DM Mono',monospace;color:var(--green);border-bottom:0.5px solid var(--border);">${r.qtySold}</td>
       <td style="padding:10px 12px;text-align:center;font-size:14px;font-weight:600;font-family:'DM Mono',monospace;color:${remainColor};border-bottom:0.5px solid var(--border);">${r.qtyRemaining}</td>
     </tr>`;
+  }).join('');
+}
+
+// ─── PRICING PAGE ──────────────────────────────────────────
+let _pricingFilter = 'all';
+function setPricingFilter(el) {
+  document.querySelectorAll('#pricing-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  _pricingFilter = el.dataset.filter;
+  renderPricing();
+}
+
+function renderPricing() {
+  const q = (document.getElementById('pricing-search').value || '').toLowerCase();
+  const COND_ORDER = ['Like New', 'Excellent', 'Good', 'Well Used', 'Heavily Used'];
+
+  // Build a map: skuId → condition → [{ netCost, netSale, profit, days }]
+  const map = {};
+  _sales.forEach(sale => {
+    const purchase = _purchases.find(p => normalizePurchaseId(p.id) === normalizePurchaseId(sale.purchaseId));
+    if (!purchase) return;
+    const skuId = normalizeSkuId(purchase.skuId);
+    const cond  = purchase.condition || 'Unknown';
+    const days  = (purchase.date && sale.date)
+      ? Math.round((new Date(sale.date) - new Date(purchase.date)) / 86400000)
+      : null;
+    if (!map[skuId]) map[skuId] = {};
+    if (!map[skuId][cond]) map[skuId][cond] = [];
+    map[skuId][cond].push({
+      netCost: +purchase.netCost || 0,
+      netSale: +sale.netSale   || 0,
+      profit:  +sale.profit    || 0,
+      days,
+    });
+  });
+
+  // Build rows per SKU
+  let rows = _skus
+    .filter(s => Object.keys(map[normalizeSkuId(s.id)] || {}).length > 0)
+    .map(s => ({ sku: s, data: map[normalizeSkuId(s.id)] }));
+
+  if (_pricingFilter !== 'all')
+    rows = rows.filter(r => r.sku.type === _pricingFilter);
+  if (q)
+    rows = rows.filter(r => (r.sku.product + r.sku.brand + r.sku.id).toLowerCase().includes(q));
+
+  rows.sort((a, b) => skuIdNum(a.sku.id) - skuIdNum(b.sku.id));
+
+  const countEl = document.getElementById('pricing-count');
+  if (countEl) countEl.textContent = `${rows.length} ${rows.length === 1 ? 'product' : 'products'}`;
+
+  const list = document.getElementById('pricing-list');
+  if (!list) return;
+
+  if (!rows.length) {
+    list.innerHTML = `<div style="text-align:center;padding:48px 0;color:var(--text3);font-size:14px;">No sales data yet</div>`;
+    return;
+  }
+
+  const avg  = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+  const fmtC = v => '$' + Math.round(v).toLocaleString();
+
+  list.innerHTML = rows.map(({ sku, data }) => {
+    const conds = COND_ORDER.filter(c => data[c]);
+    const condRows = conds.map(cond => {
+      const entries = data[cond];
+      const avgBuy   = avg(entries.map(e => e.netCost));
+      const avgSell  = avg(entries.map(e => e.netSale));
+      const avgProfit= avg(entries.map(e => e.profit));
+      const daysArr  = entries.map(e => e.days).filter(d => d !== null && d >= 0);
+      const avgDays  = daysArr.length ? Math.round(avg(daysArr)) : null;
+      const count    = entries.length;
+      const profitColor = avgProfit >= 0 ? 'var(--green)' : 'var(--red)';
+      return `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:6px;padding:10px 12px;border-bottom:0.5px solid var(--border);align-items:center;">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);">${cond}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px;">${count} sale${count>1?'s':''}</div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Avg Buy</div>
+            <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);">${fmtC(avgBuy)}</div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Avg Sell</div>
+            <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);">${fmtC(avgSell)}</div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Avg Profit</div>
+            <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:${profitColor};">${fmtC(avgProfit)}</div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Avg Days</div>
+            <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);">${avgDays !== null ? avgDays : '—'}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;">
+      <div style="padding:10px 12px;background:var(--bg3);border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:8px;">
+        <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);">${sku.id}</span>
+        <span class="item-badge ${sku.type==='Camera'?'badge-camera':sku.type==='Lens'?'badge-lens':'badge-acc'}" style="font-size:10px;">${sku.type||'—'}</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sku.product||'—'}</span>
+        <span style="font-size:11px;color:var(--text3);">${sku.brand||''}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:6px;padding:6px 12px 4px;background:var(--bg3);border-bottom:0.5px solid var(--border);">
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Condition</div>
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Avg Buy</div>
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Avg Sell</div>
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Avg Profit</div>
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Avg Days</div>
+      </div>
+      ${condRows}
+    </div>`;
   }).join('');
 }
 
