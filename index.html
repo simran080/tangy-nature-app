@@ -2487,7 +2487,7 @@ function renderSummary() {
   const soldIds = new Set(_sales.map(s => normalizePurchaseId(s.purchaseId)));
 
   let rows = _skus.map(sku => {
-    const purchases = _purchases.filter(p => parseInt(p.skuId) === parseInt(sku.id));
+    const purchases = _purchases.filter(p => normalizeSkuId(p.skuId) === normalizeSkuId(sku.id));
     const qtyPurchased = purchases.reduce((s, p) => s + (+p.qty||1), 0);
     const sold = purchases.filter(p => soldIds.has(normalizePurchaseId(p.id)) || p.sold);
     const qtySold = sold.reduce((s, p) => s + (+p.qty||1), 0);
