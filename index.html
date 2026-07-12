@@ -404,17 +404,9 @@
     </div>
     <div id="summary-count" style="font-size:12px;color:var(--text3);padding:0 16px 8px;"></div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 16px 12px;border:0.5px solid var(--border);border-radius:var(--radius);overflow-y:auto;max-height:calc(100vh - 280px);">
-      <table id="summary-table" style="width:100%;border-collapse:collapse;min-width:520px;">
-        <thead>
-          <tr style="background:var(--bg3);position:sticky;top:0;z-index:1;">
-            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:0.5px solid var(--border);white-space:nowrap;">SKU</th>
-            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:0.5px solid var(--border);white-space:nowrap;">Brand</th>
-            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:0.5px solid var(--border);white-space:nowrap;">Type</th>
-            <th style="text-align:left;padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:0.5px solid var(--border);">Product</th>
-            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:0.5px solid var(--border);white-space:nowrap;">Purchased</th>
-            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:0.5px solid var(--border);white-space:nowrap;">Sold</th>
-            <th style="text-align:center;padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:0.5px solid var(--border);white-space:nowrap;">Remaining</th>
-          </tr>
+      <table id="summary-table" style="width:100%;border-collapse:collapse;min-width:900px;">
+        <thead id="summary-thead">
+          <tr style="background:var(--bg3);position:sticky;top:0;z-index:1;"></tr>
         </thead>
         <tbody id="summary-body"></tbody>
       </table>
@@ -881,6 +873,20 @@
     <button class="sheet-close" onclick="closeSheet('detail-sheet')">✕</button>
   </div>
   <div class="sheet-body" id="detail-body"></div>
+</div>
+
+<!-- SKU DRILL-DOWN SHEET -->
+<div class="sheet-overlay" id="sku-drill-overlay" onclick="closeSheet('sku-drill-sheet')"></div>
+<div class="sheet" id="sku-drill-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div>
+      <div class="sheet-title" id="sku-drill-title">SKU Details</div>
+      <div id="sku-drill-sub" style="font-size:12px;color:var(--text3);margin-top:2px;"></div>
+    </div>
+    <button class="sheet-close" onclick="closeSheet('sku-drill-sheet')">✕</button>
+  </div>
+  <div class="sheet-body" id="sku-drill-body"></div>
 </div>
 
 <script>
@@ -2475,6 +2481,8 @@ function renderLinked() {
 
 // ─── SUMMARY ───────────────────────────────────────────────
 let summaryFilter = 'all';
+let _summarySort = { col: 'sku', dir: 'asc' };
+
 function setSummaryFilter(el) {
   document.querySelectorAll('#summary-tabs .tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
@@ -2482,18 +2490,59 @@ function setSummaryFilter(el) {
   renderSummary();
 }
 
+function sortSummaryBy(col) {
+  if (_summarySort.col === col) {
+    _summarySort.dir = _summarySort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _summarySort = { col, dir: col === 'sku' ? 'asc' : 'desc' };
+  }
+  renderSummary();
+}
+
+function _summaryThStyle(align) {
+  return `padding:10px 10px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:0.5px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;text-align:${align||'right'};`;
+}
+
+function _sortArrow(col) {
+  if (_summarySort.col !== col) return '<span style="opacity:0.3;margin-left:3px;">↕</span>';
+  return `<span style="color:var(--amber);margin-left:3px;">${_summarySort.dir==='asc'?'↑':'↓'}</span>`;
+}
+
 function renderSummary() {
   const q = (document.getElementById('summary-search').value||'').toLowerCase();
-  const soldIds = new Set(_sales.map(s => normalizePurchaseId(s.purchaseId)));
 
   let rows = _skus.map(sku => {
     const purchases = _purchases.filter(p => normalizeSkuId(p.skuId) === normalizeSkuId(sku.id));
+    if (!purchases.length) return null;
+    const purchaseNormIds = new Set(purchases.map(p => normalizePurchaseId(p.id)));
+    const matchedSales = _sales.filter(s => purchaseNormIds.has(normalizePurchaseId(s.purchaseId)));
+    const soldPurchaseIds = new Set(matchedSales.map(s => normalizePurchaseId(s.purchaseId)));
+    const soldPurchases = purchases.filter(p => soldPurchaseIds.has(normalizePurchaseId(p.id)) || p.sold);
+    const unsoldPurchases = purchases.filter(p => !soldPurchaseIds.has(normalizePurchaseId(p.id)) && !p.sold);
+
     const qtyPurchased = purchases.reduce((s, p) => s + (+p.qty||1), 0);
-    const sold = purchases.filter(p => soldIds.has(normalizePurchaseId(p.id)) || p.sold);
-    const qtySold = sold.reduce((s, p) => s + (+p.qty||1), 0);
+    const qtySold = soldPurchases.reduce((s, p) => s + (+p.qty||1), 0);
     const qtyRemaining = qtyPurchased - qtySold;
-    return { sku, qtyPurchased, qtySold, qtyRemaining };
-  }).filter(r => r.qtyPurchased > 0);
+    const sellThrough = qtyPurchased > 0 ? qtySold / qtyPurchased : 0;
+
+    const totalBuyCost = purchases.reduce((s, p) => s + (+p.netCost||0), 0);
+    const avgNetBuy = qtyPurchased > 0 ? totalBuyCost / qtyPurchased : null;
+    const tiedUpCapital = unsoldPurchases.reduce((s, p) => s + (+p.netCost||0), 0);
+
+    const totalRevenue = matchedSales.reduce((s, sale) => s + (+sale.netSale||0), 0);
+    const totalProfit = matchedSales.reduce((s, sale) => s + (+sale.profit||0), 0);
+    const totalCostSold = matchedSales.reduce((s, sale) => s + (+sale.netCost||0), 0);
+    const avgNetSell = qtySold > 0 ? totalRevenue / qtySold : null;
+    const avgMargin = totalCostSold > 0 ? (totalProfit / totalCostSold) * 100 : null;
+
+    const daysArr = matchedSales.map(sale => {
+      const p = purchases.find(p => normalizePurchaseId(p.id) === normalizePurchaseId(sale.purchaseId));
+      return (p?.date && sale.date) ? Math.round((new Date(sale.date) - new Date(p.date)) / 86400000) : null;
+    }).filter(d => d !== null);
+    const avgDays = daysArr.length > 0 ? Math.round(daysArr.reduce((a,b)=>a+b,0)/daysArr.length) : null;
+
+    return { sku, qtyPurchased, qtySold, qtyRemaining, sellThrough, avgNetBuy, tiedUpCapital, avgNetSell, totalProfit, avgMargin, avgDays };
+  }).filter(Boolean).filter(r => r.qtyPurchased > 0);
 
   if (q) rows = rows.filter(r =>
     (r.sku.product+r.sku.brand+r.sku.type+r.sku.id).toLowerCase().includes(q)
@@ -2502,32 +2551,148 @@ function renderSummary() {
   if (['Camera','Lens','Accessory'].includes(summaryFilter))
     rows = rows.filter(r => r.sku.type === summaryFilter);
 
-  rows.sort((a,b) => skuIdNum(a.sku.id) - skuIdNum(b.sku.id));
+  const { col, dir } = _summarySort;
+  const sign = dir === 'asc' ? 1 : -1;
+  rows.sort((a, b) => {
+    if (col === 'sku') return sign * (skuIdNum(a.sku.id) - skuIdNum(b.sku.id));
+    if (col === 'product') return sign * (a.sku.product||'').localeCompare(b.sku.product||'');
+    if (col === 'qty') return sign * (a.qtyPurchased - b.qtyPurchased);
+    if (col === 'sold') return sign * (a.qtySold - b.qtySold);
+    if (col === 'sellpct') return sign * (a.sellThrough - b.sellThrough);
+    if (col === 'rem') return sign * (a.qtyRemaining - b.qtyRemaining);
+    if (col === 'avgbuy') return sign * ((a.avgNetBuy||0) - (b.avgNetBuy||0));
+    if (col === 'capital') return sign * (a.tiedUpCapital - b.tiedUpCapital);
+    if (col === 'avgsell') return sign * ((a.avgNetSell||0) - (b.avgNetSell||0));
+    if (col === 'profit') return sign * (a.totalProfit - b.totalProfit);
+    if (col === 'margin') return sign * ((a.avgMargin||0) - (b.avgMargin||0));
+    if (col === 'days') return sign * ((a.avgDays||9999) - (b.avgDays||9999));
+    return 0;
+  });
 
   const countEl = document.getElementById('summary-count');
-  if (countEl) countEl.textContent = `${rows.length} ${rows.length === 1 ? 'product' : 'products'}`;
+  if (countEl) countEl.textContent = `${rows.length} ${rows.length===1?'product':'products'} · tap row to drill down`;
+
+  // Render header
+  const thead = document.querySelector('#summary-thead tr');
+  if (thead) {
+    const th = (label, c, align) => `<th onclick="sortSummaryBy('${c}')" style="${_summaryThStyle(align)}">${label}${_sortArrow(c)}</th>`;
+    thead.innerHTML =
+      th('SKU','sku','left') +
+      th('Product','product','left') +
+      th('Qty','qty','center') +
+      th('Sold','sold','center') +
+      th('Sell%','sellpct','center') +
+      th('Rem.','rem','center') +
+      th('Avg Cost','avgbuy','right') +
+      th('Capital','capital','right') +
+      th('Avg Sale','avgsell','right') +
+      th('Profit','profit','right') +
+      th('Margin','margin','right') +
+      th('Avg Days','days','center');
+  }
 
   const tbody = document.getElementById('summary-body');
   if (!tbody) return;
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3);font-size:14px;">No products found</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text3);font-size:14px;">No products found</td></tr>`;
     return;
   }
+
+  const fmtShort = n => n == null ? '—' : '$' + Math.round(n).toLocaleString();
+  const fmtPct = n => n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+  const NCOL = 12;
+
   tbody.innerHTML = rows.map((r, i) => {
     const bg = i % 2 === 0 ? 'var(--bg2)' : 'var(--bg3)';
     const remainColor = r.qtyRemaining > 0 ? 'var(--amber)' : 'var(--green)';
-    return `<tr style="background:${bg};">
-      <td style="padding:10px 12px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text3);border-bottom:0.5px solid var(--border);">${r.sku.id}</td>
-      <td style="padding:10px 12px;font-size:13px;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap;">${r.sku.brand||'—'}</td>
-      <td style="padding:10px 12px;border-bottom:0.5px solid var(--border);white-space:nowrap;">
-        <span class="item-badge ${r.sku.type==='Camera'?'badge-camera':r.sku.type==='Lens'?'badge-lens':'badge-acc'}" style="font-size:10px;">${r.sku.type||'—'}</span>
-      </td>
-      <td style="padding:10px 12px;font-size:13px;font-weight:500;color:var(--text);border-bottom:0.5px solid var(--border);min-width:160px;">${r.sku.product||'—'}</td>
-      <td style="padding:10px 12px;text-align:center;font-size:14px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);border-bottom:0.5px solid var(--border);">${r.qtyPurchased}</td>
-      <td style="padding:10px 12px;text-align:center;font-size:14px;font-weight:600;font-family:'DM Mono',monospace;color:var(--green);border-bottom:0.5px solid var(--border);">${r.qtySold}</td>
-      <td style="padding:10px 12px;text-align:center;font-size:14px;font-weight:600;font-family:'DM Mono',monospace;color:${remainColor};border-bottom:0.5px solid var(--border);">${r.qtyRemaining}</td>
+    const profitColor = r.totalProfit > 0 ? 'var(--green)' : r.totalProfit < 0 ? 'var(--red)' : 'var(--text3)';
+    const marginColor = (r.avgMargin||0) > 0 ? 'var(--green)' : (r.avgMargin||0) < 0 ? 'var(--red)' : 'var(--text3)';
+    const pct = Math.round(r.sellThrough * 100);
+    const sellPctBar = `<div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);">${pct}%</div>
+      <div style="background:var(--bg4);border-radius:3px;height:3px;width:40px;margin-top:3px;">
+        <div style="width:${pct}%;background:var(--green);height:100%;border-radius:3px;"></div>
+      </div>`;
+    const td = (content, align, extra) =>
+      `<td style="padding:10px 10px;border-bottom:0.5px solid var(--border);text-align:${align||'right'};${extra||''}">${content}</td>`;
+
+    return `<tr style="background:${bg};cursor:pointer;" onclick="showSkuDrilldown('${r.sku.id}')">
+      ${td(`<span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);">${r.sku.id}</span>`, 'left')}
+      ${td(`<span style="font-size:12px;font-weight:500;color:var(--text);">${r.sku.product||'—'}</span>`, 'left', 'min-width:140px;')}
+      ${td(`<span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);">${r.qtyPurchased}</span>`, 'center')}
+      ${td(`<span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--green);">${r.qtySold}</span>`, 'center')}
+      ${td(sellPctBar, 'center')}
+      ${td(`<span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:${remainColor};">${r.qtyRemaining}</span>`, 'center')}
+      ${td(`<span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--amber);">${hideFin(fmtShort(r.avgNetBuy))}</span>`, 'right')}
+      ${td(`<span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--amber);">${hideFin(fmtShort(r.tiedUpCapital||null))}</span>`, 'right')}
+      ${td(`<span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text);">${hideFin(fmtShort(r.avgNetSell))}</span>`, 'right')}
+      ${td(`<span style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:${profitColor};">${hideFin(fmtShort(r.totalProfit||null))}</span>`, 'right')}
+      ${td(`<span style="font-size:12px;font-family:'DM Mono',monospace;color:${marginColor};">${hideFin(r.avgMargin!=null?fmtPct(r.avgMargin):'—')}</span>`, 'right')}
+      ${td(`<span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);">${r.avgDays!=null?r.avgDays+'d':'—'}</span>`, 'center')}
     </tr>`;
   }).join('');
+}
+
+function showSkuDrilldown(skuId) {
+  const sku = _skus.find(s => normalizeSkuId(s.id) === normalizeSkuId(skuId));
+  if (!sku) return;
+  const purchases = _purchases.filter(p => normalizeSkuId(p.skuId) === normalizeSkuId(skuId));
+  const purchaseNormIds = new Set(purchases.map(p => normalizePurchaseId(p.id)));
+  const matchedSales = _sales.filter(s => purchaseNormIds.has(normalizePurchaseId(s.purchaseId)));
+  const soldIds = new Set(matchedSales.map(s => normalizePurchaseId(s.purchaseId)));
+
+  document.getElementById('sku-drill-title').textContent = sku.product || sku.id;
+  document.getElementById('sku-drill-sub').textContent = [sku.brand, sku.type, sku.id].filter(Boolean).join(' · ');
+
+  const fmtD = d => { if (!d) return '—'; const dt = new Date(d); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); };
+
+  const purchaseRows = purchases.map(p => {
+    const isSold = soldIds.has(normalizePurchaseId(p.id)) || p.sold;
+    const sale = matchedSales.find(s => normalizePurchaseId(s.purchaseId) === normalizePurchaseId(p.id));
+    const days = (p.date && sale?.date) ? Math.round((new Date(sale.date) - new Date(p.date)) / 86400000) : null;
+    const profit = sale ? (+sale.profit||0) : null;
+    const statusColor = isSold ? 'var(--green)' : 'var(--amber)';
+    const statusLabel = isSold ? 'Sold' : 'Unsold';
+    return `<div style="padding:12px 0;border-bottom:0.5px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text3);">${p.id} · ${fmtD(p.date)}</div>
+        <span style="font-size:10px;font-weight:600;color:${statusColor};background:${statusColor}22;padding:2px 7px;border-radius:4px;">${statusLabel}</span>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div><div style="font-size:10px;color:var(--text3);">Condition</div><div style="font-size:12px;color:var(--text2);">${p.condition||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--text3);">Net Cost</div><div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--amber);">${hideFin('$'+(+p.netCost||0).toFixed(2))}</div></div>
+        ${isSold && sale ? `<div><div style="font-size:10px;color:var(--text3);">Sold For</div><div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text);">${hideFin('$'+(+sale.netSale||0).toFixed(2))}</div></div>
+        <div><div style="font-size:10px;color:var(--text3);">Profit</div><div style="font-size:12px;font-family:'DM Mono',monospace;color:${profit>=0?'var(--green)':'var(--red)'};">${hideFin((profit>=0?'+':'')+'$'+Math.abs(profit).toFixed(2))}</div></div>
+        <div><div style="font-size:10px;color:var(--text3);">Days</div><div style="font-size:12px;color:var(--text2);">${days!=null?days+'d':'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--text3);">Platform</div><div style="font-size:12px;color:var(--text2);">${sale.source||'—'}</div></div>` : ''}
+        ${p.source ? `<div><div style="font-size:10px;color:var(--text3);">Source</div><div style="font-size:12px;color:var(--text2);">${p.source}</div></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const totalCost = purchases.reduce((s, p) => s + (+p.netCost||0), 0);
+  const totalRevenue = matchedSales.reduce((s, s2) => s + (+s2.netSale||0), 0);
+  const totalProfit = matchedSales.reduce((s, s2) => s + (+s2.profit||0), 0);
+  const profitColor = totalProfit >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('sku-drill-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="background:var(--bg3);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">TOTAL COST</div>
+        <div style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--amber);">${hideFin('$'+totalCost.toFixed(2))}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">TOTAL REVENUE</div>
+        <div style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);">${hideFin('$'+totalRevenue.toFixed(2))}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">PROFIT</div>
+        <div style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:${profitColor};">${hideFin((totalProfit>=0?'+':'')+'$'+Math.abs(totalProfit).toFixed(2))}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;">${purchases.length} Purchase${purchases.length!==1?'s':''}</div>
+    ${purchaseRows || '<div style="padding:12px 0;color:var(--text3);font-size:13px;">No purchases</div>'}
+  `;
+  openSheet('sku-drill-sheet');
 }
 
 // ─── PRICING PAGE ──────────────────────────────────────────
