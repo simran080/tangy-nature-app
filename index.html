@@ -2389,8 +2389,12 @@ let _userEmail = '';
 
 function parseRole(token) {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return (payload.user_metadata && payload.user_metadata.role) || 'user';
+    const p = JSON.parse(atob(token.split('.')[1]));
+    // Prefer app_metadata (admin-only, tamper-proof); fall back to user_metadata
+    // during the migration window.
+    return (p.app_metadata && p.app_metadata.role)
+        || (p.user_metadata && p.user_metadata.role)
+        || 'user';
   } catch { return 'user'; }
 }
 
