@@ -1674,6 +1674,8 @@ function viewPurchaseDetail(id) {
     </div>` : '';
   document.getElementById('detail-body').innerHTML = `
     <div class="detail-row"><span class="detail-key">Purchase ID</span><span class="detail-val mono" style="color:var(--amber)">${p.id}</span></div>
+    <div class="detail-row"><span class="detail-key">SKU ID</span><span class="detail-val mono" style="color:var(--text2);">${p.skuId||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Sale ID</span><span class="detail-val mono" style="color:${sale?'var(--green)':'var(--text3);font-style:italic'}">${sale?sale.id:'Still on Shelf'}</span></div>
     <div class="detail-row"><span class="detail-key">Brand / Type</span><span class="detail-val">${sku.brand||'—'} · ${sku.type||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(p.date)}</span></div>
     <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${p.source||'—'}</span></div>
