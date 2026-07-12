@@ -331,6 +331,8 @@ function renderResult(res){
         <div class="toggle-group">
           <span class="toggle-label">Round</span>
           <button class="toggle-btn${_tnRound===0?' active':''}" data-round onclick="setTnRound(0,this)">None</button>
+          <button class="toggle-btn${_tnRound===5?' active':''}" data-round onclick="setTnRound(5,this)">$5</button>
+          <button class="toggle-btn${_tnRound===10?' active':''}" data-round onclick="setTnRound(10,this)">$10</button>
           <button class="toggle-btn${_tnRound===25?' active':''}" data-round onclick="setTnRound(25,this)">$25</button>
         </div>
       </div>
