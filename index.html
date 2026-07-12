@@ -1955,6 +1955,7 @@ function viewSaleDetail(id) {
   document.getElementById('detail-body').innerHTML = `
     <div class="detail-row"><span class="detail-key">Sale ID</span><span class="detail-val mono">${s.id}</span></div>
     <div class="detail-row"><span class="detail-key">Purchase ID</span><span class="detail-val mono" style="color:var(--amber);">${s.purchaseId||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">SKU ID</span><span class="detail-val mono" style="color:var(--text2);">${purchase.skuId||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Item condition</span><span class="detail-val">${cond ? `<span style="font-weight:600;color:${condColor};">${cond}</span>` : '—'}</span></div>
     <div class="detail-row"><span class="detail-key">Type</span><span class="detail-val"><span class="item-badge" style="${s.isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${s.isTrade?'🔄 Trade':'💵 Cash'}</span></span></div>
     ${tradeBlock}
