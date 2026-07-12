@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tangy Nature">
+<meta name="theme-color" content="#0e0e0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Tangy Nature LLC</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -233,6 +236,15 @@
 
     <div class="section-title">Recent Sales</div>
     <div class="list-wrap" id="dash-recent-sales" style="max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+
+    <div id="dash-export" style="display:none;">
+      <div class="section-title">Export Data</div>
+      <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:24px;">
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportSales()">⬇ Sales</button>
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportPurchases()">⬇ Purchases</button>
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportExpenses()">⬇ Expenses</button>
+      </div>
+    </div>
   </div>
 
   <!-- SKU PAGE -->
@@ -919,22 +931,32 @@ const DB = {
 // ─── LOCAL CACHE (populated on each page load) ─────────────
 let _skus = [], _purchases = [], _sales = [], _expenses = [];
 
-async function loadAll() {
-  showLoader(true);
-  setDbStatus('loading');
+let _dataLoaded = false;
+async function loadAll(silent) {
+  if (!silent) { showLoader(true); setDbStatus('loading'); }
   try {
+    await ensureValidToken();
     const [rawSkus, details, purchases, sales, expenses] = await Promise.all([
       DB.getSkus(), DB.getProductDetails(), DB.getPurchases(), DB.getSales(), DB.getExpenses()
     ]);
     _skus = rawSkus.map(s => ({ ...s, ...(details.find(d => d.id === s.id) || {}) }));
     [_purchases, _sales, _expenses] = [purchases, sales, expenses];
+    _dataLoaded = true;
+    try { localStorage.setItem('tn_cache', JSON.stringify({ skus:_skus, purchases:_purchases, sales:_sales, expenses:_expenses, at: Date.now() })); } catch {}
     setDbStatus('ok');
   } catch(e) {
-    toast('⚠️ Could not connect to database');
+    // Offline / unreachable — hydrate from last good cache so the app still works read-only
+    if (!_dataLoaded) {
+      try {
+        const c = JSON.parse(localStorage.getItem('tn_cache') || 'null');
+        if (c && c.skus) { _skus=c.skus; _purchases=c.purchases; _sales=c.sales; _expenses=c.expenses; _dataLoaded=true; }
+      } catch {}
+    }
+    if (!silent) toast(_dataLoaded ? '⚠️ Offline — showing last synced data' : '⚠️ Could not connect to database');
     setDbStatus('error');
     console.error(e);
   }
-  showLoader(false);
+  if (!silent) showLoader(false);
 }
 
 function setDbStatus(state) {
@@ -1012,26 +1034,126 @@ function nextPurchaseId() {
   return 'P-' + String(max + 1).padStart(5, '0');
 }
 function fmt(n) { return '$' + (+n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+
+// ─── CSV EXPORT ───────────────────────────────────────────
+function _csvEsc(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
+function toCSV(rows, cols) {
+  const head = cols.map(c => _csvEsc(c.label)).join(',');
+  const body = rows.map(r => cols.map(c => _csvEsc(typeof c.get === 'function' ? c.get(r) : r[c.key])).join(',')).join('\n');
+  return head + '\n' + body;
+}
+function downloadCSV(filename, csv) {
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function _skuFor(purchaseId) {
+  const p = _purchases.find(p => p.id === purchaseId) || {};
+  const s = _skus.find(s => normalizeSkuId(s.id) === normalizeSkuId(p.skuId)) || {};
+  return { p, s };
+}
+function _today() { return new Date().toISOString().slice(0,10); }
+function exportSales() {
+  const rows = [..._sales].sort((a,b) => saleIdNum(a.id) - saleIdNum(b.id));
+  const cols = [
+    { label:'Sale ID', key:'id' },
+    { label:'Purchase ID', key:'purchaseId' },
+    { label:'SKU ID', get:r => r.skuId || _skuFor(r.purchaseId).p.skuId || '' },
+    { label:'Product', get:r => _skuFor(r.purchaseId).s.product || '' },
+    { label:'Date', key:'date' },
+    { label:'Channel', key:'source' },
+    { label:'Buyer State', key:'state' },
+    { label:'Sale Price', key:'unitPrice' },
+    { label:'Shipping Charged', key:'shippingCharged' },
+    { label:'Shipping Paid', key:'shippingPaid' },
+    { label:'Fees', key:'fees' },
+    { label:'G&A', key:'ga' },
+    { label:'Net Cost', key:'netCost' },
+    { label:'Net Sale', key:'netSale' },
+    { label:'Profit', key:'profit' },
+    { label:'Margin %', get:r => ((+r.margin||0)*100).toFixed(1) },
+    { label:'Trade', get:r => r.isTrade ? 'Yes' : 'No' },
+    { label:'PayPal Released', get:r => r.paypalReleased ? 'Yes' : 'No' },
+    { label:'Notes', key:'comments' },
+  ];
+  downloadCSV(`tangy-nature-sales-${_today()}.csv`, toCSV(rows, cols));
+  toast(`Exported ${rows.length} sales`);
+}
+function exportPurchases() {
+  const rows = [..._purchases].sort((a,b) => purchaseIdNum(a.id) - purchaseIdNum(b.id));
+  const soldIds = new Set(_sales.map(s => normalizePurchaseId(s.purchaseId)));
+  const cols = [
+    { label:'Purchase ID', key:'id' },
+    { label:'SKU ID', key:'skuId' },
+    { label:'Product', get:r => (_skus.find(s => normalizeSkuId(s.id) === normalizeSkuId(r.skuId))||{}).product || '' },
+    { label:'Date', key:'date' },
+    { label:'Source', key:'source' },
+    { label:'State', key:'state' },
+    { label:'Qty', get:r => r.qty || 1 },
+    { label:'Price/Unit', key:'pricePerPiece' },
+    { label:'Shipping', key:'shipping' },
+    { label:'Gas', key:'gas' },
+    { label:'Net Cost', key:'netCost' },
+    { label:'Payment', key:'paymentVia' },
+    { label:'Condition', key:'condition' },
+    { label:'Trade', get:r => r.isTrade ? 'Yes' : 'No' },
+    { label:'Status', get:r => (soldIds.has(normalizePurchaseId(r.id)) || r.sold) ? 'Sold' : 'Unsold' },
+    { label:'Notes', key:'comments' },
+  ];
+  downloadCSV(`tangy-nature-purchases-${_today()}.csv`, toCSV(rows, cols));
+  toast(`Exported ${rows.length} purchases`);
+}
+function exportExpenses() {
+  const rows = [..._expenses].sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  const cols = [
+    { label:'Date', key:'date' },
+    { label:'Category', key:'type' },
+    { label:'Product', key:'product' },
+    { label:'Source', key:'source' },
+    { label:'Qty', get:r => r.qty || 1 },
+    { label:'Price', key:'price' },
+    { label:'Discount', key:'discount' },
+    { label:'Tax', key:'taxAmount' },
+    { label:'Net Amount', key:'netAmount' },
+  ];
+  downloadCSV(`tangy-nature-expenses-${_today()}.csv`, toCSV(rows, cols));
+  toast(`Exported ${rows.length} expenses`);
+}
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function typeIcon(t) { return t==='Camera'?'📷':t==='Lens'?'🔭':t==='Drone'?'🚁':'🔧'; }
 function typeClass(t) { return t==='Camera'?'icon-camera':t==='Lens'?'icon-lens':t==='Drone'?'icon-drone':'icon-acc'; }
 
 // ─── NAVIGATION ───────────────────────────────────────────
 let currentPage = 'dashboard';
+function renderCurrentPage() {
+  const page = currentPage;
+  if (page === 'dashboard') renderDashboard();
+  else if (page === 'sku') renderSKUs();
+  else if (page === 'purchases') renderPurchases();
+  else if (page === 'sales') renderSales();
+  else if (page === 'expenses') renderExpenses();
+  else if (page === 'linked') renderLinked();
+  else if (page === 'summary') renderSummary();
+}
 async function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  document.getElementById('nav-' + page).classList.add('active');
+  const navBtn = document.getElementById('nav-' + page);
+  if (navBtn) navBtn.classList.add('active');
   currentPage = page;
-  await loadAll();
-  if (page === 'dashboard') renderDashboard();
-  if (page === 'sku') renderSKUs();
-  if (page === 'purchases') renderPurchases();
-  if (page === 'sales') renderSales();
-  if (page === 'expenses') renderExpenses();
-  if (page === 'linked') renderLinked();
-  if (page === 'summary') renderSummary();
+  window.scrollTo(0, 0);
+  if (_dataLoaded) {
+    // Instant render from cache, then silently refresh in the background
+    renderCurrentPage();
+    loadAll(true).then(renderCurrentPage);
+  } else {
+    await loadAll();
+    renderCurrentPage();
+  }
 }
 
 // ─── SHEETS ───────────────────────────────────────────────
@@ -2282,6 +2404,9 @@ function applyRoleUI() {
   document.querySelectorAll('.header-action').forEach(btn => {
     btn.style.display = canWrite() ? 'flex' : 'none';
   });
+  // Data export is owner-only
+  const exp = document.getElementById('dash-export');
+  if (exp) exp.style.display = canWrite() ? 'block' : 'none';
   // Role badge in sign-out area
   const badge = document.getElementById('role-badge');
   if (badge) {
@@ -2290,6 +2415,54 @@ function applyRoleUI() {
     badge.style.color = colors[_userRole] || 'var(--text2)';
     badge.style.borderColor = colors[_userRole] || 'var(--border)';
   }
+}
+
+// Persist access + refresh tokens and the expiry timestamp
+function saveSession(data) {
+  _authToken = data.access_token;
+  const expiresAt = Date.now() + ((+data.expires_in || 3600) * 1000);
+  localStorage.setItem('tn_auth_token', data.access_token);
+  if (data.refresh_token) localStorage.setItem('tn_refresh_token', data.refresh_token);
+  localStorage.setItem('tn_expires_at', String(expiresAt));
+}
+
+function clearSession() {
+  localStorage.removeItem('tn_auth_token');
+  localStorage.removeItem('tn_refresh_token');
+  localStorage.removeItem('tn_expires_at');
+  _authToken = null;
+}
+
+// Exchange the refresh token for a fresh access token
+let _refreshInFlight = null;
+async function refreshAccessToken() {
+  if (_refreshInFlight) return _refreshInFlight;
+  _refreshInFlight = (async () => {
+    const rt = localStorage.getItem('tn_refresh_token');
+    if (!rt) return false;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { apikey: ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: rt })
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      saveSession(data);
+      _userRole = parseRole(_authToken);
+      return true;
+    } catch { return false; }
+  })();
+  try { return await _refreshInFlight; } finally { _refreshInFlight = null; }
+}
+
+// Refresh proactively when the token is within 60s of expiring.
+// If no expiry is recorded (legacy session), rely on the 401-retry in _authedFetch.
+async function ensureValidToken() {
+  if (!_authToken) return false;
+  const exp = +localStorage.getItem('tn_expires_at') || 0;
+  if (exp && Date.now() > exp - 60000) return await refreshAccessToken();
+  return true;
 }
 
 async function doLogin() {
@@ -2307,10 +2480,9 @@ async function doLogin() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
-    _authToken = data.access_token;
+    saveSession(data);
     _userRole = parseRole(_authToken);
     _userEmail = email;
-    localStorage.setItem('tn_auth_token', _authToken);
     showApp();
   } catch(e) {
     showLoginError(e.message);
@@ -2326,21 +2498,23 @@ function showLoginError(msg) {
 async function checkSession() {
   const stored = localStorage.getItem('tn_auth_token');
   if (!stored) return false;
+  _authToken = stored;
+  _userRole = parseRole(stored);
+  // If we have a recorded expiry and it has passed, refresh before trusting it
+  const exp = +localStorage.getItem('tn_expires_at') || 0;
+  if (exp && Date.now() > exp - 60000) {
+    return await refreshAccessToken();
+  }
   const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
     headers: { apikey: ANON_KEY, Authorization: `Bearer ${stored}` }
   });
-  if (res.ok) {
-    _authToken = stored;
-    _userRole = parseRole(stored);
-    return true;
-  }
-  localStorage.removeItem('tn_auth_token');
-  return false;
+  if (res.ok) return true;
+  // Access token rejected — last-ditch refresh
+  return await refreshAccessToken();
 }
 
 function signOut() {
-  localStorage.removeItem('tn_auth_token');
-  _authToken = null;
+  clearSession();
   _userRole = 'user';
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -2356,30 +2530,92 @@ function showApp() {
   init();
 }
 
-// Override DB to use auth token
-const _origGet = DB._get.bind(DB);
-DB._get = function(table, order) {
+// Override DB to use the auth token, with proactive refresh + one 401 retry
+async function _authedFetch(url, opts = {}) {
+  await ensureValidToken();
+  const withAuth = () => ({
+    ...opts,
+    headers: { ...(opts.headers||{}), apikey: ANON_KEY, Authorization: `Bearer ${_authToken}` }
+  });
+  let r = await fetch(url, withAuth());
+  if (r.status === 401 && await refreshAccessToken()) {
+    r = await fetch(url, withAuth());
+  }
+  return r;
+}
+DB._get = async function(table, order) {
   let url = `${SUPABASE_URL}/rest/v1/${table}?select=*`;
   if (order) url += `&order=${order}`;
-  return fetch(url, { headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}` } })
-    .then(r => r.ok ? r.json() : r.text().then(t => { throw new Error(t); }));
+  const r = await _authedFetch(url);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
 };
-DB._upsert = function(table, row) {
-  return fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+DB._upsert = async function(table, row) {
+  const r = await _authedFetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: 'POST',
-    headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(row)
-  }).then(r => { if (!r.ok) return r.text().then(t => { throw new Error(t); }); });
+  });
+  if (!r.ok) throw new Error(await r.text());
 };
-DB._delete = function(table, id) {
-  return fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-    method: 'DELETE',
-    headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}` }
-  }).then(r => { if (!r.ok) return r.text().then(t => { throw new Error(t); }); });
+DB._delete = async function(table, id) {
+  const r = await _authedFetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE' });
+  if (!r.ok) throw new Error(await r.text());
 };
+
+// ─── PULL TO REFRESH ──────────────────────────────────────
+(function setupPullToRefresh(){
+  const ind = document.createElement('div');
+  ind.id = 'ptr-indicator';
+  ind.innerHTML = '<div class="ptr-spinner"></div>';
+  ind.style.cssText = 'position:fixed;top:0;left:50%;width:36px;height:36px;border-radius:50%;background:var(--bg3);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;z-index:350;transition:transform 0.15s,opacity 0.15s;opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-48px);';
+  const spin = ind.querySelector('.ptr-spinner');
+  spin.style.cssText = 'width:18px;height:18px;border:2px solid var(--bg4);border-top-color:var(--amber);border-radius:50%;';
+  document.body.appendChild(ind);
+
+  let startY = 0, pulling = false, dist = 0, refreshing = false;
+  const THRESHOLD = 70;
+  window.addEventListener('touchstart', e => {
+    if (refreshing || window.scrollY > 0) { pulling = false; return; }
+    startY = e.touches[0].clientY; pulling = true; dist = 0;
+  }, { passive: true });
+  window.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    dist = e.touches[0].clientY - startY;
+    if (dist > 0 && window.scrollY <= 0) {
+      const pull = Math.min(dist, 120);
+      ind.style.opacity = String(Math.min(pull / THRESHOLD, 1));
+      ind.style.transform = `translateX(-50%) translateY(${Math.min(pull - 48, 12)}px) rotate(${pull*3}deg)`;
+    }
+  }, { passive: true });
+  window.addEventListener('touchend', async () => {
+    if (!pulling) return;
+    pulling = false;
+    if (dist > THRESHOLD && !refreshing) {
+      refreshing = true;
+      ind.style.opacity = '1';
+      ind.style.transform = 'translateX(-50%) translateY(12px)';
+      spin.style.animation = 'spin 0.7s linear infinite';
+      await loadAll(true);
+      renderCurrentPage();
+      spin.style.animation = '';
+      refreshing = false;
+    }
+    ind.style.opacity = '0';
+    ind.style.transform = 'translateX(-50%) translateY(-48px)';
+  }, { passive: true });
+})();
+
+// ─── SERVICE WORKER (offline shell) ───────────────────────
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW registration failed', e));
+  }
+}
 
 // ─── INIT ─────────────────────────────────────────────────
 async function init() {
+  registerServiceWorker();
   await loadAll();
   renderDashboard();
 }
