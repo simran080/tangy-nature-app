@@ -576,7 +576,8 @@
       </div>
       <div class="form-group">
         <label class="form-label">Qty</label>
-        <input class="form-input" id="purchase-qty" type="number" value="1" oninput="calcPurchaseCost()">
+        <input class="form-input" id="purchase-qty" type="number" min="1" step="1" value="1" oninput="calcPurchaseCost()">
+        <div class="form-hint" id="purchase-qty-hint">Buying multiples of this SKU? Each becomes its own record so you can sell & track profit per unit.</div>
       </div>
     </div>
     <div class="form-row">
@@ -645,6 +646,10 @@
       <div class="detail-row">
         <span class="detail-key">Net cost (+ fees)</span>
         <span class="detail-val mono amber" id="p-net">$0.00</span>
+      </div>
+      <div class="detail-row" id="p-perunit-row" style="display:none;">
+        <span class="detail-key">Cost basis per unit</span>
+        <span class="detail-val mono amber" id="p-perunit">$0.00</span>
       </div>
     </div>
     <div class="btn-row" id="purchase-btn-row">
@@ -1035,6 +1040,15 @@ function nextPurchaseId() {
 }
 function fmt(n) { return '$' + (+n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
 
+// Split a dollar amount evenly across n units to the cent, with any leftover
+// cents allocated to the first units so the parts sum exactly to the total.
+function splitEven(total, n) {
+  const cents = Math.round((+total||0) * 100);
+  const base = Math.floor(cents / n);
+  const rem = cents - base * n;
+  return Array.from({ length: n }, (_, i) => (base + (i < rem ? 1 : 0)) / 100);
+}
+
 // ─── CSV EXPORT ───────────────────────────────────────────
 function _csvEsc(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
 function toCSV(rows, cols) {
@@ -1175,7 +1189,17 @@ function openSheet(id) {
     document.getElementById('purchase-date').value = new Date().toISOString().slice(0,10);
     document.getElementById('purchase-btn-row').innerHTML = '<button class="btn btn-primary" onclick="savePurchase()">Log Purchase</button>';
     setAcqType('cash');
+    // Reset to a clean form so nothing (esp. a leftover qty) carries into the next entry
+    document.getElementById('purchase-sku').value = '';
+    document.getElementById('purchase-sku-search').value = '';
+    document.getElementById('purchase-price').value = '';
+    document.getElementById('purchase-qty').value = '1';
+    document.getElementById('purchase-shipping').value = '0';
+    document.getElementById('purchase-gas').value = '0';
+    document.getElementById('purchase-state').value = '';
+    document.getElementById('purchase-comments').value = '';
     document.getElementById('purchase-condition').value = '';
+    calcPurchaseCost();
   }
   if (id === 'sale-sheet') {
     document.getElementById('sale-sheet-title').textContent = 'Log Sale';
@@ -1674,47 +1698,81 @@ function hideSkuDropdown() {
 }
 function calcPurchaseCost() {
   const price = +document.getElementById('purchase-price').value||0;
-  const qty = +document.getElementById('purchase-qty').value||1;
+  const qty = Math.max(1, Math.floor(+document.getElementById('purchase-qty').value||1));
   const ship = +document.getElementById('purchase-shipping').value||0;
   const gas = +document.getElementById('purchase-gas').value||0;
   const gross = price * qty;
   const net = gross + ship + gas;
   document.getElementById('p-gross').textContent = fmt(gross);
   document.getElementById('p-net').textContent = fmt(net);
+  const perRow = document.getElementById('p-perunit-row');
+  if (perRow) {
+    if (qty > 1) {
+      perRow.style.display = 'flex';
+      document.getElementById('p-perunit').textContent = `${fmt(net / qty)} × ${qty}`;
+    } else {
+      perRow.style.display = 'none';
+    }
+  }
 }
 async function savePurchase() {
   const skuId = document.getElementById('purchase-sku').value;
   const price = +document.getElementById('purchase-price').value;
   if (!skuId || !price) { toast('Please select a product and enter a price'); return; }
-  const qty = +document.getElementById('purchase-qty').value||1;
+  const qty = Math.max(1, Math.floor(+document.getElementById('purchase-qty').value||1));
   const ship = +document.getElementById('purchase-shipping').value||0;
   const gas = +document.getElementById('purchase-gas').value||0;
-  const gross = price * qty;
-  const net = gross + ship + gas;
   const editId = document.getElementById('purchase-edit-id').value;
   const isTrade = document.getElementById('purchase-is-trade').value === '1';
   const dateVal = document.getElementById('purchase-date').value;
   const monthVal = dateVal ? MONTH_NAMES[parseInt(dateVal.slice(5,7))-1] : '';
-  const p = {
-    id: editId || nextPurchaseId(),
+  const base = {
     skuId, date: dateVal, month: monthVal,
     source: document.getElementById('purchase-source').value,
     state: document.getElementById('purchase-state').value.toUpperCase(),
-    qty, pricePerPiece: price, grossCost: gross,
-    shipping: ship, gas,
-    netCost: net,
+    pricePerPiece: price,
     paymentVia: document.getElementById('purchase-payment').value,
     condition: document.getElementById('purchase-condition').value,
     comments: document.getElementById('purchase-comments').value,
     isTrade,
-    tradeSaleIds: JSON.stringify(_selectedTradeSaleIds),
   };
   try {
-    await DB.savePurchase(p);
+    if (editId || qty === 1) {
+      // Single record — edit, or a one-off buy (unchanged behavior)
+      const p = {
+        ...base,
+        id: editId || nextPurchaseId(),
+        qty: 1, grossCost: price,
+        shipping: ship, gas, netCost: price + ship + gas,
+        tradeSaleIds: JSON.stringify(_selectedTradeSaleIds),
+      };
+      await DB.savePurchase(p);
+      await loadAll();
+      closeSheet('purchase-sheet');
+      renderPurchases();
+      toast(editId ? 'Purchase updated' : 'Purchase logged');
+      return;
+    }
+    // Bulk buy — fan out into `qty` individual unit records, each its own
+    // sellable item with its own cost basis (shipping/gas split evenly).
+    const shipShare = splitEven(ship, qty);
+    const gasShare  = splitEven(gas, qty);
+    const startNum  = purchaseIdNum(nextPurchaseId());
+    const rows = Array.from({ length: qty }, (_, i) => ({
+      ...base,
+      id: 'P-' + String(startNum + i).padStart(5, '0'),
+      qty: 1, grossCost: price,
+      shipping: shipShare[i], gas: gasShare[i],
+      netCost: price + shipShare[i] + gasShare[i],
+      // Keep any trade linkage on the first unit only, to avoid double-counting
+      tradeSaleIds: JSON.stringify(i === 0 ? _selectedTradeSaleIds : []),
+    }));
+    for (const p of rows) await DB.savePurchase(p);
     await loadAll();
     closeSheet('purchase-sheet');
     renderPurchases();
-    toast(editId ? 'Purchase updated' : 'Purchase logged');
+    const last = 'P-' + String(startNum + qty - 1).padStart(5, '0');
+    toast(`${qty} units logged (${rows[0].id}–${last})`);
   } catch(e) { toast('❌ ' + e.message); }
 }
 let purchaseFilter = 'all';
