@@ -924,6 +924,32 @@
       <div class="form-group"><label class="form-label">Width (in)</label><input class="form-input" id="ship-wid" type="number" step="0.1" value="8"></div>
       <div class="form-group"><label class="form-label">Height (in)</label><input class="form-input" id="ship-hgt" type="number" step="0.1" value="6"></div>
     </div>
+    <div class="section-title" style="padding:0;margin:16px 0 8px;">Add-ons (optional)</div>
+    <div class="form-group">
+      <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="ship-insure-on" onchange="toggleShipInsurance()" style="width:16px;height:16px;">
+        Insure this shipment
+      </label>
+      <div id="ship-insure-fields" style="display:none;margin-top:8px;">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Declared value ($)</label><input class="form-input" id="ship-insure-amount" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="form-group"><label class="form-label">Contents</label><input class="form-input" id="ship-insure-content" placeholder="Camera lens" value="Camera gear"></div>
+        </div>
+        <div class="form-hint">Covers loss/damage up to the declared value.</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Signature at delivery</label>
+      <select class="form-select" id="ship-signature">
+        <option value="">None</option>
+        <option value="STANDARD">Standard signature</option>
+        <option value="ADULT">Adult signature (21+)</option>
+        <option value="CERTIFIED">Certified Mail (USPS only)</option>
+        <option value="INDIRECT">Indirect signature (FedEx only)</option>
+        <option value="CARRIER_CONFIRMATION">Carrier confirmation (Deutsche Post only)</option>
+      </select>
+      <div class="form-hint">Not every carrier/rate supports every option — unsupported ones are ignored for that rate.</div>
+    </div>
     <div class="btn-row" style="margin-top:4px;">
       <button class="btn btn-secondary" id="ship-rates-btn" onclick="fetchShipRates()">Compare Rates →</button>
     </div>
@@ -2987,8 +3013,17 @@ function _resetShipLabelUI() {
   document.getElementById('ship-to-phone').value = '';
   document.getElementById('ship-rates').innerHTML = '';
   document.getElementById('ship-result').innerHTML = '';
+  document.getElementById('ship-insure-on').checked = false;
+  document.getElementById('ship-insure-fields').style.display = 'none';
+  document.getElementById('ship-insure-content').value = 'Camera gear';
+  document.getElementById('ship-signature').value = '';
   const btn = document.getElementById('ship-rates-btn');
   btn.textContent = 'Compare Rates →'; btn.disabled = false; btn.style.display = '';
+}
+
+function toggleShipInsurance() {
+  document.getElementById('ship-insure-fields').style.display =
+    document.getElementById('ship-insure-on').checked ? 'block' : 'none';
 }
 
 // Buy a label for an already-logged sale (retroactive) — from the sale detail sheet.
@@ -3000,6 +3035,7 @@ function openShipLabel(saleId) {
   document.getElementById('shiplabel-sub').textContent = `${sku.product || 'Item'} · ${s.id}`;
   _resetShipLabelUI();
   document.getElementById('ship-to-state').value = s.state || '';
+  document.getElementById('ship-insure-amount').value = (+s.unitPrice || +s.netCost || 0).toFixed(2);
   closeSheet('detail-sheet');
   openSheet('shiplabel-sheet');
 }
@@ -3015,6 +3051,9 @@ function openShipLabelForSale() {
   document.getElementById('shiplabel-sub').textContent = `${sku.product || 'Item'} (before sale is logged)`;
   _resetShipLabelUI();
   document.getElementById('ship-to-state').value = document.getElementById('sale-state').value || '';
+  const salePrice = +document.getElementById('sale-price').value || 0;
+  document.getElementById('ship-insure-amount').value = (salePrice || +purchase.netCost || 0).toFixed(2);
+  document.getElementById('ship-insure-content').value = sku.product || 'Camera gear';
   openSheet('shiplabel-sheet');
 }
 
@@ -3039,6 +3078,22 @@ function _shipParcel() {
     mass_unit: 'lb',
   };
 }
+function _shipExtra() {
+  const extra = {};
+  const sig = document.getElementById('ship-signature').value;
+  if (sig) extra.signature_confirmation = sig;
+  if (document.getElementById('ship-insure-on').checked) {
+    const amount = +document.getElementById('ship-insure-amount').value || 0;
+    if (amount > 0) {
+      extra.insurance = {
+        amount: amount.toFixed(2),
+        currency: 'USD',
+        content: document.getElementById('ship-insure-content').value.trim() || 'Camera gear',
+      };
+    }
+  }
+  return extra;
+}
 
 async function _shippoCall(payload) {
   await ensureValidToken();
@@ -3059,13 +3114,21 @@ async function fetchShipRates() {
     toast('Fill in the full buyer address first'); return;
   }
   if (!parcel.weight) { toast('Enter the parcel weight'); return; }
+  if (document.getElementById('ship-insure-on').checked && !(+document.getElementById('ship-insure-amount').value > 0)) {
+    toast('Enter a declared value to insure this shipment'); return;
+  }
+  const extra = _shipExtra();
   const btn = document.getElementById('ship-rates-btn');
   btn.disabled = true; btn.textContent = 'Fetching rates…';
   document.getElementById('ship-rates').innerHTML = '';
   document.getElementById('ship-result').innerHTML = '';
   try {
-    const data = await _shippoCall({ action: 'rates', from: SHIP_FROM, to, parcel });
+    const data = await _shippoCall({ action: 'rates', from: SHIP_FROM, to, parcel, extra });
     _shipCtx.rates = data.rates || [];
+    _shipCtx.extraSummary = [
+      extra.insurance ? `Insured $${extra.insurance.amount}` : null,
+      extra.signature_confirmation ? 'Signature required' : null,
+    ].filter(Boolean).join(' · ');
     renderShipRates();
   } catch (e) {
     toast('❌ ' + e.message);
@@ -3078,7 +3141,9 @@ function renderShipRates() {
   const box = document.getElementById('ship-rates');
   const rates = _shipCtx.rates;
   if (!rates.length) { box.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">No rates returned for this address/parcel.</div>'; return; }
-  box.innerHTML = `<div class="section-title" style="padding:0;margin:0 0 8px;">Rates (cheapest first)</div>` +
+  const extraBadge = _shipCtx.extraSummary
+    ? `<div style="font-size:11px;color:var(--blue);background:var(--blue-dim);border-radius:6px;padding:5px 10px;margin-bottom:10px;display:inline-block;">✓ ${_shipCtx.extraSummary}</div>` : '';
+  box.innerHTML = `<div class="section-title" style="padding:0;margin:0 0 8px;">Rates (cheapest first)</div>` + extraBadge +
     rates.map((r, i) => `
       <div onclick="selectShipRate(${i})" id="ship-rate-${i}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:0.5px solid ${_shipCtx.selectedRateId===r.object_id?'var(--amber)':'var(--border)'};background:${_shipCtx.selectedRateId===r.object_id?'var(--amber-dim)':'var(--bg2)'};border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;">
         <div style="flex:1;min-width:0;">

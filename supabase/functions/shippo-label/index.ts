@@ -34,6 +34,38 @@ function json(req: Request, body: unknown, status = 200): Response {
   });
 }
 
+const SIGNATURE_VALUES = new Set([
+  "STANDARD", "ADULT", "CERTIFIED", "INDIRECT", "CARRIER_CONFIRMATION",
+]);
+const INSURANCE_PROVIDERS = new Set(["FEDEX", "UPS", "ONTRAC"]);
+
+// Whitelist the shipment "extra" object so the client can only request the
+// specific add-ons we support (insurance, signature confirmation) — not
+// arbitrary Shippo shipment options.
+function sanitizeExtra(extra: any): Record<string, unknown> | undefined {
+  if (!extra || typeof extra !== "object") return undefined;
+  const out: Record<string, unknown> = {};
+
+  if (typeof extra.signature_confirmation === "string" && SIGNATURE_VALUES.has(extra.signature_confirmation)) {
+    out.signature_confirmation = extra.signature_confirmation;
+  }
+
+  const ins = extra.insurance;
+  if (ins && typeof ins === "object" && ins.amount && Number(ins.amount) > 0) {
+    const insurance: Record<string, unknown> = {
+      amount: String(ins.amount),
+      currency: typeof ins.currency === "string" ? ins.currency : "USD",
+      content: typeof ins.content === "string" && ins.content.trim() ? ins.content.trim() : "Camera gear",
+    };
+    if (typeof ins.provider === "string" && INSURANCE_PROVIDERS.has(ins.provider)) {
+      insurance.provider = ins.provider;
+    }
+    out.insurance = insurance;
+  }
+
+  return Object.keys(out).length ? out : undefined;
+}
+
 async function shippo(path: string, payload: unknown): Promise<any> {
   const res = await fetch(SHIPPO_BASE + path, {
     method: "POST",
@@ -89,6 +121,7 @@ Deno.serve(async (req: Request) => {
         address_from: body.from,
         address_to: body.to,
         parcels: [body.parcel],
+        extra: sanitizeExtra(body.extra),
         async: false,
       });
       const rates = (shipment.rates ?? []).map((r: any) => ({
