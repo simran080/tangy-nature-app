@@ -888,6 +888,47 @@
   <div class="sheet-body" id="sku-drill-body"></div>
 </div>
 
+<!-- SHIPPING LABEL SHEET -->
+<div class="sheet-overlay" id="shiplabel-overlay" onclick="closeSheet('shiplabel-sheet')"></div>
+<div class="sheet" id="shiplabel-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div>
+      <div class="sheet-title">Buy Shipping Label</div>
+      <div id="shiplabel-sub" style="font-size:12px;color:var(--text3);margin-top:2px;"></div>
+    </div>
+    <button class="sheet-close" onclick="closeSheet('shiplabel-sheet')">✕</button>
+  </div>
+  <div class="sheet-body">
+    <input type="hidden" id="ship-sale-id">
+    <div class="section-title" style="padding:0;margin:0 0 8px;">Ship to (buyer)</div>
+    <div class="form-group"><label class="form-label">Full name</label><input class="form-input" id="ship-to-name" placeholder="Buyer name"></div>
+    <div class="form-group"><label class="form-label">Street address</label><input class="form-input" id="ship-to-street" placeholder="123 Main St Apt 2"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">City</label><input class="form-input" id="ship-to-city" placeholder="Boston"></div>
+      <div class="form-group"><label class="form-label">State</label><input class="form-input" id="ship-to-state" placeholder="MA" maxlength="2"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">ZIP</label><input class="form-input" id="ship-to-zip" placeholder="02118"></div>
+      <div class="form-group"><label class="form-label">Phone (optional)</label><input class="form-input" id="ship-to-phone" placeholder="(555) 555-5555"></div>
+    </div>
+    <div class="section-title" style="padding:0;margin:16px 0 8px;">Parcel</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Weight (lb)</label><input class="form-input" id="ship-weight" type="number" step="0.1" value="3"></div>
+      <div class="form-group"><label class="form-label">Length (in)</label><input class="form-input" id="ship-len" type="number" step="0.1" value="10"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Width (in)</label><input class="form-input" id="ship-wid" type="number" step="0.1" value="8"></div>
+      <div class="form-group"><label class="form-label">Height (in)</label><input class="form-input" id="ship-hgt" type="number" step="0.1" value="6"></div>
+    </div>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="btn btn-secondary" id="ship-rates-btn" onclick="fetchShipRates()">Compare Rates →</button>
+    </div>
+    <div id="ship-rates" style="margin-top:16px;"></div>
+    <div id="ship-result" style="margin-top:16px;"></div>
+  </div>
+</div>
+
 <script>
 // ─── SUPABASE CONFIG ──────────────────────────────────────
 const SUPABASE_URL = 'https://euulsabzjzrdrhmgzxfu.supabase.co';
@@ -2154,7 +2195,8 @@ function viewSaleDetail(id) {
     <div class="detail-row"><span class="detail-key">Net profit</span><span class="detail-val mono" style="color:${profit>=0?'var(--green)':'var(--red)'};font-size:16px;">${hideFin(fmt(profit))}</span></div>
     <div class="detail-row"><span class="detail-key">Margin</span><span class="detail-val mono" style="color:${profit>=0?'var(--green)':'var(--red)'};">${isViewer()?"••••":((+s.margin||0)*100).toFixed(1)+"%"}</span></div>
     ${s.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${s.comments}</span></div>`:''}
-    <div style="margin-top:20px;" class="btn-row">
+    ${canWrite() ? `<button class="btn btn-primary" style="margin-top:16px;background:var(--blue);color:#fff;" onclick="openShipLabel('${id}')">🏷️ Buy Shipping Label</button>` : ''}
+    <div style="margin-top:12px;" class="btn-row">
       ${canWrite() && !s.paypalReleased ? `<button class="btn btn-primary" style="background:var(--green);color:#fff;" onclick="releaseToPaypal('${id}')">💸 Release to PayPal</button>` : ''}
       ${s.paypalReleased ? `<div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--green);font-weight:500;text-align:center;flex:1;">✅ Profit sent to PayPal</div>` : ''}
       ${canWrite() ? `<button class="btn btn-secondary" onclick="openEditSaleTrades('${id}')">🔄 Trades</button>` : ''}
@@ -2919,6 +2961,174 @@ function renderSummary() {
       ${noSales ? `<div style="padding:10px 12px;font-size:12px;color:var(--text3);font-style:italic;">No sales yet</div>` : ''}
     </div>`;
   }).join('');
+}
+
+// ─── SHIPPING LABELS (Shippo via Edge Function) ────────────
+const SHIPPO_FN_URL = `${SUPABASE_URL}/functions/v1/shippo-label`;
+
+// Business ship-from address (editable here). Used as address_from on every label.
+const SHIP_FROM = {
+  name: 'Simarpreet Kaur',
+  street1: '3 Upland Woods Cir Unit 408',
+  city: 'Norwood', state: 'MA', zip: '02062', country: 'US',
+};
+
+let _shipCtx = null; // { saleId, rates:[], selectedRateId, selectedAmount }
+
+function openShipLabel(saleId) {
+  const s = _sales.find(x => x.id === saleId);
+  if (!s) return;
+  const { s: sku } = _skuFor(s.purchaseId);
+  _shipCtx = { saleId, rates: [], selectedRateId: null, selectedAmount: null };
+  document.getElementById('ship-sale-id').value = saleId;
+  document.getElementById('shiplabel-sub').textContent =
+    `${sku.product || 'Item'} · ${s.id}`;
+  // Prefill buyer state from the sale; clear the rest
+  document.getElementById('ship-to-name').value = '';
+  document.getElementById('ship-to-street').value = '';
+  document.getElementById('ship-to-city').value = '';
+  document.getElementById('ship-to-state').value = s.state || '';
+  document.getElementById('ship-to-zip').value = '';
+  document.getElementById('ship-to-phone').value = '';
+  document.getElementById('ship-rates').innerHTML = '';
+  document.getElementById('ship-result').innerHTML = '';
+  const btn = document.getElementById('ship-rates-btn');
+  btn.textContent = 'Compare Rates →'; btn.disabled = false;
+  closeSheet('detail-sheet');
+  openSheet('shiplabel-sheet');
+}
+
+function _shipToAddress() {
+  return {
+    name: document.getElementById('ship-to-name').value.trim(),
+    street1: document.getElementById('ship-to-street').value.trim(),
+    city: document.getElementById('ship-to-city').value.trim(),
+    state: document.getElementById('ship-to-state').value.trim().toUpperCase(),
+    zip: document.getElementById('ship-to-zip').value.trim(),
+    phone: document.getElementById('ship-to-phone').value.trim(),
+    country: 'US',
+  };
+}
+function _shipParcel() {
+  return {
+    length: +document.getElementById('ship-len').value || 0,
+    width: +document.getElementById('ship-wid').value || 0,
+    height: +document.getElementById('ship-hgt').value || 0,
+    distance_unit: 'in',
+    weight: +document.getElementById('ship-weight').value || 0,
+    mass_unit: 'lb',
+  };
+}
+
+async function _shippoCall(payload) {
+  await ensureValidToken();
+  const res = await fetch(SHIPPO_FN_URL, {
+    method: 'POST',
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.detail || `Request failed (${res.status})`);
+  return data;
+}
+
+async function fetchShipRates() {
+  const to = _shipToAddress();
+  const parcel = _shipParcel();
+  if (!to.name || !to.street1 || !to.city || !to.state || !to.zip) {
+    toast('Fill in the full buyer address first'); return;
+  }
+  if (!parcel.weight) { toast('Enter the parcel weight'); return; }
+  const btn = document.getElementById('ship-rates-btn');
+  btn.disabled = true; btn.textContent = 'Fetching rates…';
+  document.getElementById('ship-rates').innerHTML = '';
+  document.getElementById('ship-result').innerHTML = '';
+  try {
+    const data = await _shippoCall({ action: 'rates', from: SHIP_FROM, to, parcel });
+    _shipCtx.rates = data.rates || [];
+    renderShipRates();
+  } catch (e) {
+    toast('❌ ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Compare Rates →';
+  }
+}
+
+function renderShipRates() {
+  const box = document.getElementById('ship-rates');
+  const rates = _shipCtx.rates;
+  if (!rates.length) { box.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">No rates returned for this address/parcel.</div>'; return; }
+  box.innerHTML = `<div class="section-title" style="padding:0;margin:0 0 8px;">Rates (cheapest first)</div>` +
+    rates.map((r, i) => `
+      <div onclick="selectShipRate(${i})" id="ship-rate-${i}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:0.5px solid ${_shipCtx.selectedRateId===r.object_id?'var(--amber)':'var(--border)'};background:${_shipCtx.selectedRateId===r.object_id?'var(--amber-dim)':'var(--bg2)'};border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);">${r.provider} · ${r.servicelevel||''}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">${r.estimated_days!=null?r.estimated_days+' day'+(r.estimated_days==1?'':'s'):'—'}</div>
+        </div>
+        <div style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--amber);">$${(+r.amount).toFixed(2)}</div>
+      </div>`).join('') +
+    `<button class="btn btn-primary" id="ship-buy-btn" style="margin-top:4px;opacity:0.5;" disabled onclick="buyShipLabel()">Select a rate to buy</button>`;
+}
+
+function selectShipRate(i) {
+  const r = _shipCtx.rates[i];
+  if (!r) return;
+  _shipCtx.selectedRateId = r.object_id;
+  _shipCtx.selectedAmount = +r.amount;
+  renderShipRates();
+  const buy = document.getElementById('ship-buy-btn');
+  buy.disabled = false; buy.style.opacity = '1';
+  buy.textContent = `Buy Label — $${(+r.amount).toFixed(2)}`;
+}
+
+async function buyShipLabel() {
+  const rateId = _shipCtx.selectedRateId;
+  const amount = _shipCtx.selectedAmount;
+  if (!rateId) { toast('Select a rate first'); return; }
+  if (!confirm(`Buy this shipping label for $${amount.toFixed(2)}? This charges your Shippo account.`)) return;
+  const buy = document.getElementById('ship-buy-btn');
+  buy.disabled = true; buy.textContent = 'Purchasing…';
+  try {
+    const data = await _shippoCall({ action: 'buy', rate_id: rateId, label_file_type: 'PDF_4x6' });
+    await applyLabelToSale(_shipCtx.saleId, data, amount);
+    document.getElementById('ship-rates').innerHTML = '';
+    document.getElementById('ship-result').innerHTML = `
+      <div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius);padding:14px 16px;">
+        <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px;">✅ Label purchased</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Tracking</div>
+        <div style="font-size:14px;font-family:'DM Mono',monospace;color:var(--text);margin-bottom:12px;word-break:break-all;">${data.tracking_number||'—'}</div>
+        <a href="${data.label_url}" target="_blank" rel="noopener" class="btn btn-primary" style="display:block;text-decoration:none;text-align:center;">🖨️ Open / Print Label</a>
+      </div>`;
+    toast(`Label bought — $${amount.toFixed(2)} added to shipping`);
+  } catch (e) {
+    toast('❌ ' + e.message);
+    buy.disabled = false; buy.style.opacity = '1'; buy.textContent = `Buy Label — $${amount.toFixed(2)}`;
+  }
+}
+
+// Write the label cost back into the sale (as shipping paid) and recompute profit
+async function applyLabelToSale(saleId, label, amount) {
+  const s = _sales.find(x => x.id === saleId);
+  if (!s) return;
+  const gross = +s.grossSale || ((+s.unitPrice||0) + (+s.shippingCharged||0));
+  const fees = +s.fees || 0;
+  const ga = +s.ga || 0;
+  const cost = +s.netCost || 0;
+  const shipPaid = amount;
+  const net = gross - fees - shipPaid - ga;
+  const profit = net - cost;
+  const trackNote = `Tracking ${label.tracking_number || ''}`.trim();
+  const comments = s.comments ? `${s.comments} · ${trackNote}` : trackNote;
+  const updated = {
+    ...s,
+    shippingPaid: shipPaid,
+    netSale: net,
+    profit,
+    margin: cost > 0 ? profit / cost : 0,
+    comments,
+  };
+  await DB.saveSale(updated);
+  await loadAll(true);
 }
 
 // ─── QUOTE TOOL ────────────────────────────────────────────
