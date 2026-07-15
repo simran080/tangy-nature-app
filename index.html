@@ -751,19 +751,39 @@
     </div>
     <div class="card" style="margin:0 0 16px;padding:12px 16px;">
       <div class="detail-row">
-        <span class="detail-key">Net cost basis</span>
-        <span class="detail-val mono" id="s-cost">$0.00</span>
+        <span class="detail-key">Sale price</span>
+        <span class="detail-val mono" id="s-price">$0.00</span>
       </div>
       <div class="detail-row">
-        <span class="detail-key">Gross sale</span>
+        <span class="detail-key">+ Shipping charged</span>
+        <span class="detail-val mono" id="s-shipcharged">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">= Gross sale</span>
         <span class="detail-val mono" id="s-gross">$0.00</span>
       </div>
       <div class="detail-row">
-        <span class="detail-key">Net sale (after fees)</span>
+        <span class="detail-key">− Platform fees</span>
+        <span class="detail-val mono" id="s-fees" style="color:var(--red);">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">− Shipping paid</span>
+        <span class="detail-val mono" id="s-shippaid" style="color:var(--red);">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">− G&A / other</span>
+        <span class="detail-val mono" id="s-ga" style="color:var(--red);">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">= Net sale</span>
         <span class="detail-val mono" id="s-net">$0.00</span>
       </div>
       <div class="detail-row">
-        <span class="detail-key">Net profit</span>
+        <span class="detail-key">− Net cost basis</span>
+        <span class="detail-val mono" id="s-cost" style="color:var(--red);">$0.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">= Net profit</span>
         <span class="detail-val mono" id="s-profit" style="font-size:16px;">$0.00</span>
       </div>
       <div class="detail-row">
@@ -2064,9 +2084,14 @@ function calcSaleProfit() {
   const net = gross - fees - shipPaid - ga;
   const profit = net - cost;
   const margin = cost > 0 ? (profit / cost * 100) : 0;
-  document.getElementById('s-cost').textContent = fmt(cost);
+  document.getElementById('s-price').textContent = fmt(price);
+  document.getElementById('s-shipcharged').textContent = fmt(shipCharged);
   document.getElementById('s-gross').textContent = fmt(gross);
+  document.getElementById('s-fees').textContent = fmt(fees);
+  document.getElementById('s-shippaid').textContent = fmt(shipPaid);
+  document.getElementById('s-ga').textContent = fmt(ga);
   document.getElementById('s-net').textContent = fmt(net);
+  document.getElementById('s-cost').textContent = fmt(cost);
   const profitEl = document.getElementById('s-profit');
   profitEl.textContent = fmt(profit);
   profitEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
