@@ -708,6 +708,10 @@
         <input class="form-input" id="sale-ship-paid" type="number" step="0.01" value="0" oninput="calcSaleProfit()">
       </div>
     </div>
+    <div class="form-group" style="margin-top:-8px;">
+      <button type="button" class="btn btn-secondary" style="background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue);font-size:13px;padding:10px;" onclick="openShipLabelForSale()">🏷️ Buy Shipping Label</button>
+      <div class="form-hint" id="sale-label-hint"></div>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Platform fees (%)</label>
@@ -900,7 +904,6 @@
     <button class="sheet-close" onclick="closeSheet('shiplabel-sheet')">✕</button>
   </div>
   <div class="sheet-body">
-    <input type="hidden" id="ship-sale-id">
     <div class="section-title" style="padding:0;margin:0 0 8px;">Ship to (buyer)</div>
     <div class="form-group"><label class="form-label">Full name</label><input class="form-input" id="ship-to-name" placeholder="Buyer name"></div>
     <div class="form-group"><label class="form-label">Street address</label><input class="form-input" id="ship-to-street" placeholder="123 Main St Apt 2"></div>
@@ -1247,6 +1250,7 @@ function openSheet(id) {
     document.getElementById('sale-edit-id').value = '';
     document.getElementById('sale-date').value = new Date().toISOString().slice(0,10);
     document.getElementById('sale-btn-row').innerHTML = '<button class="btn btn-primary" onclick="saveSale()">Log Sale</button>';
+    document.getElementById('sale-label-hint').textContent = '';
     _saleIsTrade = false;
     setSaleType('cash');
     calcSaleProfit();
@@ -2973,28 +2977,44 @@ const SHIP_FROM = {
   city: 'Norwood', state: 'MA', zip: '02062', country: 'US',
 };
 
-let _shipCtx = null; // { saleId, rates:[], selectedRateId, selectedAmount }
+let _shipCtx = null; // { mode:'presale'|'postsale', saleId, rates:[], selectedRateId, selectedAmount }
 
-function openShipLabel(saleId) {
-  const s = _sales.find(x => x.id === saleId);
-  if (!s) return;
-  const { s: sku } = _skuFor(s.purchaseId);
-  _shipCtx = { saleId, rates: [], selectedRateId: null, selectedAmount: null };
-  document.getElementById('ship-sale-id').value = saleId;
-  document.getElementById('shiplabel-sub').textContent =
-    `${sku.product || 'Item'} · ${s.id}`;
-  // Prefill buyer state from the sale; clear the rest
+function _resetShipLabelUI() {
   document.getElementById('ship-to-name').value = '';
   document.getElementById('ship-to-street').value = '';
   document.getElementById('ship-to-city').value = '';
-  document.getElementById('ship-to-state').value = s.state || '';
   document.getElementById('ship-to-zip').value = '';
   document.getElementById('ship-to-phone').value = '';
   document.getElementById('ship-rates').innerHTML = '';
   document.getElementById('ship-result').innerHTML = '';
   const btn = document.getElementById('ship-rates-btn');
-  btn.textContent = 'Compare Rates →'; btn.disabled = false;
+  btn.textContent = 'Compare Rates →'; btn.disabled = false; btn.style.display = '';
+}
+
+// Buy a label for an already-logged sale (retroactive) — from the sale detail sheet.
+function openShipLabel(saleId) {
+  const s = _sales.find(x => x.id === saleId);
+  if (!s) return;
+  const { s: sku } = _skuFor(s.purchaseId);
+  _shipCtx = { mode: 'postsale', saleId, rates: [], selectedRateId: null, selectedAmount: null };
+  document.getElementById('shiplabel-sub').textContent = `${sku.product || 'Item'} · ${s.id}`;
+  _resetShipLabelUI();
+  document.getElementById('ship-to-state').value = s.state || '';
   closeSheet('detail-sheet');
+  openSheet('shiplabel-sheet');
+}
+
+// Buy a label WHILE logging a sale, before it's saved — from the Log Sale sheet.
+// On purchase, fills Shipping paid + appends tracking to notes right in that form.
+function openShipLabelForSale() {
+  const purchaseId = document.getElementById('sale-purchase').value;
+  if (!purchaseId) { toast('Select a purchase (item being sold) first'); return; }
+  const purchase = _purchases.find(p => p.id === purchaseId) || {};
+  const sku = _skus.find(s => normalizeSkuId(s.id) === normalizeSkuId(purchase.skuId)) || {};
+  _shipCtx = { mode: 'presale', saleId: null, rates: [], selectedRateId: null, selectedAmount: null };
+  document.getElementById('shiplabel-sub').textContent = `${sku.product || 'Item'} (before sale is logged)`;
+  _resetShipLabelUI();
+  document.getElementById('ship-to-state').value = document.getElementById('sale-state').value || '';
   openSheet('shiplabel-sheet');
 }
 
@@ -3090,14 +3110,21 @@ async function buyShipLabel() {
   buy.disabled = true; buy.textContent = 'Purchasing…';
   try {
     const data = await _shippoCall({ action: 'buy', rate_id: rateId, label_file_type: 'PDF_4x6' });
-    await applyLabelToSale(_shipCtx.saleId, data, amount);
+    if (_shipCtx.mode === 'postsale') {
+      await applyLabelToSale(_shipCtx.saleId, data, amount);
+    } else {
+      applyLabelToSaleForm(data, amount);
+    }
     document.getElementById('ship-rates').innerHTML = '';
+    const returnBtn = _shipCtx.mode === 'presale'
+      ? `<button class="btn btn-primary" style="margin-top:8px;" onclick="closeSheet('shiplabel-sheet')">← Back to Sale</button>` : '';
     document.getElementById('ship-result').innerHTML = `
       <div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius);padding:14px 16px;">
         <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px;">✅ Label purchased</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Tracking</div>
         <div style="font-size:14px;font-family:'DM Mono',monospace;color:var(--text);margin-bottom:12px;word-break:break-all;">${data.tracking_number||'—'}</div>
         <a href="${data.label_url}" target="_blank" rel="noopener" class="btn btn-primary" style="display:block;text-decoration:none;text-align:center;">🖨️ Open / Print Label</a>
+        ${returnBtn}
       </div>`;
     toast(`Label bought — $${amount.toFixed(2)} added to shipping`);
   } catch (e) {
@@ -3106,7 +3133,7 @@ async function buyShipLabel() {
   }
 }
 
-// Write the label cost back into the sale (as shipping paid) and recompute profit
+// Write the label cost back into the sale (as shipping paid) and recompute profit — retroactive path
 async function applyLabelToSale(saleId, label, amount) {
   const s = _sales.find(x => x.id === saleId);
   if (!s) return;
@@ -3129,6 +3156,17 @@ async function applyLabelToSale(saleId, label, amount) {
   };
   await DB.saveSale(updated);
   await loadAll(true);
+}
+
+// Fill the still-open Log Sale form with the label cost + tracking — pre-save path
+function applyLabelToSaleForm(label, amount) {
+  document.getElementById('sale-ship-paid').value = amount.toFixed(2);
+  const trackNote = `Tracking ${label.tracking_number || ''}`.trim();
+  const commentsEl = document.getElementById('sale-comments');
+  commentsEl.value = commentsEl.value ? `${commentsEl.value} · ${trackNote}` : trackNote;
+  document.getElementById('sale-label-hint').textContent = `✅ Label bought — $${amount.toFixed(2)} added to Shipping paid`;
+  document.getElementById('sale-label-hint').style.color = 'var(--green)';
+  calcSaleProfit();
 }
 
 // ─── QUOTE TOOL ────────────────────────────────────────────
