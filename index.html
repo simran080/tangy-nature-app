@@ -2069,6 +2069,53 @@ function openSaleForPurchase(purchaseId) {
 function onSalePurchaseChange() {
   calcSaleProfit();
 }
+
+function editSale(id) {
+  const s = _sales.find(x => x.id === id);
+  if (!s) return;
+  closeSheet('detail-sheet');
+  document.getElementById('sale-sheet-title').textContent = 'Edit Sale';
+  document.getElementById('sale-edit-id').value = id;
+  document.getElementById('sale-label-hint').textContent = '';
+  document.getElementById('sale-use-shippo').checked = false;
+  document.getElementById('sale-get-rates-btn').style.display = 'none';
+  _pendingShipLabel = null;
+
+  // Purchase select must include this sale's own purchase even though it's "sold"
+  populateSalePurchaseSelect(s.purchaseId);
+  document.getElementById('sale-purchase').value = s.purchaseId;
+
+  document.getElementById('sale-date').value = s.date || '';
+  document.getElementById('sale-source').value = s.source || 'Facebook';
+  document.getElementById('sale-price').value = s.unitPrice || '';
+  document.getElementById('sale-state').value = s.state || '';
+  document.getElementById('sale-ship-charged').value = s.shippingCharged || 0;
+  document.getElementById('sale-ship-paid').value = s.shippingPaid || 0;
+  // feesPct is stored as a fraction (e.g. 0.0299) — display as a percent (2.99)
+  document.getElementById('sale-fees-pct').value = +(((+s.feesPct || 0) * 100).toFixed(4));
+  document.getElementById('sale-fees-fixed').value = s.feesFixed || 0;
+  document.getElementById('sale-ga').value = s.ga || 0;
+  document.getElementById('sale-comments').value = s.comments || '';
+
+  _saleIsTrade = !!s.isTrade;
+  if (_saleIsTrade) {
+    setSaleType('trade');
+    try { _selectedTradePurchaseIds = JSON.parse(s.tradePurchaseIds || '[]'); }
+    catch { _selectedTradePurchaseIds = s.tradePurchaseId ? [s.tradePurchaseId] : []; }
+    renderTradeChips('sale-trade-selected', _selectedTradePurchaseIds, removeTradePurchase);
+    populateTradePurchaseSelect();
+  } else {
+    setSaleType('cash');
+  }
+
+  calcSaleProfit();
+  document.getElementById('sale-btn-row').innerHTML = `
+    <button class="btn btn-secondary" onclick="deleteSale('${id}')">Delete</button>
+    <button class="btn btn-primary" onclick="saveSale()">Update</button>
+  `;
+  document.getElementById('sale-overlay').classList.add('open');
+  document.getElementById('sale-sheet').style.transform = 'translate(-50%, 0)';
+}
 function calcSaleProfit() {
   const purchaseId = document.getElementById('sale-purchase').value;
   const purchase = _purchases.find(p=>p.id===purchaseId)||{};
@@ -2300,6 +2347,9 @@ function viewSaleDetail(id) {
     <div style="margin-top:12px;" class="btn-row">
       ${canWrite() && !s.paypalReleased ? `<button class="btn btn-primary" style="background:var(--green);color:#fff;" onclick="releaseToPaypal('${id}')">💸 Release to PayPal</button>` : ''}
       ${s.paypalReleased ? `<div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--green);font-weight:500;text-align:center;flex:1;">✅ Profit sent to PayPal</div>` : ''}
+    </div>
+    <div style="margin-top:10px;" class="btn-row">
+      ${canWrite() ? `<button class="btn btn-secondary" onclick="editSale('${id}')">✏️ Edit</button>` : ''}
       ${canWrite() ? `<button class="btn btn-secondary" onclick="openEditSaleTrades('${id}')">🔄 Trades</button>` : ''}
       ${canDelete() ? `<button class="btn btn-danger" onclick="deleteSale('${id}')">Delete</button>` : ''}
     </div>
