@@ -716,12 +716,22 @@
       <button type="button" id="sale-get-rates-btn" class="btn btn-secondary" style="display:none;margin-top:8px;background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue);font-size:13px;padding:10px;" onclick="openShipLabelForSale()">🏷️ Get Shipping Rates</button>
       <div class="form-hint" id="sale-label-hint"></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Tracking number</label>
-      <input class="form-input" id="sale-tracking" placeholder="Auto-filled if bought via Shippo, or enter manually">
-      <input type="hidden" id="sale-tracking-url">
-      <input type="hidden" id="sale-label-url">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Carrier</label>
+        <select class="form-select" id="sale-carrier">
+          <option value="">— Select carrier —</option>
+          <option value="USPS">USPS</option>
+          <option value="UPS">UPS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tracking number</label>
+        <input class="form-input" id="sale-tracking" placeholder="Auto-filled if bought via Shippo, or enter manually">
+      </div>
     </div>
+    <input type="hidden" id="sale-tracking-url">
+    <input type="hidden" id="sale-label-url">
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Platform fees (%)</label>
@@ -1191,6 +1201,7 @@ function exportSales() {
     { label:'Margin %', get:r => ((+r.margin||0)*100).toFixed(1) },
     { label:'Trade', get:r => r.isTrade ? 'Yes' : 'No' },
     { label:'PayPal Released', get:r => r.paypalReleased ? 'Yes' : 'No' },
+    { label:'Carrier', key:'carrier' },
     { label:'Tracking Number', key:'trackingNumber' },
     { label:'Tracking URL', key:'trackingUrl' },
     { label:'Label URL', key:'labelUrl' },
@@ -1312,6 +1323,7 @@ function openSheet(id) {
     document.getElementById('sale-label-hint').textContent = '';
     document.getElementById('sale-use-shippo').checked = false;
     document.getElementById('sale-get-rates-btn').style.display = 'none';
+    document.getElementById('sale-carrier').value = '';
     document.getElementById('sale-tracking').value = '';
     document.getElementById('sale-tracking-url').value = '';
     document.getElementById('sale-label-url').value = '';
@@ -2111,6 +2123,7 @@ function editSale(id) {
   document.getElementById('sale-tracking').value = s.trackingNumber || '';
   document.getElementById('sale-tracking-url').value = s.trackingUrl || '';
   document.getElementById('sale-label-url').value = s.labelUrl || '';
+  document.getElementById('sale-carrier').value = s.carrier || '';
 
   _saleIsTrade = !!s.isTrade;
   if (_saleIsTrade) {
@@ -2210,6 +2223,7 @@ async function saveSale() {
   const trackingNumber = boughtLabel ? (boughtLabel.tracking_number || '') : document.getElementById('sale-tracking').value.trim();
   const trackingUrl = boughtLabel ? (boughtLabel.tracking_url || '') : document.getElementById('sale-tracking-url').value;
   const labelUrl = boughtLabel ? (boughtLabel.label_url || '') : document.getElementById('sale-label-url').value;
+  const carrier = boughtLabel ? (_mapCarrier(_pendingShipLabel?.provider) || document.getElementById('sale-carrier').value) : document.getElementById('sale-carrier').value;
   const s = {
     id: editId || nextSaleId(),
     purchaseId, skuId: purchase.skuId,
@@ -2222,7 +2236,7 @@ async function saveSale() {
     margin: cost > 0 ? profit/cost : 0,
     isTrade: _saleIsTrade,
     tradePurchaseIds: JSON.stringify(_selectedTradePurchaseIds),
-    trackingNumber, trackingUrl, labelUrl,
+    trackingNumber, trackingUrl, labelUrl, carrier,
     comments,
   };
   try {
@@ -2354,6 +2368,7 @@ function viewSaleDetail(id) {
     <div class="detail-row"><span class="detail-key">Sale price</span><span class="detail-val mono">${hideFin(fmt(s.unitPrice))}</span></div>
     <div class="detail-row"><span class="detail-key">Shipping charged</span><span class="detail-val mono">${fmt(s.shippingCharged)}</span></div>
     <div class="detail-row"><span class="detail-key">Shipping paid</span><span class="detail-val mono">${fmt(s.shippingPaid)}</span></div>
+    <div class="detail-row"><span class="detail-key">Carrier</span><span class="detail-val">${s.carrier || '—'}</span></div>
     <div class="detail-row"><span class="detail-key">Tracking #</span><span class="detail-val mono">${s.trackingNumber ? (s.trackingUrl ? `<a href="${s.trackingUrl}" target="_blank" rel="noopener" style="color:var(--blue);">${s.trackingNumber}</a>` : s.trackingNumber) : '—'}</span></div>
     <div class="detail-row"><span class="detail-key">Platform fees</span><span class="detail-val mono">${fmt(s.fees)}</span></div>
     <div class="detail-row"><span class="detail-key">G&A</span><span class="detail-val mono">${fmt(s.ga)}</span></div>
@@ -3251,6 +3266,16 @@ function _shipExtra() {
   return extra;
 }
 
+// Map a Shippo rate's carrier name to our fixed Carrier dropdown values.
+// Returns '' if it doesn't recognize the carrier (e.g. FedEx, DHL) so the
+// caller falls back to whatever the user picked manually.
+function _mapCarrier(provider) {
+  const p = (provider || '').toUpperCase();
+  if (p.includes('USPS')) return 'USPS';
+  if (p.includes('UPS')) return 'UPS';
+  return '';
+}
+
 async function _shippoCall(payload) {
   await ensureValidToken();
   const res = await fetch(SHIPPO_FN_URL, {
@@ -3357,7 +3382,7 @@ async function buyShipLabel() {
   buy.disabled = true; buy.textContent = 'Purchasing…';
   try {
     const data = await _shippoCall({ action: 'buy', rate_id: rateId, label_file_type: 'PDF_4x6' });
-    await applyLabelToSale(_shipCtx.saleId, data, amount);
+    await applyLabelToSale(_shipCtx.saleId, data, amount, _shipCtx.selectedProvider);
     document.getElementById('ship-rates').innerHTML = '';
     document.getElementById('ship-result').innerHTML = `
       <div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius);padding:14px 16px;">
@@ -3374,7 +3399,7 @@ async function buyShipLabel() {
 }
 
 // Write the label cost + tracking back into the sale and recompute profit — retroactive path
-async function applyLabelToSale(saleId, label, amount) {
+async function applyLabelToSale(saleId, label, amount, provider) {
   const s = _sales.find(x => x.id === saleId);
   if (!s) return;
   const gross = +s.grossSale || ((+s.unitPrice||0) + (+s.shippingCharged||0));
@@ -3393,6 +3418,7 @@ async function applyLabelToSale(saleId, label, amount) {
     trackingNumber: label.tracking_number || '',
     trackingUrl: label.tracking_url || '',
     labelUrl: label.label_url || '',
+    carrier: _mapCarrier(provider) || s.carrier || '',
   };
   await DB.saveSale(updated);
   await loadAll(true);

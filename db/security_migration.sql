@@ -74,7 +74,7 @@ with (security_invoker = true) as
 select
   id, "purchaseId", "skuId", date, source, state,
   "isTrade", "tradePurchaseIds", "paypalReleased", comments,
-  "trackingNumber", "trackingUrl", "labelUrl",
+  "carrier", "trackingNumber", "trackingUrl", "labelUrl",
   case when get_user_role() = 'viewer' then null else "unitPrice"       end as "unitPrice",
   case when get_user_role() = 'viewer' then null else "grossSale"       end as "grossSale",
   case when get_user_role() = 'viewer' then null else fees              end as fees,
