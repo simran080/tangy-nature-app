@@ -1,0 +1,3 @@
+# Minimal Supabase config. `project_id` is just a local label; the real cloud
+# project is selected with `--project-ref euulsabzjzrdrhmgzxfu` on each command.
+project_id = "tangy-nature-app"
