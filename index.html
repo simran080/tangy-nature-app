@@ -141,9 +141,9 @@
   /* CARDS */
   .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 0 16px 12px; }
   .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; margin-bottom: 12px; }
-  .metric-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .metric-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
   .metric-label { font-size: 11px; color: var(--text3); font-weight: 500; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .metric-value { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+  .metric-value { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .metric-value.green { color: var(--green); }
   .metric-value.amber { color: var(--amber); }
   .metric-value.red { color: var(--red); }
@@ -190,8 +190,13 @@
     .metric-card.hero .metric-value { font-size: 40px; }
 
     .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,0.85fr); gap: 18px; align-items: start; padding: 0 28px; }
-    .dashboard-col-main, .dashboard-col-side { display: block; }
+    .dashboard-col-main, .dashboard-col-side { display: block; min-width: 0; }
     .dashboard-grid .card-grid, .dashboard-grid .section-title, .dashboard-grid .list-wrap, .dashboard-grid #dash-export { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; max-width: none; }
+    /* The main column is only ~1.15fr of an already-narrow page area — 3 metric
+       cards across don't have room for a bold 22px currency value at typical
+       laptop widths, so keep this grid at 2-up here (the standalone Expenses
+       page's .card-grid still gets the full 3-up from the base rule above). */
+    .dashboard-grid .card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .dashboard-grid .list-wrap { max-height: 60vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
     .dashboard-grid .section-title:first-child { margin-top: 0; }
   }
@@ -1750,23 +1755,23 @@ function renderDashboardMetrics() {
       return `<div class="list-item" style="align-items:flex-start;padding:14px 16px;" onclick="viewSaleDetail('${s.id}')">
         <div class="item-icon ${typeClass(sku.type||'')}" style="margin-top:2px;">${typeIcon(sku.type||'')}</div>
         <div class="item-body">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div class="item-name">${esc(sku.product||'Unknown')}</div>
-            <div style="font-size:11px;font-weight:600;color:${daysColor};background:var(--bg3);border-radius:20px;padding:2px 8px;white-space:nowrap;display:flex;align-items:center;">${ICON_CLOCK}${daysLabel}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div class="item-name" style="min-width:0;flex:1;">${esc(sku.product||'Unknown')}</div>
+            <div style="font-size:11px;font-weight:600;color:${daysColor};background:var(--bg3);border-radius:20px;padding:2px 8px;white-space:nowrap;display:flex;align-items:center;flex-shrink:0;">${ICON_CLOCK}${daysLabel}</div>
           </div>
           <div class="item-sub">${fmtDate(purchase.date)} → ${fmtDate(s.date)} · ${esc(s.source||'')}</div>
           <div style="display:flex;gap:10px;margin-top:8px;">
-            <div style="flex:1;background:var(--bg3);border-radius:6px;padding:6px 8px;">
+            <div style="flex:1;min-width:0;background:var(--bg3);border-radius:6px;padding:6px 8px;">
               <div style="font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-bottom:2px;">COST</div>
-              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text2);">${hideFin(fmt(s.netCost))}</div>
+              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${hideFin(fmt(s.netCost))}</div>
             </div>
-            <div style="flex:1;background:var(--bg3);border-radius:6px;padding:6px 8px;">
+            <div style="flex:1;min-width:0;background:var(--bg3);border-radius:6px;padding:6px 8px;">
               <div style="font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-bottom:2px;">SALE</div>
-              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);">${hideFin(fmt(s.netSale))}</div>
+              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${hideFin(fmt(s.netSale))}</div>
             </div>
-            <div style="flex:1;background:var(--bg3);border-radius:6px;padding:6px 8px;">
+            <div style="flex:1;min-width:0;background:var(--bg3);border-radius:6px;padding:6px 8px;">
               <div style="font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-bottom:2px;">PROFIT</div>
-              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:${profit>=0?'var(--green)':'var(--red)'};">${hideFin(fmt(profit))}</div>
+              <div style="font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:${profit>=0?'var(--green)':'var(--red)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${hideFin(fmt(profit))}</div>
             </div>
           </div>
         </div>
