@@ -186,7 +186,7 @@
     .nav-icon { width: 19px; height: 19px; }
     #quote-fab { left: max(24px, calc(50% - 590px)) !important; right: auto !important; bottom: 24px !important; }
 
-    .quick-actions { grid-template-columns: repeat(4, minmax(0,180px)); padding: 0 28px; }
+    .quick-actions { grid-template-columns: repeat(4, minmax(0,1fr)); padding: 0 28px; max-width: none; }
     .card-grid { padding: 0 28px; grid-template-columns: repeat(3, minmax(0,1fr)); max-width: none; }
     .metric-card.hero .metric-value { font-size: 40px; }
 
@@ -1700,6 +1700,10 @@ function renderDashboardMetrics() {
     <div class="metric-card">
       <div class="metric-label">TIED-UP CAPITAL</div>
       <div class="metric-value">${hideFin(fmt(tiedUp))}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">ITEMS SOLD</div>
+      <div class="metric-value amber">${sales.length}</div>
     </div>
   `;
 
