@@ -191,12 +191,7 @@
 
     .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,0.85fr); gap: 18px; align-items: start; padding: 0 28px; }
     .dashboard-col-main, .dashboard-col-side { display: block; min-width: 0; }
-    .dashboard-grid .card-grid, .dashboard-grid .section-title, .dashboard-grid .list-wrap, .dashboard-grid #dash-export { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; max-width: none; }
-    /* The main column is only ~1.15fr of an already-narrow page area — 3 metric
-       cards across don't have room for a bold 22px currency value at typical
-       laptop widths, so keep this grid at 2-up here (the standalone Expenses
-       page's .card-grid still gets the full 3-up from the base rule above). */
-    .dashboard-grid .card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .dashboard-grid .section-title, .dashboard-grid .list-wrap, .dashboard-grid #dash-export { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; max-width: none; }
     .dashboard-grid .list-wrap { max-height: 60vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
     .dashboard-grid .section-title:first-child { margin-top: 0; }
   }
@@ -380,9 +375,10 @@
     <div class="tabs" id="dash-quarter-tabs" style="margin-top:0;display:none;"></div>
     <div class="tabs" id="dash-month-tabs" style="margin-top:0;display:none;"></div>
 
+    <div class="card-grid" id="dash-metrics"></div>
+
     <div class="dashboard-grid">
       <div class="dashboard-col-main">
-        <div class="card-grid" id="dash-metrics"></div>
         <div class="section-title">Unsold Inventory</div>
         <div class="list-wrap" id="dash-unsold" style="max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
       </div>
