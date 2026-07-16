@@ -1230,6 +1230,21 @@ function nextPurchaseId() {
 }
 function fmt(n) { return '$' + (+n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
 
+// Escape user-entered text before interpolating into innerHTML (product
+// names, comments, sources, etc. are all free text — never trust them raw).
+function esc(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  })[ch]);
+}
+// Only allow http(s) URLs through to an href — rejects javascript: etc.
+function safeUrl(value) {
+  try {
+    const url = new URL(String(value || ''), location.href);
+    return (url.protocol === 'https:' || url.protocol === 'http:') ? esc(url.href) : '';
+  } catch { return ''; }
+}
+
 // Split a dollar amount evenly across n units to the cent, with any leftover
 // cents allocated to the first units so the parts sum exactly to the total.
 function splitEven(total, n) {
@@ -1365,6 +1380,7 @@ const ICON_CLIPBOARD = `<svg width="20" height="20" viewBox="0 0 24 24" fill="no
 const ICON_BOX = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l9-5 9 5-9 5-9-5z" stroke-linejoin="round"/><path d="M3 8v9l9 5 9-5V8M12 13v9" stroke-linejoin="round"/></svg>`;
 const ICON_BULB = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18h6M10 21h4M8 14a4 4 0 118 0c0 1.8-1 2.5-1.5 3.5h-5C9 16.5 8 15.8 8 14z" stroke-linejoin="round"/></svg>`;
 const ICON_GEAR = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke-linecap="round"/></svg>`;
+const ICON_CLOCK = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-1px;margin-right:4px;"><circle cx="8" cy="8.5" r="6"/><path d="M8 5v3.5l2.2 1.3M6 1.5h4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 // ─── NAVIGATION ───────────────────────────────────────────
 let currentPage = 'dashboard';
@@ -1626,8 +1642,8 @@ function renderDashboardMetrics() {
       return `<div class="list-item" onclick="viewPurchaseDetail('${p.id}')">
         <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
         <div class="item-body">
-          <div class="item-name">${sku.product||'Unknown'}</div>
-          <div class="item-sub">${fmtDate(p.date)} · ${p.source||''}</div>
+          <div class="item-name">${esc(sku.product||'Unknown')}</div>
+          <div class="item-sub">${fmtDate(p.date)} · ${esc(p.source||'')}</div>
         </div>
         <div class="item-right">
           <div class="item-amount amber">${hideFin(fmt(p.netCost))}</div>
@@ -1655,10 +1671,10 @@ function renderDashboardMetrics() {
         <div class="item-icon ${typeClass(sku.type||'')}" style="margin-top:2px;">${typeIcon(sku.type||'')}</div>
         <div class="item-body">
           <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div class="item-name">${sku.product||'Unknown'}</div>
-            <div style="font-size:11px;font-weight:600;color:${daysColor};background:var(--bg3);border-radius:20px;padding:2px 8px;white-space:nowrap;">⏱ ${daysLabel}</div>
+            <div class="item-name">${esc(sku.product||'Unknown')}</div>
+            <div style="font-size:11px;font-weight:600;color:${daysColor};background:var(--bg3);border-radius:20px;padding:2px 8px;white-space:nowrap;display:flex;align-items:center;">${ICON_CLOCK}${daysLabel}</div>
           </div>
-          <div class="item-sub">${fmtDate(purchase.date)} → ${fmtDate(s.date)} · ${s.source||''}</div>
+          <div class="item-sub">${fmtDate(purchase.date)} → ${fmtDate(s.date)} · ${esc(s.source||'')}</div>
           <div style="display:flex;gap:10px;margin-top:8px;">
             <div style="flex:1;background:var(--bg3);border-radius:6px;padding:6px 8px;">
               <div style="font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-bottom:2px;">COST</div>
@@ -1719,11 +1735,11 @@ function renderSKUs() {
     <div class="list-item" onclick="editSKU('${s.id}')">
       <div class="item-icon ${typeClass(s.type)}">${typeIcon(s.type)}</div>
       <div class="item-body">
-        <div class="item-name">${s.product}</div>
-        <div class="item-sub">${s.brand} · ${s.sensor||''} ${s.mp?s.mp+'MP':''}</div>
+        <div class="item-name">${esc(s.product)}</div>
+        <div class="item-sub">${esc(s.brand)} · ${esc(s.sensor||'')} ${s.mp?esc(s.mp)+'MP':''}</div>
       </div>
       <div class="item-right">
-        <div class="item-badge ${s.type==='Camera'?'badge-camera':s.type==='Lens'?'badge-lens':'badge-acc'}">${s.type}</div>
+        <div class="item-badge ${s.type==='Camera'?'badge-camera':s.type==='Lens'?'badge-lens':'badge-acc'}">${esc(s.type)}</div>
       </div>
     </div>
   `).join('');
@@ -1817,7 +1833,7 @@ function populateTradeSaleSelect() {
     sales.filter(s => !_selectedTradeSaleIds.includes(s.id)).map(s => {
       const p = _purchases.find(x=>x.id===s.purchaseId)||{};
       const sku = _skus.find(x=>normalizeSkuId(x.id)===normalizeSkuId(p.skuId))||{};
-      return `<option value="${s.id}">${s.id} · ${sku.product||'Unknown'} · ${fmtDate(s.date)} · ${fmt(s.netSale)}</option>`;
+      return `<option value="${s.id}">${s.id} · ${esc(sku.product||'Unknown')} · ${fmtDate(s.date)} · ${fmt(s.netSale)}</option>`;
     }).join('');
 }
 
@@ -1863,7 +1879,7 @@ function populateTradePurchaseSelect() {
   sel.innerHTML = '<option value="">+ Add an unsold purchase received in trade…</option>' +
     unsold.map(p => {
       const sku = _skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
-      return `<option value="${p.id}">${p.id} · ${sku.product||'Unknown'} · ${fmtDate(p.date)} · ${fmt(p.netCost)}</option>`;
+      return `<option value="${p.id}">${p.id} · ${esc(sku.product||'Unknown')} · ${fmtDate(p.date)} · ${fmt(p.netCost)}</option>`;
     }).join('');
 }
 
@@ -1885,7 +1901,7 @@ function renderTradeChips(containerId, ids, removeFn) {
       label = sku.product ? sku.product.split(' ').slice(0,3).join(' ') : id;
     }
     return `<div style="display:inline-flex;align-items:center;gap:5px;background:var(--blue-dim);border:0.5px solid var(--blue);color:var(--blue);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:500;">
-      ${label}
+      ${esc(label)}
       <span onclick="${removeFn.name}('${id}')" style="cursor:pointer;font-size:14px;line-height:1;opacity:0.7;">×</span>
     </div>`;
   }).join('');
@@ -1908,22 +1924,23 @@ function filterSkuDropdown() {
     return;
   }
   dropdown.style.display = 'block';
-  dropdown.innerHTML = matches.map(s => {
-    const label = (s.brand + ' – ' + s.product).replace(/"/g, '&quot;');
-    return `<div onclick="selectSku('${s.id}', &quot;${label}&quot;)"
+  dropdown.innerHTML = matches.map(s => `<div onclick="selectSku('${s.id}')"
       style="padding:11px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);font-size:14px;"
       onmousedown="event.preventDefault()"
       onmouseover="this.style.background='var(--bg4)'"
       onmouseout="this.style.background=''">
-      <div style="font-weight:500;color:var(--text);">${s.product}</div>
-      <div style="font-size:12px;color:var(--text3);margin-top:2px;">${s.brand} · ${s.type} · SKU ${s.id}</div>
-    </div>`;
-  }).join('');
+      <div style="font-weight:500;color:var(--text);">${esc(s.product)}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;">${esc(s.brand)} · ${esc(s.type)} · SKU ${s.id}</div>
+    </div>`
+  ).join('');
 }
 
-function selectSku(id, label) {
+// Looks the label up from _skus rather than accepting it as a parameter —
+// keeps user-controlled text out of the inline onclick attribute entirely.
+function selectSku(id) {
+  const sku = _skus.find(s => s.id === id) || {};
   document.getElementById('purchase-sku').value = id;
-  document.getElementById('purchase-sku-search').value = label;
+  document.getElementById('purchase-sku-search').value = sku.brand ? `${sku.brand} – ${sku.product}` : id;
   document.getElementById('sku-dropdown').style.display = 'none';
 }
 
@@ -2050,8 +2067,8 @@ function renderPurchases() {
     return `<div class="list-item" onclick="viewPurchaseDetail('${p.id}')">
       <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
       <div class="item-body">
-        <div class="item-name">${sku.product||'Unknown product'}</div>
-        <div class="item-sub">${fmtDate(p.date)} · ${p.source||''} · ${p.paymentVia||''}</div>
+        <div class="item-name">${esc(sku.product||'Unknown product')}</div>
+        <div class="item-sub">${fmtDate(p.date)} · ${esc(p.source||'')} · ${esc(p.paymentVia||'')}</div>
       </div>
       <div class="item-right">
         <div class="item-amount">${hideFin(fmt(p.netCost))}</div>
@@ -2059,7 +2076,7 @@ function renderPurchases() {
           <div class="item-badge ${sold?'badge-sold':'badge-unsold'}">${sold?'Sold':'Unsold'}</div>
           ${p.isTrade?'<div class="item-badge" style="background:var(--blue-dim);color:var(--blue);">Trade</div>':''}
         </div>
-        ${p.condition?`<div style="font-size:10px;font-weight:600;color:${['like new','excellent'].includes((p.condition||'').toLowerCase())?'var(--green)':p.condition.toLowerCase()==='good'?'var(--amber)':['well used','heavily used'].includes((p.condition||'').toLowerCase())?'var(--red)':'var(--red)'};margin-top:3px;text-align:right;">${p.condition}</div>`:''}
+        ${p.condition?`<div style="font-size:10px;font-weight:600;color:${['like new','excellent'].includes((p.condition||'').toLowerCase())?'var(--green)':p.condition.toLowerCase()==='good'?'var(--amber)':['well used','heavily used'].includes((p.condition||'').toLowerCase())?'var(--red)':'var(--red)'};margin-top:3px;text-align:right;">${esc(p.condition)}</div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -2076,7 +2093,7 @@ function viewPurchaseDetail(id) {
     <div style="margin:16px 0 8px;padding:12px 14px;background:var(--green-dim);border-radius:var(--radius-sm);border:0.5px solid var(--green);">
       <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--green);margin-bottom:8px;">LINKED SALE · ${sale.id}</div>
       <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Sale date</span><span class="detail-val">${fmtDate(sale.date)}</span></div>
-      <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Channel</span><span class="detail-val">${sale.source||'—'} · ${sale.state||'—'}</span></div>
+      <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Channel</span><span class="detail-val">${esc(sale.source||'—')} · ${esc(sale.state||'—')}</span></div>
       <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Sale price</span><span class="detail-val mono">${fmt(sale.unitPrice)}</span></div>
       <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Net sale</span><span class="detail-val mono">${fmt(sale.netSale)}</span></div>
       <div class="detail-row" style="border-bottom:none"><span class="detail-key">Net profit</span><span class="detail-val mono" style="color:${(+sale.profit||0)>=0?'var(--green)':'var(--red)'};font-size:15px;">${fmt(sale.profit)}</span></div>
@@ -2090,20 +2107,20 @@ function viewPurchaseDetail(id) {
     <div class="detail-row"><span class="detail-key">Purchase ID</span><span class="detail-val mono" style="color:var(--amber)">${p.id}</span></div>
     <div class="detail-row"><span class="detail-key">SKU ID</span><span class="detail-val mono" style="color:var(--text2);">${p.skuId||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Sale ID</span><span class="detail-val mono" style="color:${sale?'var(--green)':'var(--text3);font-style:italic'}">${sale?sale.id:'Still on Shelf'}</span></div>
-    <div class="detail-row"><span class="detail-key">Brand / Type</span><span class="detail-val">${sku.brand||'—'} · ${sku.type||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Brand / Type</span><span class="detail-val">${esc(sku.brand||'—')} · ${esc(sku.type||'—')}</span></div>
     <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(p.date)}</span></div>
-    <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${p.source||'—'}</span></div>
-    <div class="detail-row"><span class="detail-key">State</span><span class="detail-val">${p.state||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${esc(p.source||'—')}</span></div>
+    <div class="detail-row"><span class="detail-key">State</span><span class="detail-val">${esc(p.state||'—')}</span></div>
     <div class="detail-row"><span class="detail-key">Qty</span><span class="detail-val">${p.qty||1}</span></div>
     <div class="detail-row"><span class="detail-key">Price/unit</span><span class="detail-val mono">${hideFin(fmt(p.pricePerPiece))}</span></div>
     <div class="detail-row"><span class="detail-key">Shipping</span><span class="detail-val mono">${hideFin(fmt(p.shipping))}</span></div>
     <div class="detail-row"><span class="detail-key">Gas</span><span class="detail-val mono">${hideFin(fmt(p.gas))}</span></div>
     <div class="detail-row"><span class="detail-key">Net cost</span><span class="detail-val mono" style="color:var(--amber);font-size:15px;">${hideFin(fmt(p.netCost))}</span></div>
-    <div class="detail-row"><span class="detail-key">Payment</span><span class="detail-val">${p.paymentVia||'—'}</span></div>
-    <div class="detail-row"><span class="detail-key">Condition</span><span class="detail-val">${p.condition ? `<span style="font-weight:600;color:${['like new','excellent'].includes((p.condition||'').toLowerCase())?'var(--green)':['good','well used'].includes((p.condition||'').toLowerCase())?'var(--amber)':'var(--red)'}">${p.condition}</span>` : '—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Payment</span><span class="detail-val">${esc(p.paymentVia||'—')}</span></div>
+    <div class="detail-row"><span class="detail-key">Condition</span><span class="detail-val">${p.condition ? `<span style="font-weight:600;color:${['like new','excellent'].includes((p.condition||'').toLowerCase())?'var(--green)':['good','well used'].includes((p.condition||'').toLowerCase())?'var(--amber)':'var(--red)'}">${esc(p.condition)}</span>` : '—'}</span></div>
     <div class="detail-row"><span class="detail-key">Acquisition</span><span class="detail-val"><span class="item-badge" style="${isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${isTrade?'Trade':'Cash Buy'}</span></span></div>
     <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="item-badge ${sale?'badge-sold':'badge-unsold'}">${sale?'Sold':'Unsold'}</span></span></div>
-    ${p.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${p.comments}</span></div>`:''}
+    ${p.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${esc(p.comments)}</span></div>`:''}
     ${tradeBlock}
     ${saleBlock}
     <div style="margin-top:20px;" class="btn-row">
@@ -2191,7 +2208,7 @@ function populateSalePurchaseSelect(preselect) {
   sel.innerHTML = available.length
     ? available.map(p=>{
         const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
-        return `<option value="${p.id}" ${p.id===preselect?'selected':''}>${sku.product||'Unknown'} (${fmtDate(p.date)} · ${fmt(p.netCost)})</option>`;
+        return `<option value="${p.id}" ${p.id===preselect?'selected':''}>${esc(sku.product||'Unknown')} (${fmtDate(p.date)} · ${fmt(p.netCost)})</option>`;
       }).join('')
     : '<option value="">No unsold purchases available</option>';
   onSalePurchaseChange();
@@ -2427,14 +2444,14 @@ function renderSales() {
     return `<div class="list-item" onclick="viewSaleDetail('${s.id}')">
       <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
       <div class="item-body">
-        <div class="item-name">${sku.product||'Unknown'}</div>
-        <div class="item-sub">${fmtDate(s.date)} · ${s.source||''} · ${s.state||''}</div>
+        <div class="item-name">${esc(sku.product||'Unknown')}</div>
+        <div class="item-sub">${fmtDate(s.date)} · ${esc(s.source||'')} · ${esc(s.state||'')}</div>
       </div>
       <div class="item-right">
         <div class="item-amount ${profit>=0?'green':'red'}">${hideFin(fmt(profit))}</div>
         <div style="display:flex;gap:4px;justify-content:flex-end;margin-top:4px;align-items:center;">
           <div style="font-size:11px;color:var(--text3);">${isViewer()?"••••":((+s.margin||0)*100).toFixed(1)+"%"}</div>
-          ${cond ? `<div style="font-size:10px;font-weight:600;color:${condColor};">${cond.toUpperCase()}</div>` : ''}
+          ${cond ? `<div style="font-size:10px;font-weight:600;color:${condColor};">${esc(cond.toUpperCase())}</div>` : ''}
           ${s.isTrade?'<div class="item-badge" style="background:var(--blue-dim);color:var(--blue);">Trade</div>':''}
           ${s.paypalReleased?`<div class="item-badge" style="background:var(--green-dim);color:var(--green);display:flex;align-items:center;">${ICON_CHECK}PayPal</div>`:''}
         </div>
@@ -2456,7 +2473,7 @@ function viewSaleDetail(id) {
     const chips = linkedIds.map(pid => {
       const lp = _purchases.find(p=>p.id===pid)||{};
       const lsku = _skus.find(sk=>sk.id===lp.skuId)||{};
-      return `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-dim);border:0.5px solid var(--blue);color:var(--blue);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:500;margin:2px;">${lsku.product||pid}</span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-dim);border:0.5px solid var(--blue);color:var(--blue);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:500;margin:2px;">${esc(lsku.product||pid)}</span>`;
     }).join('');
     tradeBlock = `<div style="background:var(--blue-dim);border:0.5px solid var(--blue);border-radius:var(--radius-sm);padding:10px 12px;margin:8px 0;">
       <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:6px;">TRADE — received:</div>
@@ -2471,26 +2488,26 @@ function viewSaleDetail(id) {
     <div class="detail-row"><span class="detail-key">Sale ID</span><span class="detail-val mono" style="color:var(--amber);">${s.id}</span></div>
     <div class="detail-row"><span class="detail-key">Purchase ID</span><span class="detail-val mono" style="color:var(--text2);">${s.purchaseId||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">SKU ID</span><span class="detail-val mono" style="color:var(--text2);">${purchase.skuId||'—'}</span></div>
-    <div class="detail-row"><span class="detail-key">Item condition</span><span class="detail-val">${cond ? `<span style="font-weight:600;color:${condColor};">${cond}</span>` : '—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Item condition</span><span class="detail-val">${cond ? `<span style="font-weight:600;color:${condColor};">${esc(cond)}</span>` : '—'}</span></div>
     <div class="detail-row"><span class="detail-key">Type</span><span class="detail-val"><span class="item-badge" style="${s.isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${s.isTrade?'Trade':'Cash'}</span></span></div>
     ${tradeBlock}
     <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(s.date)}</span></div>
-    <div class="detail-row"><span class="detail-key">Channel</span><span class="detail-val">${s.source||'—'}</span></div>
-    <div class="detail-row"><span class="detail-key">Buyer state</span><span class="detail-val">${s.state||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Channel</span><span class="detail-val">${esc(s.source||'—')}</span></div>
+    <div class="detail-row"><span class="detail-key">Buyer state</span><span class="detail-val">${esc(s.state||'—')}</span></div>
     <div class="detail-row"><span class="detail-key">Sale price</span><span class="detail-val mono">${hideFin(fmt(s.unitPrice))}</span></div>
     <div class="detail-row"><span class="detail-key">Shipping charged</span><span class="detail-val mono">${fmt(s.shippingCharged)}</span></div>
     <div class="detail-row"><span class="detail-key">Shipping paid</span><span class="detail-val mono">${fmt(s.shippingPaid)}</span></div>
-    <div class="detail-row"><span class="detail-key">Carrier</span><span class="detail-val">${s.carrier || '—'}</span></div>
-    <div class="detail-row"><span class="detail-key">Tracking #</span><span class="detail-val mono">${s.trackingNumber ? (s.trackingUrl ? `<a href="${s.trackingUrl}" target="_blank" rel="noopener" style="color:var(--blue);">${s.trackingNumber}</a>` : s.trackingNumber) : '—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Carrier</span><span class="detail-val">${esc(s.carrier || '—')}</span></div>
+    <div class="detail-row"><span class="detail-key">Tracking #</span><span class="detail-val mono">${s.trackingNumber ? (safeUrl(s.trackingUrl) ? `<a href="${safeUrl(s.trackingUrl)}" target="_blank" rel="noopener" style="color:var(--blue);">${esc(s.trackingNumber)}</a>` : esc(s.trackingNumber)) : '—'}</span></div>
     <div class="detail-row"><span class="detail-key">Platform fees</span><span class="detail-val mono">${fmt(s.fees)}</span></div>
     <div class="detail-row"><span class="detail-key">G&A</span><span class="detail-val mono">${fmt(s.ga)}</span></div>
     <div class="detail-row"><span class="detail-key">Net cost basis</span><span class="detail-val mono">${hideFin(fmt(s.netCost))}</span></div>
     <div class="detail-row"><span class="detail-key">Net sale</span><span class="detail-val mono">${hideFin(fmt(s.netSale))}</span></div>
     <div class="detail-row"><span class="detail-key">Net profit</span><span class="detail-val mono" style="color:${profit>=0?'var(--green)':'var(--red)'};font-size:16px;">${hideFin(fmt(profit))}</span></div>
     <div class="detail-row"><span class="detail-key">Margin</span><span class="detail-val mono" style="color:${profit>=0?'var(--green)':'var(--red)'};">${isViewer()?"••••":((+s.margin||0)*100).toFixed(1)+"%"}</span></div>
-    ${s.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${s.comments}</span></div>`:''}
-    ${s.labelUrl
-      ? `<a href="${s.labelUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:16px;display:block;text-decoration:none;text-align:center;">${ICON_TAG}Download / Print Label</a>`
+    ${s.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${esc(s.comments)}</span></div>`:''}
+    ${safeUrl(s.labelUrl)
+      ? `<a href="${safeUrl(s.labelUrl)}" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:16px;display:block;text-decoration:none;text-align:center;">${ICON_TAG}Download / Print Label</a>`
       : (canWrite() ? `<button class="btn btn-primary" style="margin-top:16px;" onclick="openShipLabel('${id}')">${ICON_TAG}Buy Shipping Label</button>` : '')}
     ${canWrite() && !s.paypalReleased ? `<button class="btn btn-primary" style="margin-top:12px;background:var(--green);color:var(--on-accent);" onclick="releaseToPaypal('${id}')">${ICON_SEND}Release to PayPal</button>` : ''}
     ${s.paypalReleased ? `<div style="margin-top:12px;display:flex;align-items:center;gap:8px;padding:4px 2px;font-size:13px;color:var(--text2);">${ICON_CHECK}Profit sent to PayPal</div>` : ''}
@@ -2549,7 +2566,7 @@ function populateTeSelect() {
   sel.innerHTML = '<option value="">+ Add unsold purchase received…</option>' +
     unsold.map(p => {
       const sku = _skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
-      return `<option value="${p.id}">${p.id} · ${sku.product||'Unknown'} · ${fmtDate(p.date)} · ${fmt(p.netCost)}</option>`;
+      return `<option value="${p.id}">${p.id} · ${esc(sku.product||'Unknown')} · ${fmtDate(p.date)} · ${fmt(p.netCost)}</option>`;
     }).join('');
 }
 
@@ -2578,7 +2595,7 @@ function renderTeChips() {
     const sku = _skus.find(x=>normalizeSkuId(x.id)===normalizeSkuId(p.skuId))||{};
     const label = sku.product ? sku.product.split(' ').slice(0,3).join(' ') : id;
     return `<div style="display:inline-flex;align-items:center;gap:5px;background:var(--blue-dim);border:0.5px solid var(--blue);color:var(--blue);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:500;">
-      ${label}<span onclick="removeTeChip('${id}')" style="cursor:pointer;font-size:14px;line-height:1;opacity:0.7;">×</span>
+      ${esc(label)}<span onclick="removeTeChip('${id}')" style="cursor:pointer;font-size:14px;line-height:1;opacity:0.7;">×</span>
     </div>`;
   }).join('');
 }
@@ -2714,8 +2731,8 @@ function renderExpenses() {
     <div class="list-item" onclick="viewExpenseDetail('${e.id}')">
       <div class="item-icon icon-acc">${expCategoryIcon[e.type]||ICON_BULB}</div>
       <div class="item-body">
-        <div class="item-name">${e.product}</div>
-        <div class="item-sub">${e.type} · ${e.source||'—'} · ${fmtDate(e.date)}</div>
+        <div class="item-name">${esc(e.product)}</div>
+        <div class="item-sub">${esc(e.type)} · ${esc(e.source||'—')} · ${fmtDate(e.date)}</div>
       </div>
       <div class="item-right">
         <div class="item-amount red">${fmt(e.netAmount)}</div>
@@ -2729,8 +2746,8 @@ function viewExpenseDetail(id) {
   if (!e) return;
   document.getElementById('detail-title').textContent = e.product;
   document.getElementById('detail-body').innerHTML = `
-    <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${e.type}</span></div>
-    <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${e.source||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${esc(e.type)}</span></div>
+    <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${esc(e.source||'—')}</span></div>
     <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(e.date)}</span></div>
     <div class="detail-row"><span class="detail-key">Unit price</span><span class="detail-val mono">${fmt(e.price)}</span></div>
     <div class="detail-row"><span class="detail-key">Qty</span><span class="detail-val">${e.qty||1}</span></div>
@@ -3110,8 +3127,8 @@ function renderLinked() {
     <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;" onclick="viewPurchaseDetail('${p.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
         <div>
-          <div style="font-size:14px;font-weight:600;">${tradeIcon}${sku.product||'Unknown'}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${sku.brand||''} · ${sku.type||''}</div>
+          <div style="font-size:14px;font-weight:600;">${tradeIcon}${esc(sku.product||'Unknown')}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${esc(sku.brand||'')} · ${esc(sku.type||'')}</div>
         </div>
         <span class="item-badge ${sale?'badge-sold':'badge-unsold'}">${sale?'Sold':'Unsold'}</span>
       </div>
@@ -3124,7 +3141,7 @@ function renderLinked() {
         <div><span style="color:var(--text3);">Sold</span> <span>${sale?fmtDate(sale.date):'—'}</span></div>
       </div>
       ${(()=>{try{const ids=JSON.parse(p.tradeSaleIds||'[]');return ids.length?`<div style="margin-top:8px;font-size:11px;color:var(--blue);background:var(--blue-dim);padding:5px 8px;border-radius:6px;">Traded: ${ids.join(', ')}</div>`:''}catch{return ''}})()}
-      ${p.comments&&p.comments!='nan'?`<div style="margin-top:6px;font-size:11px;color:var(--text3);font-style:italic;">${p.comments.slice(0,80)}${p.comments.length>80?'…':''}</div>`:''}
+      ${p.comments&&p.comments!='nan'?`<div style="margin-top:6px;font-size:11px;color:var(--text3);font-style:italic;">${esc(p.comments.slice(0,80))}${p.comments.length>80?'…':''}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -3237,7 +3254,7 @@ function renderSummary() {
       const dimStyle  = count === 1 ? 'opacity:0.65;' : '';
       return `<div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.1fr 0.8fr;gap:4px;padding:9px 12px;border-bottom:0.5px solid var(--border);align-items:center;${dimStyle}">
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text2);">${cond}</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);">${esc(cond)}</div>
           <div style="font-size:10px;color:${count===1?'var(--amber)':'var(--text3)'};margin-top:1px;">${count} sale${count>1?'s':''}</div>
         </div>
         <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--amber);">${hideFin(fmtC(avgBuy))}</div>
@@ -3257,9 +3274,9 @@ function renderSummary() {
       <div style="padding:10px 12px;background:var(--bg3);border-bottom:0.5px solid var(--border);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);">${r.sku.id}</span>
-          <span class="item-badge ${r.sku.type==='Camera'?'badge-camera':r.sku.type==='Lens'?'badge-lens':'badge-acc'}" style="font-size:10px;">${r.sku.type||'—'}</span>
-          <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.sku.product||'—'}</span>
-          <span style="font-size:11px;color:var(--text3);white-space:nowrap;">${r.sku.brand||''}</span>
+          <span class="item-badge ${r.sku.type==='Camera'?'badge-camera':r.sku.type==='Lens'?'badge-lens':'badge-acc'}" style="font-size:10px;">${esc(r.sku.type||'—')}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.sku.product||'—')}</span>
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap;">${esc(r.sku.brand||'')}</span>
         </div>
         <!-- Inventory strip -->
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -3467,7 +3484,7 @@ function renderShipRates() {
     rates.map((r, i) => `
       <div onclick="selectShipRate(${i})" id="ship-rate-${i}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:0.5px solid ${_shipCtx.selectedRateId===r.object_id?'var(--amber)':'var(--border)'};background:${_shipCtx.selectedRateId===r.object_id?'var(--amber-dim)':'var(--bg2)'};border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;">
         <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);">${r.provider} · ${r.servicelevel||''}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">${esc(r.provider)} · ${esc(r.servicelevel||'')}</div>
           <div style="font-size:11px;color:var(--text3);margin-top:1px;">${r.estimated_days!=null?r.estimated_days+' day'+(r.estimated_days==1?'':'s'):'—'}</div>
         </div>
         <div style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--amber);">$${(+r.amount).toFixed(2)}</div>
@@ -3527,8 +3544,8 @@ async function buyShipLabel() {
       <div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius);padding:14px 16px;">
         <div style="display:flex;align-items:center;font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px;">${ICON_CHECK}Label purchased</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Tracking</div>
-        <div style="font-size:14px;font-family:'DM Mono',monospace;color:var(--text);margin-bottom:12px;word-break:break-all;">${data.tracking_number||'—'}</div>
-        <a href="${data.label_url}" target="_blank" rel="noopener" class="btn btn-primary" style="display:block;text-decoration:none;text-align:center;">${ICON_TAG}Open / Print Label</a>
+        <div style="font-size:14px;font-family:'DM Mono',monospace;color:var(--text);margin-bottom:12px;word-break:break-all;">${esc(data.tracking_number||'—')}</div>
+        <a href="${safeUrl(data.label_url)}" target="_blank" rel="noopener" class="btn btn-primary" style="display:block;text-decoration:none;text-align:center;">${ICON_TAG}Open / Print Label</a>
       </div>`;
     toast(`Label bought — $${amount.toFixed(2)} added to shipping`);
   } catch (e) {
