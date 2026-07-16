@@ -192,7 +192,7 @@
     .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,0.85fr); gap: 18px; align-items: start; padding: 0 28px; }
     .dashboard-col-main, .dashboard-col-side { display: block; }
     .dashboard-grid .card-grid, .dashboard-grid .section-title, .dashboard-grid .list-wrap, .dashboard-grid #dash-export { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; max-width: none; }
-    .dashboard-grid .list-wrap { max-height: none !important; }
+    .dashboard-grid .list-wrap { max-height: 60vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
     .dashboard-grid .section-title:first-child { margin-top: 0; }
   }
 
