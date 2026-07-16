@@ -192,9 +192,10 @@
 
     .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,0.85fr); gap: 18px; align-items: start; padding: 0 28px; }
     .dashboard-col-main, .dashboard-col-side { display: block; min-width: 0; }
-    .dashboard-grid .section-title, .dashboard-grid .list-wrap, .dashboard-grid #dash-export { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; max-width: none; }
+    .dashboard-grid .section-title, .dashboard-grid .list-wrap { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; max-width: none; }
     .dashboard-grid .list-wrap { max-height: 60vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
     .dashboard-grid .section-title:first-child { margin-top: 0; }
+    #dash-export { padding: 0 28px; max-width: none; }
   }
 
   /* SECTION */
@@ -386,14 +387,15 @@
       <div class="dashboard-col-side">
         <div class="section-title">Recent Sales</div>
         <div class="list-wrap" id="dash-recent-sales" style="max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
-        <div id="dash-export" style="display:none;">
-          <div class="section-title">Export Data</div>
-          <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:24px;">
-            <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportSales()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Sales</button>
-            <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportPurchases()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Purchases</button>
-            <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportExpenses()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Expenses</button>
-          </div>
-        </div>
+      </div>
+    </div>
+
+    <div id="dash-export" style="display:none;padding:0 16px;">
+      <div class="section-title" style="padding:0;">Export Data</div>
+      <div style="display:flex;gap:8px;margin-bottom:24px;">
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportSales()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Sales</button>
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportPurchases()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Purchases</button>
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportExpenses()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Expenses</button>
       </div>
     </div>
   </div>
