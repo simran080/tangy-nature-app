@@ -66,6 +66,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <button onclick="toggleTheme()" id="theme-toggle-btn" title="Switch light/dark" aria-label="Switch light/dark theme" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8.7A5.3 5.3 0 116.3 2 4.3 4.3 0 0013 8.7z" stroke-linejoin="round"/></svg></button>
+          <span id="user-email" title="" style="display:none;font-size:12px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
           <span id="role-badge" style="font-size:10px;font-weight:600;letter-spacing:1px;padding:3px 8px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);">USER</span>
           <button onclick="signOut()" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text3);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Sign out</button>
         </div>
@@ -2186,6 +2187,13 @@ function parseRole(token) {
   } catch { return 'user'; }
 }
 
+function parseEmail(token) {
+  try {
+    const p = JSON.parse(atob(token.split('.')[1]));
+    return p.email || '';
+  } catch { return ''; }
+}
+
 function canWrite() { return _userRole === 'dba' || _userRole === 'admin'; }
 function canDelete() { return _userRole === 'dba'; }
 function isViewer() { return _userRole === 'viewer'; }
@@ -2210,6 +2218,12 @@ function applyRoleUI() {
     badge.textContent = _userRole.toUpperCase();
     badge.style.color = colors[_userRole] || 'var(--text2)';
     badge.style.borderColor = colors[_userRole] || 'var(--border)';
+  }
+  // Username in sign-out area
+  const userEmailEl = document.getElementById('user-email');
+  if (userEmailEl) {
+    userEmailEl.textContent = _userEmail || '';
+    userEmailEl.title = _userEmail || '';
   }
 }
 
@@ -2246,6 +2260,7 @@ async function refreshAccessToken() {
       const data = await res.json();
       saveSession(data);
       _userRole = parseRole(_authToken);
+      _userEmail = parseEmail(_authToken);
       return true;
     } catch { return false; }
   })();
@@ -2296,6 +2311,7 @@ async function checkSession() {
   if (!stored) return false;
   _authToken = stored;
   _userRole = parseRole(stored);
+  _userEmail = parseEmail(stored);
   // If we have a recorded expiry and it has passed, refresh before trusting it
   const exp = +localStorage.getItem('tn_expires_at') || 0;
   if (exp && Date.now() > exp - 60000) {
