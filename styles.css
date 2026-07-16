@@ -149,14 +149,14 @@
   /* DESKTOP LAYOUT (sidebar nav + wider pages) ─────────────── */
   @media (min-width: 760px) {
     .app { max-width: 1180px; }
-    .page { margin-left: 224px; padding: 0 0 40px; min-height: auto; }
+    .page { margin-left: 254px; padding: 0 0 40px; min-height: auto; }
     .header { padding: 40px 28px 18px; }
     .search-wrap, #summary-list, .tabs, [id$="-count"], .list-wrap, .card-grid { max-width: 900px; }
     .app .tabs { padding: 0 28px; }
     #user-email { display: inline-block !important; }
 
     .nav { position: fixed; top: 24px; bottom: 24px; left: max(24px, calc(50% - 590px)); transform: none;
-      width: 190px; max-width: none; height: auto; flex-direction: column; align-items: stretch; gap: 3px;
+      width: 220px; max-width: none; height: auto; flex-direction: column; align-items: stretch; gap: 3px;
       padding: 18px 10px; border: 0.5px solid var(--border); border-top: 0.5px solid var(--border); border-radius: 20px;
       box-shadow: 0 18px 46px var(--shadow-color); overflow-x: visible; }
     .nav::before { content: 'TANGY NATURE'; display: block; padding: 6px 10px 18px; color: var(--amber); font-size: 10px; font-weight: 600; letter-spacing: 1.6px; }
