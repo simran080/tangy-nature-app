@@ -222,7 +222,7 @@ function renderDashboardMetrics() {
   if (unsoldPurchases.length === 0) {
     unsoldEl.innerHTML = '<div class="empty"><div class="empty-text">No unsold inventory</div></div>';
   } else {
-    unsoldEl.innerHTML = unsoldPurchases.map(p => {
+    unsoldEl.innerHTML = [...unsoldPurchases].sort((a,b) => (+b.netCost||0) - (+a.netCost||0)).map(p => {
       const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
       return `<div class="list-item" onclick="viewPurchaseDetail('${p.id}')">
         <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
