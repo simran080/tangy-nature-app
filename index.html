@@ -362,7 +362,7 @@
           <div class="header-title">Purchases</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button onclick="showPage('linked')" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">🔗 Linked</button>
+          <button onclick="showPage('linked')" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M6.5 9.5a2.5 2.5 0 003.5 0l2-2a2.5 2.5 0 00-3.5-3.5L7.5 5" stroke-linecap="round"/><path d="M9.5 6.5a2.5 2.5 0 00-3.5 0l-2 2a2.5 2.5 0 003.5 3.5l1-1" stroke-linecap="round"/></svg>Linked</button>
           <button class="header-action" onclick="openSheet('purchase-sheet')">+</button>
         </div>
       </div>
@@ -402,14 +402,14 @@
     </div>
     <div class="tabs" id="sale-tabs">
       <div class="tab active" data-filter="all" onclick="setSaleFilter(this)">All</div>
-      <div class="tab" data-filter="paypal" onclick="setSaleFilter(this)">💸 Pending PayPal</div>
+      <div class="tab" data-filter="paypal" onclick="setSaleFilter(this)">Pending PayPal</div>
       <div class="tab" data-filter="profit" onclick="setSaleFilter(this)">Profit+</div>
       <div class="tab" data-filter="loss" onclick="setSaleFilter(this)">Loss</div>
       <div class="tab" data-filter="facebook" onclick="setSaleFilter(this)">Facebook</div>
       <div class="tab" data-filter="ebay" onclick="setSaleFilter(this)">eBay</div>
     </div>
     <div id="paypal-summary" style="display:none;margin:0 16px 12px;background:var(--bg2);border:0.5px solid var(--amber);border-radius:var(--radius);padding:14px 16px;">
-      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--amber);margin-bottom:6px;">💸 PENDING PAYPAL TRANSFER</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--amber);margin-bottom:6px;">PENDING PAYPAL TRANSFER</div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
           <div style="font-size:22px;font-weight:600;color:var(--green);" id="paypal-total">$0.00</div>
@@ -700,8 +700,8 @@
     <div class="form-group">
       <label class="form-label">Acquisition Type</label>
       <div style="display:flex;gap:8px;margin-bottom:4px;">
-        <button type="button" id="acq-cash" onclick="setAcqType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:var(--on-accent);font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">💵 Cash Buy</button>
-        <button type="button" id="acq-trade" onclick="setAcqType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">🔄 Trade</button>
+        <button type="button" id="acq-cash" onclick="setAcqType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:var(--on-accent);font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Cash Buy</button>
+        <button type="button" id="acq-trade" onclick="setAcqType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Trade</button>
       </div>
       <input type="hidden" id="purchase-is-trade" value="0">
     </div>
@@ -792,7 +792,7 @@
         <input type="checkbox" id="sale-use-shippo" onchange="toggleUseShippo()" style="width:16px;height:16px;">
         Buy this label via Shippo (uncheck if buying elsewhere)
       </label>
-      <button type="button" id="sale-get-rates-btn" class="btn btn-secondary" style="display:none;margin-top:8px;background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue);font-size:13px;padding:10px;" onclick="openShipLabelForSale()">🏷️ Get Shipping Rates</button>
+      <button type="button" id="sale-get-rates-btn" class="btn btn-secondary" style="display:none;margin-top:8px;font-size:13px;padding:10px;" onclick="openShipLabelForSale()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M2 2h5.5L14 8.5 8.5 14 2 7.5V2z" stroke-linejoin="round"/><circle cx="5" cy="5" r="1" fill="currentColor" stroke="none"/></svg>Get Shipping Rates</button>
       <div class="form-hint" id="sale-label-hint"></div>
     </div>
     <div class="form-row">
@@ -829,8 +829,8 @@
     <div class="form-group">
       <label class="form-label">Sale type</label>
       <div style="display:flex;gap:8px;">
-        <button id="sale-type-cash" onclick="setSaleType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">💵 Cash Sale</button>
-        <button id="sale-type-trade" onclick="setSaleType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">🔄 Trade</button>
+        <button id="sale-type-cash" onclick="setSaleType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Cash Sale</button>
+        <button id="sale-type-trade" onclick="setSaleType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Trade</button>
       </div>
     </div>
     <div class="form-group" id="sale-trade-group" style="display:none;">
@@ -906,8 +906,8 @@
     <div class="form-group">
       <label class="form-label">Mark as trade</label>
       <div style="display:flex;gap:8px;">
-        <button id="te-cash" onclick="setTradeEditType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">💵 Cash Sale</button>
-        <button id="te-trade" onclick="setTradeEditType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">🔄 Trade</button>
+        <button id="te-cash" onclick="setTradeEditType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Cash Sale</button>
+        <button id="te-trade" onclick="setTradeEditType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Trade</button>
       </div>
     </div>
     <div class="form-group" id="te-trade-group" style="display:none;">
@@ -1333,6 +1333,15 @@ function exportExpenses() {
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function typeIcon(t) { return t==='Camera'?'📷':t==='Lens'?'🔭':t==='Drone'?'🚁':'🔧'; }
 function typeClass(t) { return t==='Camera'?'icon-camera':t==='Lens'?'icon-lens':t==='Drone'?'icon-drone':'icon-acc'; }
+
+// ─── BUTTON ICONS (inline SVG, matches nav-icon line-art style) ────
+const _ICON_STYLE = 'vertical-align:-2px;margin-right:6px;';
+const ICON_TAG = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="${_ICON_STYLE}"><path d="M2 2h5.5L14 8.5 8.5 14 2 7.5V2z" stroke-linejoin="round"/><circle cx="5" cy="5" r="1" fill="currentColor" stroke="none"/></svg>`;
+const ICON_SEND = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="${_ICON_STYLE}"><path d="M4 12L12 4M12 4H6.5M12 4v5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_EDIT = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="${_ICON_STYLE}"><path d="M11.5 2.5l2 2L5 13l-3 1 1-3 8.5-8.5z" stroke-linejoin="round"/></svg>`;
+const ICON_SWAP = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="${_ICON_STYLE}"><path d="M3 5.5h9M9.5 3l2.5 2.5L9.5 8M13 10.5H4M6.5 8L4 10.5 6.5 13" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_LINK = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="${_ICON_STYLE}"><path d="M6.5 9.5a2.5 2.5 0 003.5 0l2-2a2.5 2.5 0 00-3.5-3.5L7.5 5" stroke-linecap="round"/><path d="M9.5 6.5a2.5 2.5 0 00-3.5 0l-2 2a2.5 2.5 0 003.5 3.5l1-1" stroke-linecap="round"/></svg>`;
+const ICON_CHECK = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" style="${_ICON_STYLE}"><path d="M3 8.5l3.5 3.5L13 5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 // ─── NAVIGATION ───────────────────────────────────────────
 let currentPage = 'dashboard';
@@ -2051,7 +2060,7 @@ function viewPurchaseDetail(id) {
     </div>` : '';
   const tradeBlock = isTrade && tradeSaleIds.length ? `
     <div style="margin:4px 0 8px;padding:10px 14px;background:var(--blue-dim);border-radius:var(--radius-sm);border:0.5px solid var(--blue);">
-      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:6px;">🔄 TRADE — sales given away:</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:6px;">TRADE — sales given away:</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;">${tradeSaleIds.map(sid=>`<span style="background:var(--blue-dim);color:var(--blue);border-radius:20px;padding:2px 8px;font-size:12px;font-weight:500;">${sid}</span>`).join('')}</div>
     </div>` : '';
   document.getElementById('detail-body').innerHTML = `
@@ -2069,7 +2078,7 @@ function viewPurchaseDetail(id) {
     <div class="detail-row"><span class="detail-key">Net cost</span><span class="detail-val mono" style="color:var(--amber);font-size:15px;">${hideFin(fmt(p.netCost))}</span></div>
     <div class="detail-row"><span class="detail-key">Payment</span><span class="detail-val">${p.paymentVia||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Condition</span><span class="detail-val">${p.condition ? `<span style="font-weight:600;color:${['like new','excellent'].includes((p.condition||'').toLowerCase())?'var(--green)':['good','well used'].includes((p.condition||'').toLowerCase())?'var(--amber)':'var(--red)'}">${p.condition}</span>` : '—'}</span></div>
-    <div class="detail-row"><span class="detail-key">Acquisition</span><span class="detail-val"><span class="item-badge" style="${isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${isTrade?'🔄 Trade':'💵 Cash Buy'}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Acquisition</span><span class="detail-val"><span class="item-badge" style="${isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${isTrade?'Trade':'Cash Buy'}</span></span></div>
     <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="item-badge ${sale?'badge-sold':'badge-unsold'}">${sale?'Sold':'Unsold'}</span></span></div>
     ${p.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${p.comments}</span></div>`:''}
     ${tradeBlock}
@@ -2427,7 +2436,7 @@ function viewSaleDetail(id) {
       return `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-dim);border:0.5px solid var(--blue);color:var(--blue);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:500;margin:2px;">${lsku.product||pid}</span>`;
     }).join('');
     tradeBlock = `<div style="background:var(--blue-dim);border:0.5px solid var(--blue);border-radius:var(--radius-sm);padding:10px 12px;margin:8px 0;">
-      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:6px;">🔄 TRADE — received:</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--blue);margin-bottom:6px;">TRADE — received:</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips||'<span style="font-size:12px;color:var(--blue);opacity:0.7;">No items linked</span>'}</div>
     </div>`;
   }
@@ -2440,7 +2449,7 @@ function viewSaleDetail(id) {
     <div class="detail-row"><span class="detail-key">Purchase ID</span><span class="detail-val mono" style="color:var(--text2);">${s.purchaseId||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">SKU ID</span><span class="detail-val mono" style="color:var(--text2);">${purchase.skuId||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Item condition</span><span class="detail-val">${cond ? `<span style="font-weight:600;color:${condColor};">${cond}</span>` : '—'}</span></div>
-    <div class="detail-row"><span class="detail-key">Type</span><span class="detail-val"><span class="item-badge" style="${s.isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${s.isTrade?'🔄 Trade':'💵 Cash'}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Type</span><span class="detail-val"><span class="item-badge" style="${s.isTrade?'background:var(--blue-dim);color:var(--blue)':'background:var(--green-dim);color:var(--green)'}">${s.isTrade?'Trade':'Cash'}</span></span></div>
     ${tradeBlock}
     <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(s.date)}</span></div>
     <div class="detail-row"><span class="detail-key">Channel</span><span class="detail-val">${s.source||'—'}</span></div>
@@ -2458,15 +2467,13 @@ function viewSaleDetail(id) {
     <div class="detail-row"><span class="detail-key">Margin</span><span class="detail-val mono" style="color:${profit>=0?'var(--green)':'var(--red)'};">${isViewer()?"••••":((+s.margin||0)*100).toFixed(1)+"%"}</span></div>
     ${s.comments?`<div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="font-size:12px;color:var(--text2);">${s.comments}</span></div>`:''}
     ${s.labelUrl
-      ? `<a href="${s.labelUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:16px;display:block;text-decoration:none;text-align:center;">📄 Download / Print Label</a>`
-      : (canWrite() ? `<button class="btn btn-primary" style="margin-top:16px;" onclick="openShipLabel('${id}')">🏷️ Buy Shipping Label</button>` : '')}
+      ? `<a href="${s.labelUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:16px;display:block;text-decoration:none;text-align:center;">${ICON_TAG}Download / Print Label</a>`
+      : (canWrite() ? `<button class="btn btn-primary" style="margin-top:16px;" onclick="openShipLabel('${id}')">${ICON_TAG}Buy Shipping Label</button>` : '')}
+    ${canWrite() && !s.paypalReleased ? `<button class="btn btn-primary" style="margin-top:12px;background:var(--green);color:var(--on-accent);" onclick="releaseToPaypal('${id}')">${ICON_SEND}Release to PayPal</button>` : ''}
+    ${s.paypalReleased ? `<div style="margin-top:12px;display:flex;align-items:center;gap:8px;padding:4px 2px;font-size:13px;color:var(--text2);">${ICON_CHECK}Profit sent to PayPal</div>` : ''}
     <div style="margin-top:12px;" class="btn-row">
-      ${canWrite() && !s.paypalReleased ? `<button class="btn btn-primary" style="background:var(--green);color:var(--on-accent);" onclick="releaseToPaypal('${id}')">💸 Release to PayPal</button>` : ''}
-      ${s.paypalReleased ? `<div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--green);font-weight:500;text-align:center;flex:1;">✅ Profit sent to PayPal</div>` : ''}
-    </div>
-    <div style="margin-top:10px;" class="btn-row">
-      ${canWrite() ? `<button class="btn btn-secondary" onclick="editSale('${id}')">✏️ Edit</button>` : ''}
-      ${canWrite() ? `<button class="btn btn-secondary" onclick="openEditSaleTrades('${id}')">🔄 Trades</button>` : ''}
+      ${canWrite() ? `<button class="btn btn-secondary" onclick="editSale('${id}')">${ICON_EDIT}Edit</button>` : ''}
+      ${canWrite() ? `<button class="btn btn-secondary" onclick="openEditSaleTrades('${id}')">${ICON_SWAP}Trades</button>` : ''}
       ${canDelete() ? `<button class="btn btn-danger" onclick="deleteSale('${id}')">Delete</button>` : ''}
     </div>
   `;
@@ -3075,7 +3082,7 @@ function renderLinked() {
     const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
     const sale = saleByPurchase[p.id];
     const profit = sale ? +sale.profit||0 : null;
-    const tradeIcon = p.isTrade ? '🔄 ' : '';
+    const tradeIcon = p.isTrade ? ICON_SWAP : '';
     return `
     <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;" onclick="viewPurchaseDetail('${p.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
@@ -3093,7 +3100,7 @@ function renderLinked() {
         <div><span style="color:var(--text3);">Bought</span> <span>${fmtDate(p.date)}</span></div>
         <div><span style="color:var(--text3);">Sold</span> <span>${sale?fmtDate(sale.date):'—'}</span></div>
       </div>
-      ${(()=>{try{const ids=JSON.parse(p.tradeSaleIds||'[]');return ids.length?`<div style="margin-top:8px;font-size:11px;color:var(--blue);background:var(--blue-dim);padding:5px 8px;border-radius:6px;">🔄 Traded: ${ids.join(', ')}</div>`:''}catch{return ''}})()}
+      ${(()=>{try{const ids=JSON.parse(p.tradeSaleIds||'[]');return ids.length?`<div style="margin-top:8px;font-size:11px;color:var(--blue);background:var(--blue-dim);padding:5px 8px;border-radius:6px;">Traded: ${ids.join(', ')}</div>`:''}catch{return ''}})()}
       ${p.comments&&p.comments!='nan'?`<div style="margin-top:6px;font-size:11px;color:var(--text3);font-style:italic;">${p.comments.slice(0,80)}${p.comments.length>80?'…':''}</div>`:''}
     </div>`;
   }).join('');
@@ -3495,10 +3502,10 @@ async function buyShipLabel() {
     document.getElementById('ship-rates').innerHTML = '';
     document.getElementById('ship-result').innerHTML = `
       <div style="background:var(--green-dim);border:0.5px solid var(--green);border-radius:var(--radius);padding:14px 16px;">
-        <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px;">✅ Label purchased</div>
+        <div style="display:flex;align-items:center;font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px;">${ICON_CHECK}Label purchased</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Tracking</div>
         <div style="font-size:14px;font-family:'DM Mono',monospace;color:var(--text);margin-bottom:12px;word-break:break-all;">${data.tracking_number||'—'}</div>
-        <a href="${data.label_url}" target="_blank" rel="noopener" class="btn btn-primary" style="display:block;text-decoration:none;text-align:center;">🖨️ Open / Print Label</a>
+        <a href="${data.label_url}" target="_blank" rel="noopener" class="btn btn-primary" style="display:block;text-decoration:none;text-align:center;">${ICON_TAG}Open / Print Label</a>
       </div>`;
     toast(`Label bought — $${amount.toFixed(2)} added to shipping`);
   } catch (e) {
