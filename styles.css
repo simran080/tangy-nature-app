@@ -152,7 +152,7 @@
     .page { margin-left: 224px; padding: 0 0 40px; min-height: auto; }
     .header { padding: 40px 28px 18px; }
     .search-wrap, #summary-list, .tabs, [id$="-count"], .list-wrap, .card-grid { max-width: 900px; }
-    .tabs { padding: 0 28px; }
+    .app .tabs { padding: 0 28px; }
     #user-email { display: inline-block !important; }
 
     .nav { position: fixed; top: 24px; bottom: 24px; left: max(24px, calc(50% - 590px)); transform: none;
