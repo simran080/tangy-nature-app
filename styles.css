@@ -125,21 +125,21 @@
   .metric-value.green { color: var(--green); }
   .metric-value.amber { color: var(--amber); }
   .metric-value.red { color: var(--red); }
-  .metric-card.hero { grid-column: 1 / -1; background: var(--amber); border: none; padding: 20px; position: relative; overflow: hidden; }
+  .metric-card.hero { grid-column: 1 / -1; background: var(--amber); border: none; padding: 14px 20px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .metric-card.hero .metric-label { color: color-mix(in srgb, var(--on-accent) 75%, transparent); }
-  .metric-card.hero .metric-value { color: var(--on-accent); font-family: var(--font-serif); font-size: 34px; letter-spacing: -1px; position: relative; z-index: 1; }
-  .metric-card.hero::after { content: ''; position: absolute; width: 150px; height: 150px; right: -50px; top: -60px; border: 1px solid color-mix(in srgb, var(--on-accent) 20%, transparent); border-radius: 50%; box-shadow: 0 0 0 24px color-mix(in srgb, var(--on-accent) 5%, transparent); }
-  .hero-breakdown { display: flex; gap: 18px; margin-top: 12px; position: relative; z-index: 1; flex-wrap: wrap; }
+  .metric-card.hero .metric-value { color: var(--on-accent); font-family: var(--font-serif); font-size: 26px; letter-spacing: -1px; position: relative; z-index: 1; }
+  .metric-card.hero::after { content: ''; position: absolute; width: 110px; height: 110px; right: -40px; top: -45px; border: 1px solid color-mix(in srgb, var(--on-accent) 20%, transparent); border-radius: 50%; box-shadow: 0 0 0 24px color-mix(in srgb, var(--on-accent) 5%, transparent); }
+  .hero-breakdown { display: flex; gap: 18px; position: relative; z-index: 1; flex-wrap: wrap; }
   .hero-stat span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: color-mix(in srgb, var(--on-accent) 70%, transparent); }
   .hero-stat strong { display: block; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--on-accent); margin-top: 3px; }
 
   /* QUICK ACTIONS (Dashboard) */
   .quick-actions { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; padding: 0 16px; margin: 4px 0 16px; }
-  .quick-action { min-height: 76px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 14px; padding: 10px 8px; color: var(--text); cursor: pointer; font-family: 'DM Sans', sans-serif; text-align: center; transition: border-color 0.15s, transform 0.1s; }
+  .quick-action { display: flex; align-items: center; gap: 8px; min-width: 0; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 12px; padding: 10px 12px; color: var(--text); cursor: pointer; font-family: 'DM Sans', sans-serif; text-align: left; transition: border-color 0.15s, transform 0.1s; }
   .quick-action:active { transform: scale(0.97); }
-  .quick-action-icon { width: 26px; height: 26px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--amber-dim); color: var(--amber); }
-  .quick-action-icon svg { width: 15px; height: 15px; }
-  .quick-action-label { display: block; font-size: 11px; font-weight: 600; }
+  .quick-action-icon { width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--amber-dim); color: var(--amber); }
+  .quick-action-icon svg { width: 14px; height: 14px; }
+  .quick-action-label { font-size: 12px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* Dashboard two-column grid — inert on mobile (wrappers disappear via
      display:contents so section order stays exactly as it is on mobile
@@ -167,7 +167,7 @@
 
     .quick-actions { grid-template-columns: repeat(4, minmax(0,1fr)); padding: 0 28px; max-width: none; }
     .card-grid { padding: 0 28px; grid-template-columns: repeat(3, minmax(0,1fr)); max-width: none; }
-    .metric-card.hero .metric-value { font-size: 40px; }
+    .metric-card.hero .metric-value { font-size: 30px; }
 
     .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,0.85fr); gap: 18px; align-items: start; padding: 0 28px; }
     .dashboard-col-main, .dashboard-col-side { display: block; min-width: 0; }

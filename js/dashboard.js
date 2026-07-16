@@ -183,12 +183,13 @@ function renderDashboardMetrics() {
 
   document.getElementById('dash-metrics').innerHTML = `
     <div class="metric-card hero">
-      <div class="metric-label">OPERATING PROFIT</div>
-      <div class="metric-value">${hideFin(fmt(operatingProfit))}</div>
+      <div class="hero-main">
+        <div class="metric-label">OPERATING PROFIT</div>
+        <div class="metric-value">${hideFin(fmt(operatingProfit))}</div>
+      </div>
       <div class="hero-breakdown">
         <div class="hero-stat"><span>Sales profit</span><strong>${hideFin(fmt(totalProfit))}</strong></div>
         <div class="hero-stat"><span>Expenses</span><strong>${hideFin(fmt(totalExpenses))}</strong></div>
-        <div class="hero-stat"><span>Items sold</span><strong>${sales.length}</strong></div>
       </div>
     </div>
     <div class="metric-card">
