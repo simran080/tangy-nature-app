@@ -255,7 +255,7 @@
 <div id="login-screen" style="position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;">
   <div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:20px;padding:32px 24px;width:100%;max-width:380px;">
     <div style="text-align:center;margin-bottom:28px;">
-      <div style="font-size:36px;margin-bottom:10px;">📷</div>
+      <div style="margin-bottom:10px;color:var(--amber);"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 8a2 2 0 012-2h1.5l1-2h7l1 2H18a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg></div>
       <div style="font-size:11px;font-weight:500;letter-spacing:1.5px;color:var(--amber);text-transform:uppercase;margin-bottom:4px;">Tangy Nature LLC</div>
       <div style="font-size:22px;font-weight:600;">Sign In</div>
     </div>
@@ -293,7 +293,7 @@
           <div class="header-subtitle" id="dash-date"></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button onclick="toggleTheme()" id="theme-toggle-btn" title="Switch light/dark" aria-label="Switch light/dark theme" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🌙</button>
+          <button onclick="toggleTheme()" id="theme-toggle-btn" title="Switch light/dark" aria-label="Switch light/dark theme" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8.7A5.3 5.3 0 116.3 2 4.3 4.3 0 0013 8.7z" stroke-linejoin="round"/></svg></button>
           <span id="role-badge" style="font-size:10px;font-weight:600;letter-spacing:1px;padding:3px 8px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);">USER</span>
           <button onclick="signOut()" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text3);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Sign out</button>
         </div>
@@ -319,9 +319,9 @@
     <div id="dash-export" style="display:none;">
       <div class="section-title">Export Data</div>
       <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:24px;">
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportSales()">⬇ Sales</button>
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportPurchases()">⬇ Purchases</button>
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportExpenses()">⬇ Expenses</button>
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportSales()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Sales</button>
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportPurchases()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Purchases</button>
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportExpenses()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Expenses</button>
       </div>
     </div>
   </div>
@@ -456,7 +456,7 @@
           <div class="header-title">Linked Records</div>
           <div class="header-subtitle" id="linked-subtitle"></div>
         </div>
-        <button onclick="showPage('purchases')" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">← Back</button>
+        <button onclick="showPage('purchases')" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="vertical-align:-2px;margin-right:6px;"><path d="M10 3L5 8l5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
       </div>
     </div>
     <div class="search-wrap">
@@ -547,7 +547,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-header">
     <div class="sheet-title" id="sku-sheet-title">New SKU</div>
-    <button class="sheet-close" onclick="closeSheet('sku-sheet')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('sku-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
   <div class="sheet-body">
     <input type="hidden" id="sku-edit-id">
@@ -620,7 +620,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-header">
     <div class="sheet-title" id="purchase-sheet-title">Log Purchase</div>
-    <button class="sheet-close" onclick="closeSheet('purchase-sheet')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('purchase-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
   <div class="sheet-body">
     <input type="hidden" id="purchase-edit-id">
@@ -743,7 +743,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-header">
     <div class="sheet-title" id="sale-sheet-title">Log Sale</div>
-    <button class="sheet-close" onclick="closeSheet('sale-sheet')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('sale-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
   <div class="sheet-body">
     <input type="hidden" id="sale-edit-id">
@@ -899,7 +899,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-header">
     <div class="sheet-title">Edit Trades</div>
-    <button class="sheet-close" onclick="closeSheet('sale-trades-sheet')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('sale-trades-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
   <div class="sheet-body">
     <input type="hidden" id="trade-edit-sale-id">
@@ -927,7 +927,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-header">
     <div class="sheet-title" id="expense-sheet-title">Log Expense</div>
-    <button class="sheet-close" onclick="closeSheet('expense-sheet')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('expense-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
   <div class="sheet-body">
     <input type="hidden" id="expense-edit-id">
@@ -993,7 +993,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-header">
     <div class="sheet-title" id="detail-title">Details</div>
-    <button class="sheet-close" onclick="closeSheet('detail-sheet')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('detail-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
   <div class="sheet-body" id="detail-body"></div>
 </div>
@@ -1007,7 +1007,7 @@
       <div class="sheet-title" id="sku-drill-title">SKU Details</div>
       <div id="sku-drill-sub" style="font-size:12px;color:var(--text3);margin-top:2px;"></div>
     </div>
-    <button class="sheet-close" onclick="closeSheet('sku-drill-sheet')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('sku-drill-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
   <div class="sheet-body" id="sku-drill-body"></div>
 </div>
@@ -1021,7 +1021,7 @@
       <div class="sheet-title" id="shiplabel-title">Buy Shipping Label</div>
       <div id="shiplabel-sub" style="font-size:12px;color:var(--text3);margin-top:2px;"></div>
     </div>
-    <button class="sheet-close" onclick="closeSheet('shiplabel-sheet')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('shiplabel-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
   <div class="sheet-body">
     <div class="section-title" style="padding:0;margin:0 0 8px;">Ship to (buyer)</div>
@@ -1071,7 +1071,7 @@
       <div class="form-hint">Not every carrier/rate supports every option — unsupported ones are ignored for that rate.</div>
     </div>
     <div class="btn-row" style="margin-top:4px;">
-      <button class="btn btn-secondary" id="ship-rates-btn" onclick="fetchShipRates()">Compare Rates →</button>
+      <button class="btn btn-secondary" id="ship-rates-btn" onclick="fetchShipRates()">Compare Rates<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="vertical-align:-2px;margin-left:6px;"><path d="M6 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div id="ship-rates" style="margin-top:16px;"></div>
     <div id="ship-result" style="margin-top:16px;"></div>
@@ -1147,7 +1147,7 @@ async function loadAll(silent) {
         if (c && c.skus) { _skus=c.skus; _purchases=c.purchases; _sales=c.sales; _expenses=c.expenses; _dataLoaded=true; }
       } catch {}
     }
-    if (!silent) toast(_dataLoaded ? '⚠️ Offline — showing last synced data' : '⚠️ Could not connect to database');
+    if (!silent) toast(_dataLoaded ? 'Offline — showing last synced data' : 'Could not connect to database');
     setDbStatus('error');
     console.error(e);
   }
@@ -1347,6 +1347,24 @@ const ICON_EDIT = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" s
 const ICON_SWAP = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="${_ICON_STYLE}"><path d="M3 5.5h9M9.5 3l2.5 2.5L9.5 8M13 10.5H4M6.5 8L4 10.5 6.5 13" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICON_LINK = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="${_ICON_STYLE}"><path d="M6.5 9.5a2.5 2.5 0 003.5 0l2-2a2.5 2.5 0 00-3.5-3.5L7.5 5" stroke-linecap="round"/><path d="M9.5 6.5a2.5 2.5 0 00-3.5 0l-2 2a2.5 2.5 0 003.5 3.5l1-1" stroke-linecap="round"/></svg>`;
 const ICON_CHECK = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" style="${_ICON_STYLE}"><path d="M3 8.5l3.5 3.5L13 5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_MOON = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8.7A5.3 5.3 0 116.3 2 4.3 4.3 0 0013 8.7z" stroke-linejoin="round"/></svg>`;
+const ICON_SUN = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4" stroke-linecap="round"/></svg>`;
+const ICON_DOWNLOAD = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="${_ICON_STYLE}"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_X = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg>`;
+const ICON_CHEVRON_L = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="${_ICON_STYLE}"><path d="M10 3L5 8l5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_CHEVRON_R = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="margin-left:6px;vertical-align:-2px;"><path d="M6 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_CHAT = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v11H8l-4 4V4z" stroke-linejoin="round"/></svg>`;
+const ICON_RECEIPT_BIG = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 2h12v20l-2-1.5L14 22l-2-1.5L10 22l-2-1.5L6 22V2z" stroke-linejoin="round"/><path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/></svg>`;
+const ICON_BOX_BIG = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 8l9-5 9 5-9 5-9-5z" stroke-linejoin="round"/><path d="M3 8v9l9 5 9-5V8M12 13v9" stroke-linejoin="round"/></svg>`;
+const ICON_DOLLAR_BIG = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.1-1.3-2-3-2s-3 .8-3 1.8c0 2.5 6 1.1 6 3.6 0 1-1.3 1.8-3 1.8s-3-.9-3-2" stroke-linecap="round"/></svg>`;
+const ICON_LINK_BIG = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7L11.5 6.7" stroke-linecap="round"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1.4-1.4" stroke-linecap="round"/></svg>`;
+const ICON_CAMERA_BIG = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 8a2 2 0 012-2h1.5l1-2h7l1 2H18a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg>`;
+const ICON_CHECK_BIG = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_IMAGE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9" stroke-linejoin="round"/></svg>`;
+const ICON_CLIPBOARD = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M8 11h8M8 15h5" stroke-linecap="round"/></svg>`;
+const ICON_BOX = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l9-5 9 5-9 5-9-5z" stroke-linejoin="round"/><path d="M3 8v9l9 5 9-5V8M12 13v9" stroke-linejoin="round"/></svg>`;
+const ICON_BULB = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18h6M10 21h4M8 14a4 4 0 118 0c0 1.8-1 2.5-1.5 3.5h-5C9 16.5 8 15.8 8 14z" stroke-linejoin="round"/></svg>`;
+const ICON_GEAR = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke-linecap="round"/></svg>`;
 
 // ─── NAVIGATION ───────────────────────────────────────────
 let currentPage = 'dashboard';
@@ -1694,7 +1712,7 @@ function renderSKUs() {
   if (countEl) countEl.textContent = `${skus.length} ${skus.length === 1 ? 'item' : 'items'}`;
   const el = document.getElementById('sku-list');
   if (skus.length === 0) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📷</div><div class="empty-text">No SKUs yet</div><div class="empty-sub">Tap + to add your first product</div></div>';
+    el.innerHTML = `<div class="empty"><div class="empty-icon">${ICON_CAMERA_BIG}</div><div class="empty-text">No SKUs yet</div><div class="empty-sub">Tap + to add your first product</div></div>`;
     return;
   }
   el.innerHTML = skus.map(s => `
@@ -1740,7 +1758,7 @@ async function saveSKU() {
     closeSheet('sku-sheet');
     renderSKUs();
     toast(editId ? 'SKU updated' : 'SKU added');
-  } catch(e) { toast('❌ Save failed: ' + e.message); }
+  } catch(e) { toast('Save failed: ' + e.message); }
 }
 function editSKU(id) {
   const sku = _skus.find(s=>s.id===id);
@@ -1765,7 +1783,7 @@ function editSKU(id) {
 }
 async function deleteSKU(id) {
   if (!confirm('Delete this SKU?')) return;
-  try { await DB.deleteSku(id); await loadAll(); closeSheet('sku-sheet'); renderSKUs(); toast('SKU deleted'); } catch(e) { toast('❌ ' + e.message); }
+  try { await DB.deleteSku(id); await loadAll(); closeSheet('sku-sheet'); renderSKUs(); toast('SKU deleted'); } catch(e) { toast(e.message); }
 }
 
 // ─── PURCHASES ─────────────────────────────────────────────
@@ -1989,7 +2007,7 @@ async function savePurchase() {
     renderPurchases();
     const last = 'P-' + String(startNum + qty - 1).padStart(5, '0');
     toast(`${qty} units logged (${rows[0].id}–${last})`);
-  } catch(e) { toast('❌ ' + e.message); }
+  } catch(e) { toast(e.message); }
 }
 let purchaseFilter = 'all';
 function setPurchaseFilter(el) {
@@ -2023,7 +2041,7 @@ function renderPurchases() {
 
   const el = document.getElementById('purchase-list');
   if (purchases.length === 0) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No purchases found</div><div class="empty-sub">Try a different filter or search</div></div>';
+    el.innerHTML = `<div class="empty"><div class="empty-icon">${ICON_BOX_BIG}</div><div class="empty-text">No purchases found</div><div class="empty-sub">Try a different filter or search</div></div>`;
     return;
   }
   el.innerHTML = purchases.map(p => {
@@ -2091,8 +2109,8 @@ function viewPurchaseDetail(id) {
     <div style="margin-top:20px;" class="btn-row">
       ${canWrite() ? `<button class="btn btn-secondary" onclick="editPurchase('${id}')">Edit</button>` : ''}
       ${!sale
-        ? (canWrite() ? '<button class="btn btn-primary" onclick="closeSheet(\'detail-sheet\');openSaleForPurchase(\'' + id + '\')">Log Sale →</button>' : '')
-        : '<button class="btn btn-secondary" onclick="closeSheet(\'detail-sheet\');viewSaleDetail(\'' + (sale.id) + '\')">View Sale →</button>'}
+        ? (canWrite() ? '<button class="btn btn-primary" onclick="closeSheet(\'detail-sheet\');openSaleForPurchase(\'' + id + '\')">Log Sale' + ICON_CHEVRON_R + '</button>' : '')
+        : '<button class="btn btn-secondary" onclick="closeSheet(\'detail-sheet\');viewSaleDetail(\'' + (sale.id) + '\')">View Sale' + ICON_CHEVRON_R + '</button>'}
     </div>
     ${!sale && canDelete() ? '<div style="margin-top:10px;"><button class="btn btn-danger" onclick="deletePurchase(\'' + id + '\')">Delete Purchase</button></div>' : ''}
   `;
@@ -2139,7 +2157,7 @@ async function deletePurchase(id) {
     closeSheet('purchase-sheet');
     renderPurchases();
     toast('Purchase deleted');
-  } catch(e) { toast('❌ ' + e.message); }
+  } catch(e) { toast(e.message); }
 }
 
 // ─── SALES ─────────────────────────────────────────────────
@@ -2293,7 +2311,7 @@ async function saveSale() {
         boughtLabel = await _shippoCall({ action: 'buy', rate_id: _pendingShipLabel.rateId, label_file_type: 'PDF_4x6' });
         _pendingShipLabel.purchased = boughtLabel;
       } catch (e) {
-        toast('❌ Label purchase failed — sale not logged: ' + e.message);
+        toast('Label purchase failed — sale not logged: ' + e.message);
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = document.getElementById('sale-edit-id').value ? 'Update' : 'Log Sale'; }
         return;
       }
@@ -2345,7 +2363,7 @@ async function saveSale() {
     if (boughtLabel?.label_url) window.open(boughtLabel.label_url, '_blank', 'noopener');
     toast(editId ? 'Sale updated' : 'Sale logged — ' + fmt(profit) + ' profit' + (boughtLabel ? ' · label purchased — see sale detail to download' : ''));
   } catch(e) {
-    toast('❌ ' + e.message + (boughtLabel ? ' — label was already purchased, tracking: ' + (boughtLabel.tracking_number||'—') : ''));
+    toast(e.message + (boughtLabel ? ' — label was already purchased, tracking: ' + (boughtLabel.tracking_number||'—') : ''));
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? 'Update' : 'Log Sale'; }
   }
 }
@@ -2396,8 +2414,8 @@ function renderSales() {
   const el = document.getElementById('sale-list');
   if (sales.length === 0) {
     el.innerHTML = saleFilter === 'paypal'
-      ? '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">All profits sent to PayPal!</div></div>'
-      : '<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No sales found</div><div class="empty-sub">Try a different filter or search</div></div>';
+      ? `<div class="empty"><div class="empty-icon">${ICON_CHECK_BIG}</div><div class="empty-text">All profits sent to PayPal!</div></div>`
+      : `<div class="empty"><div class="empty-icon">${ICON_DOLLAR_BIG}</div><div class="empty-text">No sales found</div><div class="empty-sub">Try a different filter or search</div></div>`;
     return;
   }
   el.innerHTML = sales.map(s => {
@@ -2418,7 +2436,7 @@ function renderSales() {
           <div style="font-size:11px;color:var(--text3);">${isViewer()?"••••":((+s.margin||0)*100).toFixed(1)+"%"}</div>
           ${cond ? `<div style="font-size:10px;font-weight:600;color:${condColor};">${cond.toUpperCase()}</div>` : ''}
           ${s.isTrade?'<div class="item-badge" style="background:var(--blue-dim);color:var(--blue);">Trade</div>':''}
-          ${s.paypalReleased?'<div class="item-badge" style="background:var(--green-dim);color:var(--green);">PayPal ✓</div>':''}
+          ${s.paypalReleased?`<div class="item-badge" style="background:var(--green-dim);color:var(--green);display:flex;align-items:center;">${ICON_CHECK}PayPal</div>`:''}
         </div>
       </div>
     </div>`;
@@ -2580,7 +2598,7 @@ async function saveEditSaleTrades() {
     closeSheet('sale-trades-sheet');
     toast('Trade links saved');
     viewSaleDetail(saleId);
-  } catch(e) { toast('❌ ' + e.message); }
+  } catch(e) { toast(e.message); }
 }
 
 async function releaseToPaypal(id) {
@@ -2592,17 +2610,17 @@ async function releaseToPaypal(id) {
     await loadAll();
     closeSheet('detail-sheet');
     renderSales();
-    toast('💸 Profit released to PayPal');
-  } catch(e) { toast('❌ ' + e.message); }
+    toast('Profit released to PayPal');
+  } catch(e) { toast(e.message); }
 }
 
 async function deleteSale(id) {
   if (!confirm('Delete this sale?')) return;
-  try { await DB.deleteSale(id); await loadAll(); closeSheet('detail-sheet'); renderSales(); toast('Sale deleted'); } catch(e) { toast('❌ ' + e.message); }
+  try { await DB.deleteSale(id); await loadAll(); closeSheet('detail-sheet'); renderSales(); toast('Sale deleted'); } catch(e) { toast(e.message); }
 }
 
 // ─── EXPENSES ─────────────────────────────────────────────
-const expCategoryIcon = { 'Cam Accessories':'🔧', 'Backdrop':'🖼️', 'Display Board':'📋', 'Shipping':'📦', 'Others':'💡' };
+const expCategoryIcon = { 'Cam Accessories':ICON_GEAR, 'Backdrop':ICON_IMAGE, 'Display Board':ICON_CLIPBOARD, 'Shipping':ICON_BOX, 'Others':ICON_BULB };
 let expFilter = 'all';
 function setExpFilter(el) {
   document.querySelectorAll('#exp-tabs .tab').forEach(t => t.classList.remove('active'));
@@ -2658,7 +2676,7 @@ async function saveExpense() {
     closeSheet('expense-sheet');
     renderExpenses();
     toast(editId ? 'Expense updated' : 'Expense logged');
-  } catch(e2) { toast('❌ ' + e2.message); }
+  } catch(e2) { toast(e2.message); }
 }
 function renderExpenses() {
   let expenses = [..._expenses].sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -2689,12 +2707,12 @@ function renderExpenses() {
   `;
   const el = document.getElementById('expense-list');
   if (expenses.length === 0) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">No expenses yet</div><div class="empty-sub">Tap + to log your first expense</div></div>';
+    el.innerHTML = `<div class="empty"><div class="empty-icon">${ICON_RECEIPT_BIG}</div><div class="empty-text">No expenses yet</div><div class="empty-sub">Tap + to log your first expense</div></div>`;
     return;
   }
   el.innerHTML = expenses.map(e => `
     <div class="list-item" onclick="viewExpenseDetail('${e.id}')">
-      <div class="item-icon icon-acc">${expCategoryIcon[e.type]||'💡'}</div>
+      <div class="item-icon icon-acc">${expCategoryIcon[e.type]||ICON_BULB}</div>
       <div class="item-body">
         <div class="item-name">${e.product}</div>
         <div class="item-sub">${e.type} · ${e.source||'—'} · ${fmtDate(e.date)}</div>
@@ -2752,7 +2770,7 @@ function editExpense(id) {
 }
 async function deleteExpense(id) {
   if (!confirm('Delete this expense?')) return;
-  try { await DB.deleteExpense(id); await loadAll(); closeSheet('detail-sheet'); closeSheet('expense-sheet'); renderExpenses(); toast('Expense deleted'); } catch(e) { toast('❌ ' + e.message); }
+  try { await DB.deleteExpense(id); await loadAll(); closeSheet('detail-sheet'); closeSheet('expense-sheet'); renderExpenses(); toast('Expense deleted'); } catch(e) { toast(e.message); }
 }
 
 
@@ -2910,7 +2928,7 @@ function currentTheme() {
 }
 function updateThemeToggleIcon(mode) {
   const btn = document.getElementById('theme-toggle-btn');
-  if (btn) btn.textContent = mode === 'dark' ? '☀️' : '🌙';
+  if (btn) btn.innerHTML = mode === 'dark' ? ICON_SUN : ICON_MOON;
 }
 function applyTheme(mode) {
   document.documentElement.setAttribute('data-theme', mode);
@@ -3079,7 +3097,7 @@ function renderLinked() {
 
   const el = document.getElementById('linked-list');
   if (rows.length === 0) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🔗</div><div class="empty-text">No records found</div></div>';
+    el.innerHTML = `<div class="empty"><div class="empty-icon">${ICON_LINK_BIG}</div><div class="empty-text">No records found</div></div>`;
     return;
   }
 
@@ -3307,7 +3325,7 @@ function _resetShipLabelUI() {
   document.getElementById('ship-insure-content').value = 'Camera gear';
   document.getElementById('ship-signature').value = '';
   const btn = document.getElementById('ship-rates-btn');
-  btn.textContent = 'Compare Rates →'; btn.disabled = false; btn.style.display = '';
+  btn.innerHTML = 'Compare Rates' + ICON_CHEVRON_R; btn.disabled = false; btn.style.display = '';
 }
 
 function toggleShipInsurance() {
@@ -3433,9 +3451,9 @@ async function fetchShipRates() {
     ].filter(Boolean).join(' · ');
     renderShipRates();
   } catch (e) {
-    toast('❌ ' + e.message);
+    toast(e.message);
   } finally {
-    btn.disabled = false; btn.textContent = 'Compare Rates →';
+    btn.disabled = false; btn.innerHTML = 'Compare Rates' + ICON_CHEVRON_R;
   }
 }
 
@@ -3444,7 +3462,7 @@ function renderShipRates() {
   const rates = _shipCtx.rates;
   if (!rates.length) { box.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">No rates returned for this address/parcel.</div>'; return; }
   const extraBadge = _shipCtx.extraSummary
-    ? `<div style="font-size:11px;color:var(--blue);background:var(--blue-dim);border-radius:6px;padding:5px 10px;margin-bottom:10px;display:inline-block;">✓ ${_shipCtx.extraSummary}</div>` : '';
+    ? `<div style="font-size:11px;color:var(--blue);background:var(--blue-dim);border-radius:6px;padding:5px 10px;margin-bottom:10px;display:inline-flex;align-items:center;">${ICON_CHECK}${_shipCtx.extraSummary}</div>` : '';
   box.innerHTML = `<div class="section-title" style="padding:0;margin:0 0 8px;">Rates (cheapest first)</div>` + extraBadge +
     rates.map((r, i) => `
       <div onclick="selectShipRate(${i})" id="ship-rate-${i}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:0.5px solid ${_shipCtx.selectedRateId===r.object_id?'var(--amber)':'var(--border)'};background:${_shipCtx.selectedRateId===r.object_id?'var(--amber-dim)':'var(--bg2)'};border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;">
@@ -3514,7 +3532,7 @@ async function buyShipLabel() {
       </div>`;
     toast(`Label bought — $${amount.toFixed(2)} added to shipping`);
   } catch (e) {
-    toast('❌ ' + e.message);
+    toast(e.message);
     buy.disabled = false; buy.style.opacity = '1'; buy.textContent = `Buy Label — $${amount.toFixed(2)}`;
   }
 }
@@ -3564,11 +3582,11 @@ renderDashboard();
 <!-- ─── QUOTE TOOL FLOATING BUTTON ─────────────────────────── -->
 <button id="quote-fab" onclick="openQuoteTool()" title="Get Live Quote"
   style="position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px);right:20px;z-index:150;
-    width:48px;height:48px;border-radius:50%;background:var(--amber);border:none;
+    width:48px;height:48px;border-radius:50%;background:var(--amber);color:var(--on-accent);border:none;
     box-shadow:0 4px 16px var(--amber-shadow);cursor:pointer;
     display:none;align-items:center;justify-content:center;font-size:22px;
     transition:transform 0.15s,opacity 0.15s;">
-  💬
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v11H8l-4 4V4z" stroke-linejoin="round"/></svg>
 </button>
 
 </div><!-- end main-app -->
