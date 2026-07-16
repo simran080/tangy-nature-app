@@ -66,8 +66,8 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <button onclick="toggleTheme()" id="theme-toggle-btn" title="Switch light/dark" aria-label="Switch light/dark theme" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8.7A5.3 5.3 0 116.3 2 4.3 4.3 0 0013 8.7z" stroke-linejoin="round"/></svg></button>
-          <span id="user-email" title="" style="display:none;font-size:12px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-          <span id="role-badge" style="font-size:10px;font-weight:600;letter-spacing:1px;padding:3px 8px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);">USER</span>
+          <span id="user-email" onclick="toggleRoleBadge()" title="" style="display:none;cursor:pointer;font-size:12px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+          <span id="role-badge" style="display:none;font-size:10px;font-weight:600;letter-spacing:1px;padding:3px 8px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);">USER</span>
           <button onclick="signOut()" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text3);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Sign out</button>
         </div>
       </div>
@@ -2223,8 +2223,14 @@ function applyRoleUI() {
   const userEmailEl = document.getElementById('user-email');
   if (userEmailEl) {
     userEmailEl.textContent = _userEmail || '';
-    userEmailEl.title = _userEmail || '';
+    userEmailEl.title = _userEmail ? `${_userEmail} — click to show role` : '';
   }
+}
+
+// Role badge stays hidden until the user clicks their name to reveal it
+function toggleRoleBadge() {
+  const badge = document.getElementById('role-badge');
+  if (badge) badge.style.display = badge.style.display === 'none' ? 'inline-block' : 'none';
 }
 
 // Persist access + refresh tokens and the expiry timestamp
