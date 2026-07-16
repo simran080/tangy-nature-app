@@ -147,6 +147,54 @@
   .metric-value.green { color: var(--green); }
   .metric-value.amber { color: var(--amber); }
   .metric-value.red { color: var(--red); }
+  .metric-card.hero { grid-column: 1 / -1; background: var(--amber); border: none; padding: 20px; position: relative; overflow: hidden; }
+  .metric-card.hero .metric-label { color: color-mix(in srgb, var(--on-accent) 75%, transparent); }
+  .metric-card.hero .metric-value { color: var(--on-accent); font-family: var(--font-serif); font-size: 34px; letter-spacing: -1px; position: relative; z-index: 1; }
+  .metric-card.hero::after { content: ''; position: absolute; width: 150px; height: 150px; right: -50px; top: -60px; border: 1px solid color-mix(in srgb, var(--on-accent) 20%, transparent); border-radius: 50%; box-shadow: 0 0 0 24px color-mix(in srgb, var(--on-accent) 5%, transparent); }
+  .hero-breakdown { display: flex; gap: 18px; margin-top: 12px; position: relative; z-index: 1; flex-wrap: wrap; }
+  .hero-stat span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: color-mix(in srgb, var(--on-accent) 70%, transparent); }
+  .hero-stat strong { display: block; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--on-accent); margin-top: 3px; }
+
+  /* QUICK ACTIONS (Dashboard) */
+  .quick-actions { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; padding: 0 16px; margin: 4px 0 16px; }
+  .quick-action { min-height: 76px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 14px; padding: 10px 8px; color: var(--text); cursor: pointer; font-family: 'DM Sans', sans-serif; text-align: center; transition: border-color 0.15s, transform 0.1s; }
+  .quick-action:active { transform: scale(0.97); }
+  .quick-action-icon { width: 26px; height: 26px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--amber-dim); color: var(--amber); }
+  .quick-action-icon svg { width: 15px; height: 15px; }
+  .quick-action-label { display: block; font-size: 11px; font-weight: 600; }
+
+  /* Dashboard two-column grid — inert on mobile (wrappers disappear via
+     display:contents so section order stays exactly as it is on mobile
+     today), becomes a real two-column layout at the desktop breakpoint. */
+  .dashboard-col-main, .dashboard-col-side { display: contents; }
+
+  /* DESKTOP LAYOUT (sidebar nav + wider pages) ─────────────── */
+  @media (min-width: 760px) {
+    .app { max-width: 1180px; }
+    .page { margin-left: 224px; padding: 0 0 40px; min-height: auto; }
+    .header { padding: 40px 28px 18px; }
+    .search-wrap, #summary-list, .tabs, [id$="-count"], .list-wrap, .card-grid { max-width: 900px; }
+
+    .nav { position: fixed; top: 24px; bottom: 24px; left: max(24px, calc(50% - 590px)); transform: none;
+      width: 190px; max-width: none; height: auto; flex-direction: column; align-items: stretch; gap: 3px;
+      padding: 18px 10px; border: 0.5px solid var(--border); border-top: 0.5px solid var(--border); border-radius: 20px;
+      box-shadow: 0 18px 46px var(--shadow-color); overflow-x: visible; }
+    .nav::before { content: 'TANGY NATURE'; display: block; padding: 6px 10px 18px; color: var(--amber); font-size: 10px; font-weight: 600; letter-spacing: 1.6px; }
+    .nav-btn { flex: 0; flex-direction: row; justify-content: flex-start; gap: 11px; min-height: 42px; padding: 9px 10px; border-radius: 10px; font-size: 12.5px; }
+    .nav-btn.active { background: var(--amber-dim); }
+    .nav-icon { width: 19px; height: 19px; }
+    #quote-fab { left: max(24px, calc(50% - 590px)) !important; right: auto !important; bottom: 24px !important; }
+
+    .quick-actions { grid-template-columns: repeat(4, minmax(0,180px)); padding: 0 28px; }
+    .card-grid { padding: 0 28px; grid-template-columns: repeat(3, minmax(0,1fr)); max-width: none; }
+    .metric-card.hero .metric-value { font-size: 40px; }
+
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,0.85fr); gap: 18px; align-items: start; padding: 0 28px; }
+    .dashboard-col-main, .dashboard-col-side { display: block; }
+    .dashboard-grid .card-grid, .dashboard-grid .section-title, .dashboard-grid .list-wrap, .dashboard-grid #dash-export { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; max-width: none; }
+    .dashboard-grid .list-wrap { max-height: none !important; }
+    .dashboard-grid .section-title:first-child { margin-top: 0; }
+  }
 
   /* SECTION */
   .section-title { font-size: 11px; font-weight: 500; letter-spacing: 1.2px; color: var(--text3); text-transform: uppercase; padding: 0 16px; margin-bottom: 10px; margin-top: 20px; }
@@ -304,24 +352,46 @@
         <span id="db-label" style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.3px;">Connecting…</span>
       </div>
     </div>
+    <div class="quick-actions" aria-label="Quick actions">
+      <button class="quick-action" data-write-action onclick="openSheet('purchase-sheet')">
+        <span class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke-linecap="round"/></svg></span>
+        <span class="quick-action-label">Purchase</span>
+      </button>
+      <button class="quick-action" data-write-action onclick="openSheet('sale-sheet')">
+        <span class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round"/></svg></span>
+        <span class="quick-action-label">Sale</span>
+      </button>
+      <button class="quick-action" data-write-action onclick="openExpenseSheet()">
+        <span class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 14l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></span>
+        <span class="quick-action-label">Expense</span>
+      </button>
+      <button class="quick-action" onclick="showPage('sku')">
+        <span class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10M4 18h7" stroke-linecap="round"/></svg></span>
+        <span class="quick-action-label">Catalog</span>
+      </button>
+    </div>
+
     <div class="tabs" id="dash-year-tabs" style="margin-top:4px;"></div>
     <div class="tabs" id="dash-quarter-tabs" style="margin-top:0;display:none;"></div>
     <div class="tabs" id="dash-month-tabs" style="margin-top:0;display:none;"></div>
 
-    <div class="card-grid" id="dash-metrics"></div>
-
-    <div class="section-title">Unsold Inventory</div>
-    <div class="list-wrap" id="dash-unsold" style="max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
-
-    <div class="section-title">Recent Sales</div>
-    <div class="list-wrap" id="dash-recent-sales" style="max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
-
-    <div id="dash-export" style="display:none;">
-      <div class="section-title">Export Data</div>
-      <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:24px;">
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportSales()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Sales</button>
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportPurchases()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Purchases</button>
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportExpenses()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Expenses</button>
+    <div class="dashboard-grid">
+      <div class="dashboard-col-main">
+        <div class="card-grid" id="dash-metrics"></div>
+        <div class="section-title">Unsold Inventory</div>
+        <div class="list-wrap" id="dash-unsold" style="max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+      </div>
+      <div class="dashboard-col-side">
+        <div class="section-title">Recent Sales</div>
+        <div class="list-wrap" id="dash-recent-sales" style="max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+        <div id="dash-export" style="display:none;">
+          <div class="section-title">Export Data</div>
+          <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:24px;">
+            <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportSales()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Sales</button>
+            <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportPurchases()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Purchases</button>
+            <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportExpenses()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Expenses</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1584,6 +1654,7 @@ function renderDashboardMetrics() {
   const totalRevenue = sales.reduce((s,s2) => s + (+s2.netSale||0), 0);
   const totalProfit = sales.reduce((s,s2) => s + (+s2.profit||0), 0);
   const totalExpenses = expenses.reduce((s,e) => s + (+e.netAmount||0), 0);
+  const operatingProfit = totalProfit - totalExpenses;
   const revToProfitPct = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
   const soldIds = new Set(allSales.map(s=>normalizePurchaseId(s.purchaseId)));
   const unsoldPurchases = purchases.filter(p => !soldIds.has(normalizePurchaseId(p.id)) && !p.sold);
@@ -1599,6 +1670,15 @@ function renderDashboardMetrics() {
   const avgDaysColor = avgDays === null ? 'var(--text)' : +avgDays <= 3 ? 'var(--green)' : +avgDays <= 14 ? 'var(--amber)' : 'var(--red)';
 
   document.getElementById('dash-metrics').innerHTML = `
+    <div class="metric-card hero">
+      <div class="metric-label">OPERATING PROFIT</div>
+      <div class="metric-value">${hideFin(fmt(operatingProfit))}</div>
+      <div class="hero-breakdown">
+        <div class="hero-stat"><span>Sales profit</span><strong>${hideFin(fmt(totalProfit))}</strong></div>
+        <div class="hero-stat"><span>Expenses</span><strong>${hideFin(fmt(totalExpenses))}</strong></div>
+        <div class="hero-stat"><span>Items sold</span><strong>${sales.length}</strong></div>
+      </div>
+    </div>
     <div class="metric-card">
       <div class="metric-label">TOTAL COST</div>
       <div class="metric-value">${hideFin(fmt(totalCost))}</div>
@@ -2818,6 +2898,10 @@ function applyRoleUI() {
   // Show/hide all add buttons
   document.querySelectorAll('.header-action').forEach(btn => {
     btn.style.display = canWrite() ? 'flex' : 'none';
+  });
+  // Dashboard quick-action tiles that create records (Purchase/Sale/Expense)
+  document.querySelectorAll('[data-write-action]').forEach(btn => {
+    btn.style.display = canWrite() ? '' : 'none';
   });
   // Data export is owner-only
   const exp = document.getElementById('dash-export');
