@@ -1,10 +1,13 @@
 // Tangy Nature service worker — offline app shell + font caching
-const CACHE = 'tn-cache-v1';
+const CACHE = 'tn-cache-v2';
 const SHELL = [
   './',
   './index.html',
   './quote.html',
   './manifest.json',
+  './styles.css',
+  './js/utils.js',
+  './js/icons.js',
 ];
 
 self.addEventListener('install', event => {
