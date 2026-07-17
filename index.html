@@ -963,7 +963,7 @@ function setDbStatus(state) {
     dot.style.background = 'var(--green)';
     dot.style.boxShadow = '0 0 6px var(--green)';
     label.style.color = 'var(--green)';
-    label.textContent = `Supabase · ${_skus.length} SKUs · ${_purchases.length} purchases · ${_sales.length} sales`;
+    label.textContent = 'Supabase';
   } else if (state === 'loading') {
     dot.style.background = 'var(--amber)';
     dot.style.boxShadow = '0 0 6px var(--amber)';
