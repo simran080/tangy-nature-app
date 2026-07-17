@@ -60,21 +60,26 @@
     <div class="header">
       <div class="header-top">
         <div>
-          <div class="header-label">Tangy Nature LLC</div>
+          <div class="header-label" id="dash-header-label">Tangy Nature LLC</div>
           <div class="header-title">Dashboard</div>
-          <div class="header-subtitle" id="dash-date"></div>
+          <div class="header-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text3);margin-top:2px;">
+            <span id="dash-date"></span>
+            <span style="color:var(--border2);">&middot;</span>
+            <span id="db-dot" style="width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;display:inline-block;"></span>
+            <span id="db-label">Connecting…</span>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <button onclick="toggleTheme()" id="theme-toggle-btn" title="Switch light/dark" aria-label="Switch light/dark theme" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8.7A5.3 5.3 0 116.3 2 4.3 4.3 0 0013 8.7z" stroke-linejoin="round"/></svg></button>
-          <span id="user-email" onclick="toggleRoleBadge()" title="" style="display:none;cursor:pointer;font-size:12px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-          <span id="role-badge" style="display:none;font-size:10px;font-weight:600;letter-spacing:1px;padding:3px 8px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);">USER</span>
-          <button onclick="signOut()" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text3);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Sign out</button>
+        <div style="position:relative;flex-shrink:0;">
+          <button onclick="toggleUserMenu()" id="user-avatar-btn" aria-label="Account menu" aria-haspopup="true" style="width:32px;height:32px;border-radius:50%;background:var(--amber);color:var(--on-accent);border:none;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;">A</button>
+          <div id="user-menu" style="display:none;position:absolute;top:38px;right:0;background:var(--bg2);border:0.5px solid var(--border2);border-radius:12px;box-shadow:0 8px 24px var(--shadow-color);padding:6px;min-width:200px;z-index:50;">
+            <div style="padding:8px 10px;font-size:12px;color:var(--text2);border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span id="user-email" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+              <span id="role-badge" style="font-size:9px;font-weight:600;letter-spacing:0.5px;padding:2px 7px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);flex-shrink:0;">USER</span>
+            </div>
+            <button onclick="toggleTheme()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'DM Sans',sans-serif;">Dark mode<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8.7A5.3 5.3 0 116.3 2 4.3 4.3 0 0013 8.7z" stroke-linejoin="round"/></svg></button>
+            <button onclick="signOut()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
+          </div>
         </div>
-      </div>
-      <!-- Supabase status badge -->
-      <div id="db-status" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:20px;padding:5px 12px;">
-        <span id="db-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;"></span>
-        <span id="db-label" style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.3px;">Connecting…</span>
       </div>
     </div>
     <div class="quick-actions" aria-label="Quick actions">
@@ -2219,19 +2224,27 @@ function applyRoleUI() {
     badge.style.color = colors[_userRole] || 'var(--text2)';
     badge.style.borderColor = colors[_userRole] || 'var(--border)';
   }
-  // Username in sign-out area
+  // Username inside the account menu
   const userEmailEl = document.getElementById('user-email');
   if (userEmailEl) {
     userEmailEl.textContent = _userEmail || '';
-    userEmailEl.title = _userEmail ? `${_userEmail} — click to show role` : '';
+    userEmailEl.title = _userEmail || '';
   }
+  // Avatar initial
+  const avatarBtn = document.getElementById('user-avatar-btn');
+  if (avatarBtn) avatarBtn.textContent = _userEmail ? _userEmail.charAt(0).toUpperCase() : '?';
 }
 
-// Role badge stays hidden until the user clicks their name to reveal it
-function toggleRoleBadge() {
-  const badge = document.getElementById('role-badge');
-  if (badge) badge.style.display = badge.style.display === 'none' ? 'inline-block' : 'none';
+function toggleUserMenu() {
+  const menu = document.getElementById('user-menu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
+document.addEventListener('click', e => {
+  const menu = document.getElementById('user-menu');
+  const btn = document.getElementById('user-avatar-btn');
+  if (!menu || menu.style.display === 'none') return;
+  if (!menu.contains(e.target) && e.target !== btn) menu.style.display = 'none';
+});
 
 // Persist access + refresh tokens and the expiry timestamp
 function saveSession(data) {

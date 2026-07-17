@@ -150,10 +150,10 @@
   @media (min-width: 760px) {
     .app { max-width: 1180px; }
     .page { margin-left: 254px; padding: 0 0 40px; min-height: auto; }
-    .header { padding: 40px 28px 18px; }
+    .header { padding: 28px 28px 18px; }
+    #dash-header-label { display: none; }
     .search-wrap, #summary-list, .tabs, [id$="-count"], .list-wrap, .card-grid { max-width: 900px; }
     .app .tabs { padding: 0 28px; }
-    #user-email { display: inline-block !important; }
 
     .nav { position: fixed; top: 24px; bottom: 24px; left: max(24px, calc(50% - 590px)); transform: none;
       width: 220px; max-width: none; height: auto; flex-direction: column; align-items: stretch; gap: 3px;
