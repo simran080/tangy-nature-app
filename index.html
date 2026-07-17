@@ -1020,7 +1020,10 @@ function syncNavHeight() {
   if (!nav || !page) return;
   if (window.innerWidth < 760) { nav.style.height = ''; return; }
   const navTop = nav.getBoundingClientRect().top;
-  const pageBottom = page.getBoundingClientRect().bottom;
+  // Measure the last content element, not .page's own box -- .page carries
+  // 40px of trailing bottom padding that would otherwise get included.
+  const lastChild = page.lastElementChild;
+  const pageBottom = (lastChild || page).getBoundingClientRect().bottom;
   const maxAvailable = window.innerHeight - 24 - navTop;
   const target = Math.max(200, Math.min(pageBottom - navTop, maxAvailable));
   nav.style.height = target + 'px';
