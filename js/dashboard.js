@@ -205,16 +205,16 @@ function renderDashboardMetrics() {
       <div class="metric-value ${revToProfitPct>=0?'green':'red'}">${isViewer()?"••••":revToProfitPct.toFixed(1)+"%"}</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">AVG DAYS TO SELL</div>
-      <div class="metric-value" style="color:${avgDaysColor};">${avgDays !== null ? avgDays + 'd' : '—'}</div>
-    </div>
-    <div class="metric-card">
       <div class="metric-label">TIED-UP CAPITAL</div>
       <div class="metric-value">${hideFin(fmt(tiedUp))}</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">ITEMS SOLD</div>
       <div class="metric-value amber">${sales.length}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">AVG DAYS TO SELL</div>
+      <div class="metric-value" style="color:${avgDaysColor};">${avgDays !== null ? avgDays + 'd' : '—'}</div>
     </div>
   `;
 
