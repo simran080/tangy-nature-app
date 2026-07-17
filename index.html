@@ -2512,6 +2512,7 @@ async function init() {
   registerServiceWorker();
   await loadAll();
   renderDashboard();
+  requestAnimationFrame(syncNavHeight);
 }
 
 (async () => {
@@ -3043,6 +3044,7 @@ function showQuoteFab() {
 
 // ─── INIT ─────────────────────────────────────────────────
 renderDashboard();
+requestAnimationFrame(syncNavHeight);
 </script>
 <!-- ─── QUOTE TOOL FLOATING BUTTON ─────────────────────────── -->
 <button id="quote-fab" onclick="openQuoteTool()" title="Get Live Quote"
