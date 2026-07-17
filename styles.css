@@ -174,7 +174,6 @@
     .dashboard-grid .section-title, .dashboard-grid .list-wrap { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; max-width: none; }
     .dashboard-grid .list-wrap { max-height: 60vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
     .dashboard-grid .section-title:first-child { margin-top: 0; }
-    #dash-export { padding: 0 28px; max-width: none; }
   }
 
   /* SECTION */

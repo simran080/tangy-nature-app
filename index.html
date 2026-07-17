@@ -76,6 +76,14 @@
               <span id="role-badge" style="font-size:9px;font-weight:600;letter-spacing:0.5px;padding:2px 7px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);flex-shrink:0;">USER</span>
             </div>
             <button onclick="toggleTheme()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'DM Sans',sans-serif;">Dark mode<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8.7A5.3 5.3 0 116.3 2 4.3 4.3 0 0013 8.7z" stroke-linejoin="round"/></svg></button>
+            <div id="dash-export" style="display:none;border-top:0.5px solid var(--border);margin-top:2px;padding-top:2px;">
+              <button onclick="toggleExportSubmenu()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'DM Sans',sans-serif;">Export data<svg id="export-chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="transition:transform 0.15s;"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <div id="export-submenu" style="display:none;">
+                <button onclick="exportSales()" style="width:100%;text-align:left;background:none;border:none;padding:7px 10px 7px 20px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;">Sales</button>
+                <button onclick="exportPurchases()" style="width:100%;text-align:left;background:none;border:none;padding:7px 10px 7px 20px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;">Purchases</button>
+                <button onclick="exportExpenses()" style="width:100%;text-align:left;background:none;border:none;padding:7px 10px 7px 20px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;">Expenses</button>
+              </div>
+            </div>
             <button onclick="signOut()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
           </div>
         </div>
@@ -117,14 +125,6 @@
       </div>
     </div>
 
-    <div id="dash-export" style="display:none;padding:0 16px;">
-      <div class="section-title" style="padding:0;">Export Data</div>
-      <div style="display:flex;gap:8px;margin-bottom:24px;">
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportSales()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Sales</button>
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportPurchases()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Purchases</button>
-        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:11px;" onclick="exportExpenses()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;margin-right:6px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Expenses</button>
-      </div>
-    </div>
   </div>
 
   <!-- SKU PAGE -->
@@ -2236,13 +2236,29 @@ function applyRoleUI() {
 
 function toggleUserMenu() {
   const menu = document.getElementById('user-menu');
-  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  if (!menu) return;
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  if (menu.style.display === 'none') closeExportSubmenu();
+}
+function toggleExportSubmenu() {
+  const sub = document.getElementById('export-submenu');
+  const chevron = document.getElementById('export-chevron');
+  if (!sub) return;
+  const opening = sub.style.display === 'none';
+  sub.style.display = opening ? 'block' : 'none';
+  if (chevron) chevron.style.transform = opening ? 'rotate(90deg)' : 'none';
+}
+function closeExportSubmenu() {
+  const sub = document.getElementById('export-submenu');
+  const chevron = document.getElementById('export-chevron');
+  if (sub) sub.style.display = 'none';
+  if (chevron) chevron.style.transform = 'none';
 }
 document.addEventListener('click', e => {
   const menu = document.getElementById('user-menu');
   const btn = document.getElementById('user-avatar-btn');
   if (!menu || menu.style.display === 'none') return;
-  if (!menu.contains(e.target) && e.target !== btn) menu.style.display = 'none';
+  if (!menu.contains(e.target) && e.target !== btn) { menu.style.display = 'none'; closeExportSubmenu(); }
 });
 
 // Persist access + refresh tokens and the expiry timestamp
