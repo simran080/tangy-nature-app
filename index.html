@@ -1008,7 +1008,24 @@ function renderCurrentPage() {
   else if (page === 'expenses') renderExpenses();
   else if (page === 'linked') renderLinked();
   else if (page === 'summary') renderSummary();
+  requestAnimationFrame(syncNavHeight);
 }
+
+// Desktop sidebar nav height follows the current page's content height,
+// so it ends around the same point as the page rather than stretching
+// full viewport height or shrinking to just its own menu items.
+function syncNavHeight() {
+  const nav = document.querySelector('.nav');
+  const page = document.querySelector('.page.active');
+  if (!nav || !page) return;
+  if (window.innerWidth < 760) { nav.style.height = ''; return; }
+  const navTop = nav.getBoundingClientRect().top;
+  const pageBottom = page.getBoundingClientRect().bottom;
+  const maxAvailable = window.innerHeight - 24 - navTop;
+  const target = Math.max(200, Math.min(pageBottom - navTop, maxAvailable));
+  nav.style.height = target + 'px';
+}
+window.addEventListener('resize', () => requestAnimationFrame(syncNavHeight));
 async function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
