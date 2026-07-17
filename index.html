@@ -372,41 +372,44 @@
       <label class="form-label">Product name</label>
       <input class="form-input" id="sku-product" placeholder="Sony Alpha 7 III">
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Sensor</label>
-        <select class="form-select" id="sku-sensor">
-          <option value="">—</option>
-          <option value="Full Frame">Full Frame</option>
-          <option value="APS-C">APS-C</option>
-          <option value="Micro 4/3">Micro 4/3</option>
-          <option value="Medium Format">Medium Format</option>
-          <option value="1 inch">1 inch</option>
-        </select>
+    <button type="button" class="btn btn-secondary" id="sku-details-toggle" onclick="toggleSkuDetails()" style="margin-bottom:16px;">+ Add Details</button>
+    <div id="sku-extra-details" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Sensor</label>
+          <select class="form-select" id="sku-sensor">
+            <option value="">—</option>
+            <option value="Full Frame">Full Frame</option>
+            <option value="APS-C">APS-C</option>
+            <option value="Micro 4/3">Micro 4/3</option>
+            <option value="Medium Format">Medium Format</option>
+            <option value="1 inch">1 inch</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Megapixels</label>
+          <input class="form-input" id="sku-mp" type="number" placeholder="24.2">
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Megapixels</label>
-        <input class="form-input" id="sku-mp" type="number" placeholder="24.2">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Max FPS</label>
+          <input class="form-input" id="sku-fps" type="number" placeholder="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Video</label>
+          <input class="form-input" id="sku-video" placeholder="4K/30p">
+        </div>
       </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Max FPS</label>
-        <input class="form-input" id="sku-fps" type="number" placeholder="10">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Video</label>
-        <input class="form-input" id="sku-video" placeholder="4K/30p">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Lens type</label>
-        <input class="form-input" id="sku-lens-type" placeholder="Standard Zoom">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Max aperture</label>
-        <input class="form-input" id="sku-aperture" type="number" step="0.1" placeholder="2.8">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Lens type</label>
+          <input class="form-input" id="sku-lens-type" placeholder="Standard Zoom">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max aperture</label>
+          <input class="form-input" id="sku-aperture" type="number" step="0.1" placeholder="2.8">
+        </div>
       </div>
     </div>
     <div class="btn-row" id="sku-btn-row">
@@ -1152,6 +1155,15 @@ function clearSkuForm() {
   });
   document.getElementById('sku-type').value='Camera';
   document.getElementById('sku-sensor').value='';
+  setSkuDetailsOpen(false);
+}
+function setSkuDetailsOpen(open) {
+  document.getElementById('sku-extra-details').style.display = open ? 'block' : 'none';
+  document.getElementById('sku-details-toggle').textContent = open ? '− Hide Details' : '+ Add Details';
+}
+function toggleSkuDetails() {
+  const isOpen = document.getElementById('sku-extra-details').style.display !== 'none';
+  setSkuDetailsOpen(!isOpen);
 }
 async function saveSKU() {
   const product = document.getElementById('sku-product').value.trim();
@@ -1192,6 +1204,8 @@ function editSKU(id) {
   document.getElementById('sku-video').value = sku.video||'';
   document.getElementById('sku-lens-type').value = sku.lensType||'';
   document.getElementById('sku-aperture').value = sku.aperture||'';
+  const hasDetails = sku.sensor || sku.mp || sku.fps || sku.video || sku.lensType || sku.aperture;
+  setSkuDetailsOpen(!!hasDetails);
   document.getElementById('sku-btn-row').innerHTML = `
     <button class="btn btn-danger" onclick="deleteSKU('${id}')">Delete</button>
     <button class="btn btn-primary" onclick="saveSKU()">Update</button>
