@@ -1,5 +1,5 @@
 // Tangy Nature service worker — offline app shell + font caching
-const CACHE = 'tn-cache-v3';
+const CACHE = 'tn-cache-v4';
 const SHELL = [
   './',
   './index.html',
