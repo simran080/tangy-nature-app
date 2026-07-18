@@ -191,7 +191,13 @@
     <div class="tabs" id="purchase-year-tabs" style="margin-top:0;"></div>
     <div class="tabs" id="purchase-quarter-tabs" style="margin-top:0;display:none;"></div>
     <div class="tabs" id="purchase-month-tabs" style="margin-top:0;display:none;"></div>
-    <div id="purchase-count" style="font-size:12px;color:var(--text3);padding:0 16px 8px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 16px 8px;">
+      <div id="purchase-count" style="font-size:12px;color:var(--text3);"></div>
+      <div id="unsold-share-actions" style="display:none;gap:8px;flex-shrink:0;">
+        <button onclick="copyUnsoldInventory()" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-1px;margin-right:5px;"><rect x="5" y="5" width="8" height="9" rx="1"/><path d="M3 11V3a1 1 0 011-1h6" stroke-linecap="round"/></svg>Copy List</button>
+        <button onclick="downloadUnsoldInventory()" style="background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-1px;margin-right:5px;"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M3 13.5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Download</button>
+      </div>
+    </div>
     <div class="list-wrap" id="purchase-list" style="overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 280px);"></div>
   </div>
 
@@ -1473,6 +1479,54 @@ function setPurchaseFilter(el) {
   purchaseFilter = el.dataset.filter;
   renderPurchases();
 }
+
+// Customer-facing "what's in stock" list — product info only, no cost/pricing data.
+function getUnsoldPurchases() {
+  const soldIds = new Set(_sales.map(s => normalizePurchaseId(s.purchaseId)));
+  return _purchases.filter(p => !soldIds.has(normalizePurchaseId(p.id)) && !p.sold);
+}
+function buildUnsoldInventoryText() {
+  const unsold = getUnsoldPurchases();
+  const typeLabels = { Camera:'CAMERAS', Lens:'LENSES', Drone:'DRONES', Accessory:'ACCESSORIES', Flash:'FLASHES' };
+  const typeOrder = ['Camera','Lens','Drone','Accessory','Flash'];
+  const grouped = {};
+  unsold.forEach(p => {
+    const sku = _skus.find(s => normalizeSkuId(s.id) === normalizeSkuId(p.skuId)) || {};
+    const type = typeOrder.includes(sku.type) ? sku.type : 'Other';
+    (grouped[type] = grouped[type] || []).push({ product: sku.product || 'Unknown item', condition: p.condition || '' });
+  });
+  const sections = [...typeOrder, 'Other']
+    .filter(t => grouped[t] && grouped[t].length)
+    .map(t => {
+      const label = typeLabels[t] || 'OTHER';
+      const items = grouped[t]
+        .sort((a,b) => a.product.localeCompare(b.product))
+        .map(i => `- ${i.product}${i.condition ? ' — ' + i.condition : ''}`).join('\n');
+      return `${label}\n${items}`;
+    });
+  const dateStr = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  const header = `IN STOCK — Tangy Nature LLC\n${dateStr}\n${unsold.length} item${unsold.length!==1?'s':''} available`;
+  return sections.length ? `${header}\n\n${sections.join('\n\n')}` : `${header}\n\nNothing in stock right now.`;
+}
+async function copyUnsoldInventory() {
+  const text = buildUnsoldInventoryText();
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('Copied in-stock list to clipboard');
+  } catch (e) {
+    toast('Could not copy — try Download instead');
+  }
+}
+function downloadUnsoldInventory() {
+  const text = buildUnsoldInventoryText();
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `tangy-nature-in-stock-${_today()}.txt`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Downloaded in-stock list');
+}
 function setPurchaseType(el) {
   document.querySelectorAll('#purchase-type-tabs .tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
@@ -1545,6 +1599,9 @@ function renderPurchases() {
   const sales = _sales;
   const soldIds = new Set(sales.map(s=>normalizePurchaseId(s.purchaseId)));
   let purchases = [..._purchases].sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  const shareActionsEl = document.getElementById('unsold-share-actions');
+  if (shareActionsEl) shareActionsEl.style.display = purchaseFilter === 'unsold' ? 'flex' : 'none';
 
   // Apply search
   if (q) purchases = purchases.filter(p=>{
