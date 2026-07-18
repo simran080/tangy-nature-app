@@ -180,6 +180,17 @@
       <div class="tab" data-filter="sold" onclick="setPurchaseFilter(this)">Sold</div>
       <div class="tab" data-filter="trade" onclick="setPurchaseFilter(this)">Trades</div>
     </div>
+    <div class="tabs" id="purchase-type-tabs">
+      <div class="tab active" data-type="all" onclick="setPurchaseType(this)">All Types</div>
+      <div class="tab" data-type="Camera" onclick="setPurchaseType(this)">Camera</div>
+      <div class="tab" data-type="Lens" onclick="setPurchaseType(this)">Lens</div>
+      <div class="tab" data-type="Drone" onclick="setPurchaseType(this)">Drone</div>
+      <div class="tab" data-type="Accessory" onclick="setPurchaseType(this)">Accessory</div>
+      <div class="tab" data-type="Flash" onclick="setPurchaseType(this)">Flash</div>
+    </div>
+    <div class="tabs" id="purchase-year-tabs" style="margin-top:0;"></div>
+    <div class="tabs" id="purchase-quarter-tabs" style="margin-top:0;display:none;"></div>
+    <div class="tabs" id="purchase-month-tabs" style="margin-top:0;display:none;"></div>
     <div id="purchase-count" style="font-size:12px;color:var(--text3);padding:0 16px 8px;"></div>
     <div class="list-wrap" id="purchase-list" style="overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 280px);"></div>
   </div>
@@ -209,6 +220,17 @@
       <div class="tab" data-filter="facebook" onclick="setSaleFilter(this)">Facebook</div>
       <div class="tab" data-filter="ebay" onclick="setSaleFilter(this)">eBay</div>
     </div>
+    <div class="tabs" id="sale-type-tabs">
+      <div class="tab active" data-type="all" onclick="setSaleType(this)">All Types</div>
+      <div class="tab" data-type="Camera" onclick="setSaleType(this)">Camera</div>
+      <div class="tab" data-type="Lens" onclick="setSaleType(this)">Lens</div>
+      <div class="tab" data-type="Drone" onclick="setSaleType(this)">Drone</div>
+      <div class="tab" data-type="Accessory" onclick="setSaleType(this)">Accessory</div>
+      <div class="tab" data-type="Flash" onclick="setSaleType(this)">Flash</div>
+    </div>
+    <div class="tabs" id="sale-year-tabs" style="margin-top:0;"></div>
+    <div class="tabs" id="sale-quarter-tabs" style="margin-top:0;display:none;"></div>
+    <div class="tabs" id="sale-month-tabs" style="margin-top:0;display:none;"></div>
     <div id="paypal-summary" style="display:none;margin:0 16px 12px;background:var(--bg2);border:0.5px solid var(--amber);border-radius:var(--radius);padding:14px 16px;">
       <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--amber);margin-bottom:6px;">PENDING PAYPAL TRANSFER</div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -1443,11 +1465,78 @@ async function savePurchase() {
   } catch(e) { toast(e.message); }
 }
 let purchaseFilter = 'all';
+let purchaseTypeFilter = 'all';
+let purchaseYear = 'all', purchaseQuarter = 'all', purchaseMonth = 'all';
 function setPurchaseFilter(el) {
   document.querySelectorAll('#purchase-tabs .tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   purchaseFilter = el.dataset.filter;
   renderPurchases();
+}
+function setPurchaseType(el) {
+  document.querySelectorAll('#purchase-type-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  purchaseTypeFilter = el.dataset.type;
+  renderPurchases();
+}
+function setPurchaseYear(el, year) {
+  document.querySelectorAll('#purchase-year-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  purchaseYear = year;
+  purchaseQuarter = 'all';
+  purchaseMonth = 'all';
+  renderPurchases();
+}
+function setPurchaseQuarter(el, quarter) {
+  document.querySelectorAll('#purchase-quarter-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  purchaseQuarter = quarter;
+  purchaseMonth = 'all';
+  renderPurchases();
+}
+function setPurchaseMonth(el, month) {
+  document.querySelectorAll('#purchase-month-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  purchaseMonth = month;
+  renderPurchases();
+}
+function renderPurchaseYearTabs() {
+  const ytEl = document.getElementById('purchase-year-tabs');
+  const years = [...new Set(_purchases.map(p => p.date ? p.date.slice(0,4) : null).filter(Boolean))].sort().reverse();
+  ytEl.innerHTML = `<div class="tab ${purchaseYear==='all'?'active':''}" onclick="setPurchaseYear(this,'all')">All Time</div>`
+    + years.map(y => `<div class="tab ${purchaseYear===y?'active':''}" onclick="setPurchaseYear(this,'${y}')">${y}</div>`).join('');
+}
+function renderPurchaseQuarterTabs() {
+  const qtEl = document.getElementById('purchase-quarter-tabs');
+  if (purchaseYear === 'all') { qtEl.style.display = 'none'; return; }
+  const quartersWithData = new Set(
+    _purchases.filter(p => p.date && p.date.startsWith(purchaseYear))
+      .map(p => 'Q' + Math.ceil(parseInt(p.date.slice(5,7)) / 3))
+  );
+  if (quartersWithData.size === 0) { qtEl.style.display = 'none'; return; }
+  qtEl.style.display = 'flex';
+  qtEl.innerHTML = `<div class="tab ${purchaseQuarter==='all'?'active':''}" onclick="setPurchaseQuarter(this,'all')">Full Year</div>`
+    + ['Q1','Q2','Q3','Q4'].filter(q => quartersWithData.has(q))
+      .map(q => `<div class="tab ${purchaseQuarter===q?'active':''}" onclick="setPurchaseQuarter(this,'${q}')">${q}</div>`).join('');
+}
+function renderPurchaseMonthTabs() {
+  const mtEl = document.getElementById('purchase-month-tabs');
+  if (purchaseYear === 'all') { mtEl.style.display = 'none'; return; }
+  const qMonths = purchaseQuarter !== 'all' ? getQuarterMonths(purchaseQuarter) : null;
+  const monthsWithData = new Set(
+    _purchases.filter(p => {
+      if (!p.date || !p.date.startsWith(purchaseYear)) return false;
+      if (qMonths && !qMonths.includes(p.date.slice(5,7))) return false;
+      return true;
+    }).map(p => p.date.slice(5,7))
+  );
+  if (monthsWithData.size === 0) { mtEl.style.display = 'none'; return; }
+  mtEl.style.display = 'flex';
+  const label = purchaseQuarter !== 'all' ? purchaseQuarter : 'All Months';
+  mtEl.innerHTML = `<div class="tab ${purchaseMonth==='all'?'active':''}" onclick="setPurchaseMonth(this,'all')">${label}</div>`
+    + ['01','02','03','04','05','06','07','08','09','10','11','12']
+      .filter(m => monthsWithData.has(m))
+      .map(m => `<div class="tab ${purchaseMonth===m?'active':''}" onclick="setPurchaseMonth(this,'${m}')">${MONTH_NAMES[parseInt(m)-1]}</div>`).join('');
 }
 
 function renderPurchases() {
@@ -1467,6 +1556,24 @@ function renderPurchases() {
   if (purchaseFilter === 'sold')   purchases = purchases.filter(p => soldIds.has(normalizePurchaseId(p.id)) || p.sold);
   if (purchaseFilter === 'unsold') purchases = purchases.filter(p => !soldIds.has(normalizePurchaseId(p.id)) && !p.sold);
   if (purchaseFilter === 'trade')  purchases = purchases.filter(p => p.isTrade);
+
+  // Apply product type filter
+  if (purchaseTypeFilter !== 'all') purchases = purchases.filter(p => {
+    const sku = skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
+    return sku.type === purchaseTypeFilter;
+  });
+
+  // Apply date filter
+  if (purchaseYear !== 'all') purchases = purchases.filter(p => p.date && p.date.startsWith(purchaseYear));
+  if (purchaseQuarter !== 'all') {
+    const qMonths = getQuarterMonths(purchaseQuarter);
+    purchases = purchases.filter(p => p.date && qMonths.includes(p.date.slice(5,7)));
+  }
+  if (purchaseMonth !== 'all') purchases = purchases.filter(p => p.date && p.date.slice(5,7) === purchaseMonth);
+
+  renderPurchaseYearTabs();
+  renderPurchaseQuarterTabs();
+  renderPurchaseMonthTabs();
 
   // Update count label
   const countEl = document.getElementById('purchase-count');
@@ -1801,11 +1908,78 @@ async function saveSale() {
   }
 }
 let saleFilter = 'all';
+let saleTypeFilter = 'all';
+let saleYear = 'all', saleQuarter = 'all', saleMonth = 'all';
 function setSaleFilter(el) {
   document.querySelectorAll('#sale-tabs .tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   saleFilter = el.dataset.filter;
   renderSales();
+}
+function setSaleType(el) {
+  document.querySelectorAll('#sale-type-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  saleTypeFilter = el.dataset.type;
+  renderSales();
+}
+function setSaleYear(el, year) {
+  document.querySelectorAll('#sale-year-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  saleYear = year;
+  saleQuarter = 'all';
+  saleMonth = 'all';
+  renderSales();
+}
+function setSaleQuarter(el, quarter) {
+  document.querySelectorAll('#sale-quarter-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  saleQuarter = quarter;
+  saleMonth = 'all';
+  renderSales();
+}
+function setSaleMonth(el, month) {
+  document.querySelectorAll('#sale-month-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  saleMonth = month;
+  renderSales();
+}
+function renderSaleYearTabs() {
+  const ytEl = document.getElementById('sale-year-tabs');
+  const years = [...new Set(_sales.map(s => s.date ? s.date.slice(0,4) : null).filter(Boolean))].sort().reverse();
+  ytEl.innerHTML = `<div class="tab ${saleYear==='all'?'active':''}" onclick="setSaleYear(this,'all')">All Time</div>`
+    + years.map(y => `<div class="tab ${saleYear===y?'active':''}" onclick="setSaleYear(this,'${y}')">${y}</div>`).join('');
+}
+function renderSaleQuarterTabs() {
+  const qtEl = document.getElementById('sale-quarter-tabs');
+  if (saleYear === 'all') { qtEl.style.display = 'none'; return; }
+  const quartersWithData = new Set(
+    _sales.filter(s => s.date && s.date.startsWith(saleYear))
+      .map(s => 'Q' + Math.ceil(parseInt(s.date.slice(5,7)) / 3))
+  );
+  if (quartersWithData.size === 0) { qtEl.style.display = 'none'; return; }
+  qtEl.style.display = 'flex';
+  qtEl.innerHTML = `<div class="tab ${saleQuarter==='all'?'active':''}" onclick="setSaleQuarter(this,'all')">Full Year</div>`
+    + ['Q1','Q2','Q3','Q4'].filter(q => quartersWithData.has(q))
+      .map(q => `<div class="tab ${saleQuarter===q?'active':''}" onclick="setSaleQuarter(this,'${q}')">${q}</div>`).join('');
+}
+function renderSaleMonthTabs() {
+  const mtEl = document.getElementById('sale-month-tabs');
+  if (saleYear === 'all') { mtEl.style.display = 'none'; return; }
+  const qMonths = saleQuarter !== 'all' ? getQuarterMonths(saleQuarter) : null;
+  const monthsWithData = new Set(
+    _sales.filter(s => {
+      if (!s.date || !s.date.startsWith(saleYear)) return false;
+      if (qMonths && !qMonths.includes(s.date.slice(5,7))) return false;
+      return true;
+    }).map(s => s.date.slice(5,7))
+  );
+  if (monthsWithData.size === 0) { mtEl.style.display = 'none'; return; }
+  mtEl.style.display = 'flex';
+  const label = saleQuarter !== 'all' ? saleQuarter : 'All Months';
+  mtEl.innerHTML = `<div class="tab ${saleMonth==='all'?'active':''}" onclick="setSaleMonth(this,'all')">${label}</div>`
+    + ['01','02','03','04','05','06','07','08','09','10','11','12']
+      .filter(m => monthsWithData.has(m))
+      .map(m => `<div class="tab ${saleMonth===m?'active':''}" onclick="setSaleMonth(this,'${m}')">${MONTH_NAMES[parseInt(m)-1]}</div>`).join('');
 }
 
 function renderSales() {
@@ -1839,6 +2013,25 @@ function renderSales() {
   if (saleFilter === 'facebook') sales = sales.filter(s => (s.source||'').toLowerCase().includes('facebook'));
   if (saleFilter === 'ebay')     sales = sales.filter(s => (s.source||'').toLowerCase().includes('ebay'));
   if (saleFilter === 'paypal')   sales = sales.filter(s => !s.paypalReleased && (+s.profit||0) > 0);
+
+  // Apply product type filter
+  if (saleTypeFilter !== 'all') sales = sales.filter(s => {
+    const p = purchases.find(x=>x.id===s.purchaseId)||{};
+    const sku = skus.find(x=>normalizeSkuId(x.id)===normalizeSkuId(p.skuId))||{};
+    return sku.type === saleTypeFilter;
+  });
+
+  // Apply date filter
+  if (saleYear !== 'all') sales = sales.filter(s => s.date && s.date.startsWith(saleYear));
+  if (saleQuarter !== 'all') {
+    const qMonths = getQuarterMonths(saleQuarter);
+    sales = sales.filter(s => s.date && qMonths.includes(s.date.slice(5,7)));
+  }
+  if (saleMonth !== 'all') sales = sales.filter(s => s.date && s.date.slice(5,7) === saleMonth);
+
+  renderSaleYearTabs();
+  renderSaleQuarterTabs();
+  renderSaleMonthTabs();
 
   // Count
   const countEl = document.getElementById('sale-count');
