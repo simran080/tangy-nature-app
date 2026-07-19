@@ -36,6 +36,7 @@ function exportPurchases() {
     { label:'SKU ID', key:'skuId' },
     { label:'Product', get:r => (_skus.find(s => normalizeSkuId(s.id) === normalizeSkuId(r.skuId))||{}).product || '' },
     { label:'Date', key:'date' },
+    { label:'Listed Date', key:'listedDate' },
     { label:'Source', key:'source' },
     { label:'State', key:'state' },
     { label:'Qty', get:r => r.qty || 1 },

@@ -465,9 +465,16 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Date</label>
+        <label class="form-label">Purchased</label>
         <input class="form-input" id="purchase-date" type="date">
       </div>
+      <div class="form-group">
+        <label class="form-label">Listed On</label>
+        <input class="form-input" id="purchase-listed-date" type="date">
+        <div class="form-hint">When it went up for sale — leave blank if not listed yet</div>
+      </div>
+    </div>
+    <div class="form-row">
       <div class="form-group">
         <label class="form-label">Source</label>
         <select class="form-select" id="purchase-source">
@@ -477,6 +484,17 @@
           <option>PayPal</option>
           <option>Family</option>
           <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment via</label>
+        <select class="form-select" id="purchase-payment">
+          <option>Cash</option>
+          <option>Zelle</option>
+          <option>Venmo</option>
+          <option>PayPal F&F</option>
+          <option>PayPal G&S</option>
+          <option>Credit Card</option>
         </select>
       </div>
     </div>
@@ -503,31 +521,20 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Payment via</label>
-        <select class="form-select" id="purchase-payment">
-          <option>Cash</option>
-          <option>Zelle</option>
-          <option>Venmo</option>
-          <option>PayPal F&F</option>
-          <option>PayPal G&S</option>
-          <option>Credit Card</option>
-        </select>
-      </div>
-      <div class="form-group">
         <label class="form-label">State</label>
         <input class="form-input" id="purchase-state" placeholder="MA" maxlength="2">
       </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Item Condition</label>
-      <select class="form-select" id="purchase-condition">
-        <option value="">— Select condition —</option>
-        <option value="Like New">Like New</option>
-        <option value="Excellent">Excellent</option>
-        <option value="Good">Good</option>
-        <option value="Well Used">Well Used</option>
-        <option value="Heavily Used">Heavily Used</option>
-      </select>
+      <div class="form-group">
+        <label class="form-label">Item Condition</label>
+        <select class="form-select" id="purchase-condition">
+          <option value="">— Select condition —</option>
+          <option value="Like New">Like New</option>
+          <option value="Excellent">Excellent</option>
+          <option value="Good">Good</option>
+          <option value="Well Used">Well Used</option>
+          <option value="Heavily Used">Heavily Used</option>
+        </select>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Acquisition Type</label>
@@ -1095,6 +1102,7 @@ function openSheet(id) {
     document.getElementById('purchase-sheet-title').textContent = 'Log Purchase';
     document.getElementById('purchase-edit-id').value = '';
     document.getElementById('purchase-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('purchase-listed-date').value = '';
     document.getElementById('purchase-btn-row').innerHTML = '<button class="btn btn-primary" onclick="savePurchase()">Log Purchase</button>';
     setAcqType('cash');
     // Reset to a clean form so nothing (esp. a leftover qty) carries into the next entry
@@ -1420,9 +1428,10 @@ async function savePurchase() {
   const editId = document.getElementById('purchase-edit-id').value;
   const isTrade = document.getElementById('purchase-is-trade').value === '1';
   const dateVal = document.getElementById('purchase-date').value;
+  const listedDateVal = document.getElementById('purchase-listed-date').value;
   const monthVal = dateVal ? MONTH_NAMES[parseInt(dateVal.slice(5,7))-1] : '';
   const base = {
-    skuId, date: dateVal, month: monthVal,
+    skuId, date: dateVal, month: monthVal, listedDate: listedDateVal,
     source: document.getElementById('purchase-source').value,
     state: document.getElementById('purchase-state').value.toUpperCase(),
     pricePerPiece: price,
@@ -1648,7 +1657,7 @@ function renderPurchases() {
       <div class="item-icon ${typeClass(sku.type||'')}">${typeIcon(sku.type||'')}</div>
       <div class="item-body">
         <div class="item-name">${esc(sku.product||'Unknown product')}</div>
-        <div class="item-sub">${fmtDate(p.date)} · ${esc(p.source||'')} · ${esc(p.paymentVia||'')}</div>
+        <div class="item-sub">${fmtDate(p.date)} · ${esc(p.source||'')} · ${esc(p.paymentVia||'')}${p.listedDate?` · Listed ${fmtDate(p.listedDate)}`:''}</div>
       </div>
       <div class="item-right">
         <div class="item-amount">${hideFin(fmt(p.netCost))}</div>
@@ -1669,10 +1678,17 @@ function viewPurchaseDetail(id) {
   const isTrade = p.isTrade;
   const tradeSaleIds = (() => { try { return JSON.parse(p.tradeSaleIds||'[]'); } catch { return []; } })();
   document.getElementById('detail-title').textContent = sku.product||'Purchase';
+  const daysListedToSold = (p.listedDate && sale && sale.date)
+    ? Math.round((new Date(sale.date) - new Date(p.listedDate)) / (1000*60*60*24))
+    : null;
+  const daysOnShelf = (p.listedDate && !sale)
+    ? Math.round((new Date() - new Date(p.listedDate)) / (1000*60*60*24))
+    : null;
   const saleBlock = sale ? `
     <div style="margin:16px 0 8px;padding:12px 14px;background:var(--green-dim);border-radius:var(--radius-sm);border:0.5px solid var(--green);">
       <div style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--green);margin-bottom:8px;">LINKED SALE · ${sale.id}</div>
       <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Sale date</span><span class="detail-val">${fmtDate(sale.date)}</span></div>
+      ${daysListedToSold !== null ? `<div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Listed → Sold</span><span class="detail-val">${daysListedToSold} day${daysListedToSold!==1?'s':''}</span></div>` : ''}
       <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Channel</span><span class="detail-val">${esc(sale.source||'—')} · ${esc(sale.state||'—')}</span></div>
       <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Sale price</span><span class="detail-val mono">${fmt(sale.unitPrice)}</span></div>
       <div class="detail-row" style="border-color:var(--green-dim)"><span class="detail-key">Net sale</span><span class="detail-val mono">${fmt(sale.netSale)}</span></div>
@@ -1688,7 +1704,9 @@ function viewPurchaseDetail(id) {
     <div class="detail-row"><span class="detail-key">SKU ID</span><span class="detail-val mono" style="color:var(--text2);">${p.skuId||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Sale ID</span><span class="detail-val mono" style="color:${sale?'var(--green)':'var(--text3);font-style:italic'}">${sale?sale.id:'Still on Shelf'}</span></div>
     <div class="detail-row"><span class="detail-key">Brand / Type</span><span class="detail-val">${esc(sku.brand||'—')} · ${esc(sku.type||'—')}</span></div>
-    <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${fmtDate(p.date)}</span></div>
+    <div class="detail-row"><span class="detail-key">Purchased</span><span class="detail-val">${fmtDate(p.date)}</span></div>
+    <div class="detail-row"><span class="detail-key">Listed on</span><span class="detail-val">${p.listedDate ? fmtDate(p.listedDate) : '—'}</span></div>
+    ${daysOnShelf !== null ? `<div class="detail-row"><span class="detail-key">Days on shelf</span><span class="detail-val" style="color:${daysOnShelf<=14?'var(--green)':daysOnShelf<=45?'var(--amber)':'var(--red)'};">${daysOnShelf} day${daysOnShelf!==1?'s':''}</span></div>` : ''}
     <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${esc(p.source||'—')}</span></div>
     <div class="detail-row"><span class="detail-key">State</span><span class="detail-val">${esc(p.state||'—')}</span></div>
     <div class="detail-row"><span class="detail-key">Qty</span><span class="detail-val">${p.qty||1}</span></div>
@@ -1726,6 +1744,7 @@ function editPurchase(id) {
   const skuForEdit = _skus.find(s=>normalizeSkuId(s.id)===normalizeSkuId(p.skuId))||{};
   document.getElementById('purchase-sku-search').value = skuForEdit.product ? skuForEdit.brand+' – '+skuForEdit.product : p.skuId;
   document.getElementById('purchase-date').value = p.date;
+  document.getElementById('purchase-listed-date').value = p.listedDate||'';
   document.getElementById('purchase-source').value = p.source;
   document.getElementById('purchase-price').value = p.pricePerPiece;
   document.getElementById('purchase-qty').value = p.qty||1;
