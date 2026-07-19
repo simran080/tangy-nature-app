@@ -668,8 +668,8 @@
     <div class="form-group">
       <label class="form-label">Sale type</label>
       <div style="display:flex;gap:8px;">
-        <button id="sale-type-cash" onclick="setSaleType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Cash Sale</button>
-        <button id="sale-type-trade" onclick="setSaleType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Trade</button>
+        <button id="sale-type-cash" onclick="setSaleAcqType('cash')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--amber);background:var(--amber);color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Cash Sale</button>
+        <button id="sale-type-trade" onclick="setSaleAcqType('trade')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Trade</button>
       </div>
     </div>
     <div class="form-group" id="sale-trade-group" style="display:none;">
@@ -1131,7 +1131,7 @@ function openSheet(id) {
     document.getElementById('sale-label-url').value = '';
     _pendingShipLabel = null;
     _saleIsTrade = false;
-    setSaleType('cash');
+    setSaleAcqType('cash');
     calcSaleProfit();
   }
 }
@@ -1779,7 +1779,7 @@ async function deletePurchase(id) {
 // ─── SALES ─────────────────────────────────────────────────
 let _saleIsTrade = false;
 
-function setSaleType(type) {
+function setSaleAcqType(type) {
   _saleIsTrade = type === 'trade';
   const cashBtn = document.getElementById('sale-type-cash');
   const tradeBtn = document.getElementById('sale-type-trade');
@@ -1855,13 +1855,13 @@ function editSale(id) {
 
   _saleIsTrade = !!s.isTrade;
   if (_saleIsTrade) {
-    setSaleType('trade');
+    setSaleAcqType('trade');
     try { _selectedTradePurchaseIds = JSON.parse(s.tradePurchaseIds || '[]'); }
     catch { _selectedTradePurchaseIds = s.tradePurchaseId ? [s.tradePurchaseId] : []; }
     renderTradeChips('sale-trade-selected', _selectedTradePurchaseIds, removeTradePurchase);
     populateTradePurchaseSelect();
   } else {
-    setSaleType('cash');
+    setSaleAcqType('cash');
   }
 
   calcSaleProfit();
