@@ -175,7 +175,7 @@ async function saveSale() {
   const labelUrl = boughtLabel ? (boughtLabel.label_url || '') : document.getElementById('sale-label-url').value;
   const carrier = boughtLabel ? (_mapCarrier(_pendingShipLabel?.provider) || document.getElementById('sale-carrier').value) : document.getElementById('sale-carrier').value;
   const s = {
-    id: editId || nextSaleId(),
+    ...(editId ? { id: editId } : {}), // new rows get their id from the DB sequence
     purchaseId, skuId: purchase.skuId,
     date: document.getElementById('sale-date').value,
     source: document.getElementById('sale-source').value,

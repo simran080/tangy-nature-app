@@ -11,13 +11,14 @@ const DB = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
-  async _upsert(table, row) {
+  async _upsert(table, row, returning) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
       method: 'POST',
-      headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': `resolution=merge-duplicates,return=${returning ? 'representation' : 'minimal'}` },
       body: JSON.stringify(row)
     });
     if (!res.ok) throw new Error(await res.text());
+    return returning ? (await res.json())[0] : undefined;
   },
   async _delete(table, id) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
@@ -33,8 +34,8 @@ const DB = {
   async getExpenses()  { return this._get('expenses', 'date.desc'); },
   async saveSku(row)      { return this._upsert('skus', { id: row.id, brand: row.brand, type: row.type, product: row.product }); },
   async saveProductDetails(row) { return this._upsert('product_details', { id: row.id, sensor: row.sensor, mp: row.mp, fps: row.fps, video: row.video, lensType: row.lensType, aperture: row.aperture }); },
-  async savePurchase(row) { return this._upsert('purchases', row); },
-  async saveSale(row)     { return this._upsert('sales', row); },
+  async savePurchase(row) { return this._upsert('purchases', row, true); },
+  async saveSale(row)     { return this._upsert('sales', row, true); },
   async saveExpense(row)  { return this._upsert('expenses', row); },
   async deleteSku(id)      { return this._delete('skus', id); },
   async deletePurchase(id) { return this._delete('purchases', id); },

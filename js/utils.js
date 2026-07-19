@@ -26,10 +26,6 @@ function normalizeSaleId(id) {
   if (!id) return '';
   return 'S-' + String(saleIdNum(id)).padStart(5, '0');
 }
-function nextSaleId() {
-  const max = _sales.length ? Math.max(..._sales.map(s => saleIdNum(s.id))) : 0;
-  return 'S-' + String(max + 1).padStart(5, '0');
-}
 
 // Extracts numeric part from any Purchase ID format (e.g. "P064", "P-00064" → 64)
 function purchaseIdNum(id) {
@@ -40,10 +36,6 @@ function purchaseIdNum(id) {
 function normalizePurchaseId(id) {
   if (!id) return '';
   return 'P-' + String(purchaseIdNum(id)).padStart(5, '0');
-}
-function nextPurchaseId() {
-  const max = _purchases.length ? Math.max(..._purchases.map(p => purchaseIdNum(p.id))) : 0;
-  return 'P-' + String(max + 1).padStart(5, '0');
 }
 function fmt(n) { return '$' + (+n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
 

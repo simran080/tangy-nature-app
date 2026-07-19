@@ -189,7 +189,7 @@ async function savePurchase() {
       // Single record — edit, or a one-off buy (unchanged behavior)
       const p = {
         ...base,
-        id: editId || nextPurchaseId(),
+        ...(editId ? { id: editId } : {}), // new rows get their id from the DB sequence
         qty: 1, grossCost: price,
         shipping: ship, gas, netCost: price + ship + gas,
         tradeSaleIds: JSON.stringify(_selectedTradeSaleIds),
@@ -205,22 +205,20 @@ async function savePurchase() {
     // sellable item with its own cost basis (shipping/gas split evenly).
     const shipShare = splitEven(ship, qty);
     const gasShare  = splitEven(gas, qty);
-    const startNum  = purchaseIdNum(nextPurchaseId());
     const rows = Array.from({ length: qty }, (_, i) => ({
       ...base,
-      id: 'P-' + String(startNum + i).padStart(5, '0'),
       qty: 1, grossCost: price,
       shipping: shipShare[i], gas: gasShare[i],
       netCost: price + shipShare[i] + gasShare[i],
       // Keep any trade linkage on the first unit only, to avoid double-counting
       tradeSaleIds: JSON.stringify(i === 0 ? _selectedTradeSaleIds : []),
     }));
-    for (const p of rows) await DB.savePurchase(p);
+    const saved = [];
+    for (const p of rows) saved.push(await DB.savePurchase(p));
     await loadAll();
     closeSheet('purchase-sheet');
     renderPurchases();
-    const last = 'P-' + String(startNum + qty - 1).padStart(5, '0');
-    toast(`${qty} units logged (${rows[0].id}–${last})`);
+    toast(`${qty} units logged (${saved[0].id}–${saved[saved.length - 1].id})`);
   } catch(e) { toast(e.message); }
 }
 let purchaseFilter = 'all';
