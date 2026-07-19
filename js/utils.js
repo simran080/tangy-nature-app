@@ -56,8 +56,9 @@ function esc(value) {
 }
 // Only allow http(s) URLs through to an href — rejects javascript: etc.
 function safeUrl(value) {
+  if (!value) return '';
   try {
-    const url = new URL(String(value || ''), location.href);
+    const url = new URL(String(value), location.href);
     return (url.protocol === 'https:' || url.protocol === 'http:') ? esc(url.href) : '';
   } catch { return ''; }
 }
