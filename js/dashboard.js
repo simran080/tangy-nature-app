@@ -299,6 +299,10 @@ function renderDashboardChart() {
     sales = sales.filter(s => s.date && months.includes(s.date.slice(5,7)));
     expenses = expenses.filter(e => e.date && months.includes(e.date.slice(5,7)));
   }
+  if (dashYear !== 'all' && dashMonth !== 'all') {
+    sales = sales.filter(s => s.date && s.date.slice(5,7) === dashMonth);
+    expenses = expenses.filter(e => e.date && e.date.slice(5,7) === dashMonth);
+  }
 
   const byMonth = {};
   const monthKey = d => d.slice(0, 7); // YYYY-MM
