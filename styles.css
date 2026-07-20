@@ -119,6 +119,8 @@
   /* CARDS */
   .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 0 16px 12px; }
   .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; margin-bottom: 12px; }
+  .trend-wrap { padding: 0 16px; margin-bottom: 12px; }
+  .trend-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; height: 240px; }
   .metric-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; min-width: 0; }
   .metric-label { font-size: 11px; color: var(--text3); font-weight: 500; letter-spacing: 0.5px; margin-bottom: 3px; }
   .metric-value { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -167,6 +169,7 @@
 
     .quick-actions { grid-template-columns: repeat(4, minmax(0,1fr)); padding: 0 28px; max-width: none; }
     .card-grid { padding: 0 28px; grid-template-columns: repeat(3, minmax(0,1fr)); grid-auto-rows: 1fr; max-width: none; }
+    .trend-wrap { padding: 0 28px; max-width: none; }
     .metric-card.hero { grid-column: 1; grid-row: 1 / span 3; flex-direction: column; align-items: stretch; justify-content: space-between; }
     .metric-card.hero .metric-value { font-size: 30px; }
     .metric-card.hero .hero-breakdown { flex-direction: column; gap: 10px; border-top: 0.5px solid color-mix(in srgb, var(--on-accent) 20%, transparent); padding-top: 12px; }
