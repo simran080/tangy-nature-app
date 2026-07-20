@@ -64,6 +64,31 @@
           <div class="header-title">Dashboard</div>
           <div class="header-meta" style="font-size:12px;color:var(--text3);margin-top:2px;" id="dash-date"></div>
         </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <div style="position:relative;flex-shrink:0;" data-write-action>
+          <button onclick="toggleLogMenu()" id="log-btn" aria-label="Log a record" aria-haspopup="true" style="height:32px;padding:0 12px;border-radius:16px;background:var(--amber);color:var(--on-accent);border:none;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+            Log
+          </button>
+          <div id="log-menu" style="display:none;position:absolute;top:38px;right:0;background:var(--bg2);border:0.5px solid var(--border2);border-radius:12px;box-shadow:0 8px 24px var(--shadow-color);padding:6px;min-width:170px;z-index:50;">
+            <button onclick="closeLogMenu();openSheet('sku-sheet')" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10M4 18h7" stroke-linecap="round"/></svg>
+              Catalog
+            </button>
+            <button onclick="closeLogMenu();openSheet('purchase-sheet')" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke-linecap="round"/></svg>
+              Purchase
+            </button>
+            <button onclick="closeLogMenu();openSheet('sale-sheet')" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round"/></svg>
+              Sale
+            </button>
+            <button onclick="closeLogMenu();openExpenseSheet()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 14l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+              Expense
+            </button>
+          </div>
+        </div>
         <div style="position:relative;flex-shrink:0;">
           <button onclick="toggleUserMenu()" id="user-avatar-btn" aria-label="Account menu" aria-haspopup="true" style="width:32px;height:32px;border-radius:50%;background:var(--amber);color:var(--on-accent);border:none;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;">A</button>
           <div id="user-menu" style="display:none;position:absolute;top:38px;right:0;background:var(--bg2);border:0.5px solid var(--border2);border-radius:12px;box-shadow:0 8px 24px var(--shadow-color);padding:6px;min-width:220px;z-index:50;">
@@ -87,25 +112,8 @@
             <button onclick="signOut()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
           </div>
         </div>
+        </div>
       </div>
-    </div>
-    <div class="quick-actions" aria-label="Quick actions">
-      <button class="quick-action" data-write-action onclick="openSheet('sku-sheet')">
-        <span class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10M4 18h7" stroke-linecap="round"/></svg></span>
-        <span class="quick-action-label">Catalog</span>
-      </button>
-      <button class="quick-action" data-write-action onclick="openSheet('purchase-sheet')">
-        <span class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke-linecap="round"/></svg></span>
-        <span class="quick-action-label">Purchase</span>
-      </button>
-      <button class="quick-action" data-write-action onclick="openSheet('sale-sheet')">
-        <span class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round"/></svg></span>
-        <span class="quick-action-label">Sale</span>
-      </button>
-      <button class="quick-action" data-write-action onclick="openExpenseSheet()">
-        <span class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 14l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></span>
-        <span class="quick-action-label">Expense</span>
-      </button>
     </div>
 
     <div class="tabs" id="dash-year-tabs" style="margin-top:4px;"></div>

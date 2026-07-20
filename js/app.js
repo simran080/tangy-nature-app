@@ -264,7 +264,7 @@ function applyRoleUI() {
   document.querySelectorAll('.header-action').forEach(btn => {
     btn.style.display = canWrite() ? 'flex' : 'none';
   });
-  // Dashboard quick-action tiles that create records (Purchase/Sale/Expense)
+  // The Log button and its menu items (Catalog/Purchase/Sale/Expense)
   document.querySelectorAll('[data-write-action]').forEach(btn => {
     btn.style.display = canWrite() ? '' : 'none';
   });
@@ -293,8 +293,20 @@ function applyRoleUI() {
 function toggleUserMenu() {
   const menu = document.getElementById('user-menu');
   if (!menu) return;
+  closeLogMenu();
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
   if (menu.style.display === 'none') closeExportSubmenu();
+}
+function toggleLogMenu() {
+  const menu = document.getElementById('log-menu');
+  if (!menu) return;
+  const userMenu = document.getElementById('user-menu');
+  if (userMenu) userMenu.style.display = 'none';
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+function closeLogMenu() {
+  const menu = document.getElementById('log-menu');
+  if (menu) menu.style.display = 'none';
 }
 function toggleExportSubmenu() {
   const sub = document.getElementById('export-submenu');
@@ -313,8 +325,15 @@ function closeExportSubmenu() {
 document.addEventListener('click', e => {
   const menu = document.getElementById('user-menu');
   const btn = document.getElementById('user-avatar-btn');
-  if (!menu || menu.style.display === 'none') return;
-  if (!menu.contains(e.target) && e.target !== btn) { menu.style.display = 'none'; closeExportSubmenu(); }
+  if (menu && menu.style.display !== 'none' && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.style.display = 'none';
+    closeExportSubmenu();
+  }
+  const logMenu = document.getElementById('log-menu');
+  const logBtn = document.getElementById('log-btn');
+  if (logMenu && logMenu.style.display !== 'none' && !logMenu.contains(e.target) && !logBtn.contains(e.target)) {
+    logMenu.style.display = 'none';
+  }
 });
 
 // Persist access + refresh tokens and the expiry timestamp

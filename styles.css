@@ -135,13 +135,6 @@
   .hero-stat span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: color-mix(in srgb, var(--on-accent) 70%, transparent); }
   .hero-stat strong { display: block; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--on-accent); margin-top: 3px; }
 
-  /* QUICK ACTIONS (Dashboard) */
-  .quick-actions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; padding: 0 16px; margin: 4px 0 16px; }
-  .quick-action { display: flex; align-items: center; gap: 8px; min-width: 0; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 12px; padding: 10px 12px; color: var(--text); cursor: pointer; font-family: 'DM Sans', sans-serif; text-align: left; transition: border-color 0.15s, transform 0.1s; }
-  .quick-action:active { transform: scale(0.97); }
-  .quick-action-icon { width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--amber-dim); color: var(--amber); }
-  .quick-action-icon svg { width: 14px; height: 14px; }
-  .quick-action-label { font-size: 12px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* Dashboard two-column grid — inert on mobile (wrappers disappear via
      display:contents so section order stays exactly as it is on mobile
@@ -167,7 +160,6 @@
     .nav-icon { width: 19px; height: 19px; }
     #quote-fab { left: auto !important; right: max(52px, calc(50% - 590px + 28px)) !important; top: 156px !important; bottom: auto !important; }
 
-    .quick-actions { grid-template-columns: repeat(4, minmax(0,1fr)); padding: 0 28px; max-width: none; }
     .card-grid { padding: 0 28px; grid-template-columns: repeat(3, minmax(0,1fr)); grid-auto-rows: 1fr; max-width: none; }
     .trend-wrap { padding: 0 28px; max-width: none; }
     .metric-card.hero { grid-column: 1; grid-row: 1 / span 3; flex-direction: column; align-items: stretch; justify-content: space-between; }
