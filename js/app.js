@@ -441,6 +441,8 @@ function applyTheme(mode) {
   const meta = document.getElementById('theme-color-meta');
   // meta[name=theme-color] requires a literal — must match --bg in :root/dark tokens above
   if (meta) meta.setAttribute('content', mode === 'dark' ? '#1b1f18' : '#ede6d6');
+  // Chart colors are read from CSS vars at draw time, so redraw on theme change
+  if (typeof renderDashboardChart === 'function') renderDashboardChart();
 }
 function toggleTheme() {
   applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');

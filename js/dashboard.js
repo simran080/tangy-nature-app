@@ -86,6 +86,7 @@ function setDashYear(el, year) {
   renderQuarterTabs();
   renderMonthTabs();
   renderDashboardMetrics();
+  renderDashboardChart();
 }
 
 function setDashQuarter(el, quarter) {
@@ -95,6 +96,7 @@ function setDashQuarter(el, quarter) {
   dashMonth = 'all';
   renderMonthTabs();
   renderDashboardMetrics();
+  renderDashboardChart();
 }
 
 function setDashMonth(el, month) {
@@ -102,6 +104,7 @@ function setDashMonth(el, month) {
   el.classList.add('active');
   dashMonth = month;
   renderDashboardMetrics();
+  renderDashboardChart();
 }
 
 function renderQuarterTabs() {
@@ -281,6 +284,86 @@ function renderDashboardMetrics() {
   }
 }
 
+// ─── MONTHLY TREND CHART ────────────────────────────────────
+let _dashChart = null;
+function renderDashboardChart() {
+  const wrap = document.getElementById('dash-trend-wrap');
+  const canvas = document.getElementById('dash-trend-chart');
+  if (!wrap || !canvas || typeof Chart === 'undefined') return;
+  if (isViewer()) { wrap.style.display = 'none'; return; }
+
+  let sales = dashYear === 'all' ? _sales : _sales.filter(s => s.date && s.date.startsWith(dashYear));
+  let expenses = dashYear === 'all' ? _expenses : _expenses.filter(e => e.date && e.date.startsWith(dashYear));
+  if (dashYear !== 'all' && dashQuarter !== 'all') {
+    const months = getQuarterMonths(dashQuarter);
+    sales = sales.filter(s => s.date && months.includes(s.date.slice(5,7)));
+    expenses = expenses.filter(e => e.date && months.includes(e.date.slice(5,7)));
+  }
+
+  const byMonth = {};
+  const monthKey = d => d.slice(0, 7); // YYYY-MM
+  sales.forEach(s => {
+    if (!s.date) return;
+    const k = monthKey(s.date);
+    (byMonth[k] = byMonth[k] || { revenue: 0, cost: 0, profit: 0, expenses: 0 });
+    byMonth[k].revenue += +s.netSale || 0;
+    byMonth[k].cost += +s.netCost || 0;
+    byMonth[k].profit += +s.profit || 0;
+  });
+  expenses.forEach(e => {
+    if (!e.date) return;
+    const k = monthKey(e.date);
+    (byMonth[k] = byMonth[k] || { revenue: 0, cost: 0, profit: 0, expenses: 0 });
+    byMonth[k].expenses += +e.netAmount || 0;
+  });
+
+  const months = Object.keys(byMonth).sort();
+  if (months.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const labels = months.map(m => {
+    const [y, mo] = m.split('-');
+    return MONTH_NAMES[parseInt(mo) - 1] + ' \'' + y.slice(2);
+  });
+  const revenueData = months.map(m => byMonth[m].revenue);
+  const costData = months.map(m => byMonth[m].cost + byMonth[m].expenses);
+  const profitData = months.map(m => byMonth[m].profit - byMonth[m].expenses);
+
+  const style = getComputedStyle(document.documentElement);
+  const cGreen = style.getPropertyValue('--green').trim();
+  const cRed = style.getPropertyValue('--red').trim();
+  const cBlue = style.getPropertyValue('--blue').trim();
+  const cText3 = style.getPropertyValue('--text3').trim();
+  const cBorder = style.getPropertyValue('--border').trim();
+  const font = { family: "'DM Sans', sans-serif", size: 11 };
+
+  if (_dashChart) { _dashChart.destroy(); _dashChart = null; }
+  _dashChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Revenue', data: revenueData, borderColor: cBlue, backgroundColor: cBlue, tension: 0.3, pointRadius: 2 },
+        { label: 'Cost', data: costData, borderColor: cRed, backgroundColor: cRed, tension: 0.3, pointRadius: 2 },
+        { label: 'Profit', data: profitData, borderColor: cGreen, backgroundColor: cGreen, tension: 0.3, pointRadius: 2, borderWidth: 2.5 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: cText3, boxWidth: 10, font } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } },
+      },
+      scales: {
+        x: { ticks: { color: cText3, font }, grid: { color: cBorder } },
+        y: { ticks: { color: cText3, font, callback: v => '$' + v }, grid: { color: cBorder } },
+      },
+    },
+  });
+}
+
 function renderDashboard() {
   document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 
@@ -293,4 +376,5 @@ function renderDashboard() {
 
 
   renderDashboardMetrics();
+  renderDashboardChart();
 }
