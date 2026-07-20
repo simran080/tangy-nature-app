@@ -158,7 +158,7 @@
     .nav-btn { flex: 0; flex-direction: row; justify-content: flex-start; gap: 11px; min-height: 42px; padding: 9px 10px; border-radius: 10px; font-size: 12.5px; }
     .nav-btn.active { background: var(--amber-dim); }
     .nav-icon { width: 19px; height: 19px; }
-    #quote-fab { left: auto !important; right: max(52px, calc(50% - 590px + 28px)) !important; top: 156px !important; bottom: auto !important; }
+    #quote-fab { left: max(24px, calc(50% - 590px)) !important; right: auto !important; bottom: 24px !important; top: auto !important; }
 
     .card-grid { padding: 0 28px; grid-template-columns: repeat(3, minmax(0,1fr)); grid-auto-rows: 1fr; max-width: none; }
     .trend-wrap { padding: 0 28px; max-width: none; }
