@@ -504,13 +504,14 @@ DB._get = async function(table, order) {
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 };
-DB._upsert = async function(table, row) {
+DB._upsert = async function(table, row, returning) {
   const r = await _authedFetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    headers: { 'Content-Type': 'application/json', 'Prefer': `resolution=merge-duplicates,return=${returning ? 'representation' : 'minimal'}` },
     body: JSON.stringify(row)
   });
   if (!r.ok) throw new Error(await r.text());
+  return returning ? (await r.json())[0] : undefined;
 };
 DB._delete = async function(table, id) {
   const r = await _authedFetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE' });
