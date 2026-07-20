@@ -89,6 +89,7 @@
             </button>
           </div>
         </div>
+        <button onclick="toggleTheme()" id="theme-toggle-btn" aria-label="Toggle dark mode" style="width:32px;height:32px;border-radius:50%;background:var(--bg2);border:0.5px solid var(--border2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></button>
         <div style="position:relative;flex-shrink:0;">
           <button onclick="toggleUserMenu()" id="user-avatar-btn" aria-label="Account menu" aria-haspopup="true" style="width:32px;height:32px;border-radius:50%;background:var(--amber);color:var(--on-accent);border:none;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;">A</button>
           <div id="user-menu" style="display:none;position:absolute;top:38px;right:0;background:var(--bg2);border:0.5px solid var(--border2);border-radius:12px;box-shadow:0 8px 24px var(--shadow-color);padding:6px;min-width:220px;z-index:50;">
@@ -100,7 +101,6 @@
               <span id="user-email" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
               <span id="role-badge" style="font-size:9px;font-weight:600;letter-spacing:0.5px;padding:2px 7px;border-radius:20px;border:0.5px solid;color:var(--text3);border-color:var(--border2);flex-shrink:0;">USER</span>
             </div>
-            <button onclick="toggleTheme()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'DM Sans',sans-serif;">Dark mode<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8.7A5.3 5.3 0 116.3 2 4.3 4.3 0 0013 8.7z" stroke-linejoin="round"/></svg></button>
             <div id="dash-export" style="display:none;border-top:0.5px solid var(--border);margin-top:2px;padding-top:2px;">
               <button onclick="toggleExportSubmenu()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'DM Sans',sans-serif;">Export data<svg id="export-chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="transition:transform 0.15s;"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <div id="export-submenu" style="display:none;">
