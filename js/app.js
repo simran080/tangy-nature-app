@@ -225,6 +225,7 @@ function closeSheet(id) {
 let _sheetFocusReturnEl = null;
 function _sheetIsOpen(el) { return /translate\(-50%,\s*0(px)?\)/.test(el.style.transform); }
 function _onSheetTransformChange(el) {
+  if (!el.classList || !el.classList.contains('sheet')) return;
   const isOpen = _sheetIsOpen(el);
   if (isOpen && el.hasAttribute('inert')) {
     el.removeAttribute('inert');
