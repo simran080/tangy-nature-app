@@ -217,6 +217,86 @@ function closeSheet(id) {
   document.getElementById(id).style.transform = 'translate(-50%, 100%)';
 }
 
+// ─── ACCESSIBILITY: sheet inert/focus + tab semantics ───────
+// A few call sites move a sheet on/off screen by setting .style.transform
+// directly instead of going through openSheet()/closeSheet(). A
+// MutationObserver on that one attribute covers every current and future
+// call site without having to track each one down individually.
+let _sheetFocusReturnEl = null;
+function _sheetIsOpen(el) { return /translate\(-50%,\s*0(px)?\)/.test(el.style.transform); }
+function _onSheetTransformChange(el) {
+  const isOpen = _sheetIsOpen(el);
+  if (isOpen && el.hasAttribute('inert')) {
+    el.removeAttribute('inert');
+    _sheetFocusReturnEl = document.activeElement;
+    const focusable = el.querySelector('input, select, textarea, button, [tabindex]');
+    (focusable || el).focus();
+  } else if (!isOpen && !el.hasAttribute('inert')) {
+    el.setAttribute('inert', '');
+    const prev = _sheetFocusReturnEl;
+    _sheetFocusReturnEl = null;
+    if (prev && document.body.contains(prev)) prev.focus();
+  }
+}
+document.querySelectorAll('.sheet').forEach(el => {
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('inert', '');
+});
+new MutationObserver(muts => {
+  for (const m of muts) _onSheetTransformChange(m.target);
+}).observe(document.body, { attributes: true, attributeFilter: ['style'], subtree: true });
+document.addEventListener('keydown', e => {
+  const open = document.querySelector('.sheet:not([inert])');
+  if (!open) return;
+  if (e.key === 'Escape') { closeSheet(open.id); return; }
+  if (e.key !== 'Tab') return;
+  // Basic focus trap — keep Tab/Shift+Tab cycling within the open sheet.
+  const focusable = [...open.querySelectorAll('input, select, textarea, button, [tabindex]:not([tabindex="-1"])')]
+    .filter(el => !el.disabled && el.offsetParent !== null);
+  if (!focusable.length) return;
+  const first = focusable[0], last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+
+// Filter tabs are plain divs with onclick handlers rebuilt via innerHTML
+// all over the app; rather than touch every render call site, decorate
+// whatever's currently in the DOM and re-decorate on any relevant change.
+function decorateTabs() {
+  document.querySelectorAll('.tabs').forEach(list => {
+    list.setAttribute('role', 'tablist');
+    [...list.children].forEach(tab => {
+      if (!tab.classList.contains('tab')) return;
+      tab.setAttribute('role', 'tab');
+      const active = tab.classList.contains('active');
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      tab.setAttribute('tabindex', active ? '0' : '-1');
+    });
+  });
+}
+new MutationObserver(() => decorateTabs())
+  .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+decorateTabs();
+document.addEventListener('keydown', e => {
+  const tab = e.target.closest('[role="tab"]');
+  if (!tab) return;
+  const list = tab.closest('[role="tablist"]');
+  if (!list) return;
+  const tabs = [...list.querySelectorAll('[role="tab"]')];
+  const i = tabs.indexOf(tab);
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const next = e.key === 'ArrowRight' ? tabs[(i + 1) % tabs.length] : tabs[(i - 1 + tabs.length) % tabs.length];
+    next.focus(); next.click();
+  } else if (e.key === 'Home') {
+    e.preventDefault(); tabs[0].focus(); tabs[0].click();
+  } else if (e.key === 'End') {
+    e.preventDefault(); tabs[tabs.length - 1].focus(); tabs[tabs.length - 1].click();
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault(); tab.click();
+  }
+});
+
 // ─── TOAST ─────────────────────────────────────────────────
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -436,7 +516,10 @@ async function checkSession() {
 
 function signOut() {
   clearSession();
+  try { localStorage.removeItem('tn_cache'); } catch {}
   _userRole = 'user';
+  _skus = []; _purchases = []; _sales = []; _expenses = [];
+  _dataLoaded = false;
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-password').value = '';
