@@ -1,10 +1,6 @@
 // ─── MANAGE USERS (manage-users Edge Function) ──────────────
 const USERS_FN_URL = `${SUPABASE_URL}/functions/v1/manage-users`;
-// 'user' is intentionally not offered here — it now behaves identically to
-// 'viewer' (see isViewer() in app.js), so there's no reason to pick between
-// two options that do the same thing. Any account still tagged 'user' from
-// before this change keeps working exactly the same (still masked/read-only).
-const ROLE_LABEL = { dba: 'DBA (full access)', admin: 'Admin', viewer: 'Viewer (read-only, masked)' };
+const ROLE_LABEL = { dba: 'DBA (full access)', admin: 'Admin', user: 'User (read-only, sees real numbers)', viewer: 'Viewer (read-only, masked)' };
 let _usersCache = [];
 
 async function _usersCall(payload) {
@@ -55,7 +51,7 @@ function renderUsersList() {
         <div class="item-sub">${u.last_sign_in_at ? 'Last signed in ' + fmtDate(u.last_sign_in_at.slice(0,10)) : 'Never signed in'}</div>
       </div>
       <select class="form-select" style="width:auto;flex-shrink:0;" data-user-id="${esc(u.id)}" onchange="setUserRole('${esc(u.id)}', this)">
-        ${(() => { const displayRole = u.role === 'user' ? 'viewer' : u.role; return Object.keys(ROLE_LABEL).map(r => `<option value="${r}" ${r === displayRole ? 'selected' : ''}>${ROLE_LABEL[r]}</option>`).join(''); })()}
+        ${Object.keys(ROLE_LABEL).map(r => `<option value="${r}" ${r === u.role ? 'selected' : ''}>${ROLE_LABEL[r]}</option>`).join('')}
       </select>
     </div>
   `).join('');
