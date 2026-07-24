@@ -261,3 +261,85 @@ create policy "update_admins" on public.skus
   with check (get_user_role() = any (array['dba','admin']));
 create policy "delete_dba" on public.skus
   for delete to authenticated using (get_user_role() = 'dba');
+
+
+-- ----------------------------------------------------------------------------
+-- SECTION 6 — Audit trail for sales/purchases/expenses/skus/product_details
+-- ----------------------------------------------------------------------------
+-- Why: there was no record of who changed or deleted a row, or what it looked
+-- like before. Trigger-based (not app-level) so it catches every write
+-- regardless of path — the app's DB.save*/delete* calls, a direct edit in the
+-- Supabase table editor, a future Edge Function — not just the ones the JS
+-- client happens to log itself.
+--
+-- Query it directly in the SQL editor, e.g.:
+--   select * from public.audit_log where table_name = 'sales' order by changed_at desc limit 50;
+-- No in-app viewer yet — add one later if this turns out to be needed often.
+
+create table if not exists public.audit_log (
+  id          bigserial primary key,
+  table_name  text        not null,
+  op          text        not null,               -- INSERT | UPDATE | DELETE
+  row_id      text,                                -- the app's own id (e.g. 'S-42'), not audit_log's own id
+  old_data    jsonb,
+  new_data    jsonb,
+  changed_by  uuid,                                -- auth.uid(); null for non-authenticated/system writes
+  changed_by_role text,
+  changed_at  timestamptz not null default now()
+);
+
+alter table public.audit_log enable row level security;
+
+drop policy if exists "select_dba_admin" on public.audit_log;
+create policy "select_dba_admin" on public.audit_log
+  for select to authenticated
+  using (get_user_role() = any (array['dba','admin']));
+-- No insert/update/delete policy for authenticated — rows are only ever
+-- written by the SECURITY DEFINER trigger function below, never directly
+-- by a client, so the log itself can't be edited or deleted through the API.
+
+create or replace function public.audit_trigger_fn()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.audit_log (table_name, op, row_id, old_data, new_data, changed_by, changed_by_role)
+  values (
+    TG_TABLE_NAME,
+    TG_OP,
+    coalesce((case when TG_OP = 'DELETE' then old.id else new.id end)::text, null),
+    case when TG_OP in ('UPDATE','DELETE') then to_jsonb(old) else null end,
+    case when TG_OP in ('INSERT','UPDATE') then to_jsonb(new) else null end,
+    auth.uid(),
+    get_user_role()
+  );
+  return coalesce(new, old);
+end;
+$$;
+
+drop trigger if exists audit_sales on public.sales;
+create trigger audit_sales
+  after insert or update or delete on public.sales
+  for each row execute function public.audit_trigger_fn();
+
+drop trigger if exists audit_purchases on public.purchases;
+create trigger audit_purchases
+  after insert or update or delete on public.purchases
+  for each row execute function public.audit_trigger_fn();
+
+drop trigger if exists audit_expenses on public.expenses;
+create trigger audit_expenses
+  after insert or update or delete on public.expenses
+  for each row execute function public.audit_trigger_fn();
+
+drop trigger if exists audit_skus on public.skus;
+create trigger audit_skus
+  after insert or update or delete on public.skus
+  for each row execute function public.audit_trigger_fn();
+
+drop trigger if exists audit_product_details on public.product_details;
+create trigger audit_product_details
+  after insert or update or delete on public.product_details
+  for each row execute function public.audit_trigger_fn();
