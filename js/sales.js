@@ -148,6 +148,7 @@ async function saveSale() {
       try {
         boughtLabel = await _shippoCall({ action: 'buy', rate_id: _pendingShipLabel.rateId, label_file_type: 'PDF_4x6' });
         _pendingShipLabel.purchased = boughtLabel;
+        _persistPendingLabel({ mode: 'presale', purchaseId, label: boughtLabel, amount: _pendingShipLabel.amount, provider: _pendingShipLabel.provider });
       } catch (e) {
         toast('Label purchase failed — sale not logged: ' + e.message);
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = document.getElementById('sale-edit-id').value ? 'Update' : 'Log Sale'; }
@@ -193,6 +194,7 @@ async function saveSale() {
     await DB.saveSale(s);
     await loadAll();
     _pendingShipLabel = null;
+    _clearPendingLabel();
     closeSheet('sale-sheet');
     renderSales();
     // Best-effort — browsers often block a popup this far after an async chain,

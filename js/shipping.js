@@ -13,6 +13,58 @@ let _shipCtx = null; // { mode:'presale'|'postsale', saleId, rates:[], selectedR
 // { rateId, amount, provider, servicelevel, purchased: <buy response once bought, else null> }
 let _pendingShipLabel = null;
 
+// ─── UNRECONCILED LABEL PURCHASE (persisted across reload) ──
+// Buying a Shippo label and saving the sale/updating it can't be one atomic
+// transaction — they're two different systems. If the save fails right
+// after a successful purchase, this is the only record that a real charge
+// happened. Persisted the moment the purchase succeeds, before the save is
+// even attempted, so a crash or refresh doesn't lose track of it — surfaced
+// as a banner on next load until a human reconciles it.
+const PENDING_LABEL_KEY = 'tn_pending_label';
+function _persistPendingLabel(info) {
+  try { localStorage.setItem(PENDING_LABEL_KEY, JSON.stringify({ ...info, at: Date.now() })); } catch {}
+}
+function _clearPendingLabel() {
+  try { localStorage.removeItem(PENDING_LABEL_KEY); } catch {}
+  const wrap = document.getElementById('pending-label-banner-wrap');
+  if (wrap) wrap.style.display = 'none';
+}
+function checkPendingLabel() {
+  const wrap = document.getElementById('pending-label-banner-wrap');
+  const banner = document.getElementById('pending-label-banner');
+  if (!wrap || !banner) return;
+  let info;
+  try { info = JSON.parse(localStorage.getItem(PENDING_LABEL_KEY) || 'null'); } catch { info = null; }
+  if (!info) { wrap.style.display = 'none'; return; }
+  const label = info.label || {};
+  const when = info.at ? new Date(info.at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+  banner.innerHTML = `
+    <div style="font-weight:600;font-size:13px;color:var(--red);margin-bottom:4px;">Unreconciled shipping label</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">
+      A label was purchased (${esc(when)}) but ${info.mode === 'postsale' ? `saving it to sale <strong>${esc(info.saleId||'')}</strong>` : 'logging the sale'} failed. This was a real charge — nothing was lost, but it needs to be reconciled manually.
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:2px;">Tracking: <span style="font-family:'DM Mono',monospace;color:var(--text);">${esc(label.tracking_number||'—')}</span></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Amount: ${fmt(info.amount)}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      ${label.label_url ? `<a href="${safeUrl(label.label_url)}" target="_blank" rel="noopener" class="btn" style="padding:6px 12px;font-size:12px;">Open label</a>` : ''}
+      ${info.mode === 'postsale' ? `<button class="btn" style="padding:6px 12px;font-size:12px;" onclick="retryPendingLabel()">Retry saving to sale</button>` : ''}
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="_clearPendingLabel()">Dismiss (handled manually)</button>
+    </div>`;
+  wrap.style.display = 'block';
+}
+async function retryPendingLabel() {
+  let info;
+  try { info = JSON.parse(localStorage.getItem(PENDING_LABEL_KEY) || 'null'); } catch { info = null; }
+  if (!info || info.mode !== 'postsale') return;
+  try {
+    await applyLabelToSale(info.saleId, info.label, info.amount, info.provider);
+    toast('Reconciled — label saved to sale');
+  } catch (e) {
+    toast('Still failing: ' + e.message);
+  }
+  checkPendingLabel();
+}
+
 function toggleUseShippo() {
   const on = document.getElementById('sale-use-shippo').checked;
   document.getElementById('sale-get-rates-btn').style.display = on ? 'block' : 'none';
@@ -231,6 +283,7 @@ async function buyShipLabel() {
   buy.disabled = true; buy.textContent = 'Purchasing…';
   try {
     const data = await _shippoCall({ action: 'buy', rate_id: rateId, label_file_type: 'PDF_4x6' });
+    _persistPendingLabel({ mode: 'postsale', saleId: _shipCtx.saleId, label: data, amount, provider: _shipCtx.selectedProvider });
     await applyLabelToSale(_shipCtx.saleId, data, amount, _shipCtx.selectedProvider);
     document.getElementById('ship-rates').innerHTML = '';
     document.getElementById('ship-result').innerHTML = `
@@ -270,5 +323,6 @@ async function applyLabelToSale(saleId, label, amount, provider) {
     carrier: _mapCarrier(provider) || s.carrier || '',
   };
   await DB.saveSale(updated);
+  _clearPendingLabel();
   await loadAll(true);
 }

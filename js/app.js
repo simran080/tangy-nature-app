@@ -701,6 +701,7 @@ async function init() {
   registerServiceWorker();
   await loadAll();
   renderDashboard();
+  checkPendingLabel();
   requestAnimationFrame(syncNavHeight);
 }
 
