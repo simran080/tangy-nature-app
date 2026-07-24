@@ -1,6 +1,6 @@
 // ─── SUPABASE CONFIG ──────────────────────────────────────
 const SUPABASE_URL = 'https://euulsabzjzrdrhmgzxfu.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1dWxzYWJ6anpyZHJobWd6eGZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTQzNzUsImV4cCI6MjA5MjgzMDM3NX0.MC7buyUzIJxTBGXfskAuypRIORnQ3GBvlPWtFq-B7k4';
+const ANON_KEY = 'sb_publishable_JcUZCgJXGT6DjS3wFOEJkg_DeUwU-tB';
 
 // ─── DB LAYER (Supabase) ──────────────────────────────────
 const DB = {
