@@ -335,7 +335,7 @@ function parseEmail(token) {
 
 function canWrite() { return _userRole === 'dba' || _userRole === 'admin'; }
 function canDelete() { return _userRole === 'dba'; }
-function isViewer() { return _userRole === 'viewer'; }
+function isViewer() { return _userRole === 'viewer' || _userRole === 'user'; }
 function hideFin(val) { return isViewer() ? '<span style="color:var(--text3);letter-spacing:3px;font-size:13px;">••••</span>' : val; }
 
 function applyRoleUI() {

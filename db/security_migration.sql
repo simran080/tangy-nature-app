@@ -75,18 +75,18 @@ select
   id, "purchaseId", "skuId", date, source, state,
   "isTrade", "tradePurchaseIds", "paypalReleased", comments,
   "carrier", "trackingNumber", "trackingUrl", "labelUrl",
-  case when get_user_role() = 'viewer' then null else "unitPrice"       end as "unitPrice",
-  case when get_user_role() = 'viewer' then null else "grossSale"       end as "grossSale",
-  case when get_user_role() = 'viewer' then null else fees              end as fees,
-  case when get_user_role() = 'viewer' then null else "feesPct"         end as "feesPct",
-  case when get_user_role() = 'viewer' then null else "feesFixed"       end as "feesFixed",
-  case when get_user_role() = 'viewer' then null else "shippingCharged" end as "shippingCharged",
-  case when get_user_role() = 'viewer' then null else "shippingPaid"    end as "shippingPaid",
-  case when get_user_role() = 'viewer' then null else ga                end as ga,
-  case when get_user_role() = 'viewer' then null else "netSale"         end as "netSale",
-  case when get_user_role() = 'viewer' then null else "netCost"         end as "netCost",
-  case when get_user_role() = 'viewer' then null else profit            end as profit,
-  case when get_user_role() = 'viewer' then null else margin            end as margin
+  case when get_user_role() = any (array['viewer','user']) then null else "unitPrice"       end as "unitPrice",
+  case when get_user_role() = any (array['viewer','user']) then null else "grossSale"       end as "grossSale",
+  case when get_user_role() = any (array['viewer','user']) then null else fees              end as fees,
+  case when get_user_role() = any (array['viewer','user']) then null else "feesPct"         end as "feesPct",
+  case when get_user_role() = any (array['viewer','user']) then null else "feesFixed"       end as "feesFixed",
+  case when get_user_role() = any (array['viewer','user']) then null else "shippingCharged" end as "shippingCharged",
+  case when get_user_role() = any (array['viewer','user']) then null else "shippingPaid"    end as "shippingPaid",
+  case when get_user_role() = any (array['viewer','user']) then null else ga                end as ga,
+  case when get_user_role() = any (array['viewer','user']) then null else "netSale"         end as "netSale",
+  case when get_user_role() = any (array['viewer','user']) then null else "netCost"         end as "netCost",
+  case when get_user_role() = any (array['viewer','user']) then null else profit            end as profit,
+  case when get_user_role() = any (array['viewer','user']) then null else margin            end as margin
 from public.sales;
 
 create or replace view public.purchases_v
@@ -94,20 +94,20 @@ with (security_invoker = true) as
 select
   id, "skuId", date, source, state, qty, "paymentVia", condition,
   "isTrade", "tradeSaleIds", sold, comments,
-  case when get_user_role() = 'viewer' then null else "pricePerPiece" end as "pricePerPiece",
-  case when get_user_role() = 'viewer' then null else shipping        end as shipping,
-  case when get_user_role() = 'viewer' then null else gas             end as gas,
-  case when get_user_role() = 'viewer' then null else "netCost"       end as "netCost"
+  case when get_user_role() = any (array['viewer','user']) then null else "pricePerPiece" end as "pricePerPiece",
+  case when get_user_role() = any (array['viewer','user']) then null else shipping        end as shipping,
+  case when get_user_role() = any (array['viewer','user']) then null else gas             end as gas,
+  case when get_user_role() = any (array['viewer','user']) then null else "netCost"       end as "netCost"
 from public.purchases;
 
 create or replace view public.expenses_v
 with (security_invoker = true) as
 select
   id, type, product, source, date, qty,
-  case when get_user_role() = 'viewer' then null else price       end as price,
-  case when get_user_role() = 'viewer' then null else discount    end as discount,
-  case when get_user_role() = 'viewer' then null else "taxAmount" end as "taxAmount",
-  case when get_user_role() = 'viewer' then null else "netAmount" end as "netAmount"
+  case when get_user_role() = any (array['viewer','user']) then null else price       end as price,
+  case when get_user_role() = any (array['viewer','user']) then null else discount    end as discount,
+  case when get_user_role() = any (array['viewer','user']) then null else "taxAmount" end as "taxAmount",
+  case when get_user_role() = any (array['viewer','user']) then null else "netAmount" end as "netAmount"
 from public.expenses;
 
 -- Lock direct reads once the app points at the views (uncomment when ready):
