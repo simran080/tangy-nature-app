@@ -239,3 +239,25 @@ create policy "update_admins" on public.product_details
   using (get_user_role() = any (array['dba','admin']))
   with check (get_user_role() = any (array['dba','admin']));
 -- delete_dba and select_all on product_details are unchanged and already correct.
+
+-- skus is worse than the others: it never got Section 4 at all. "auth_all"
+-- (qual=true, with_check=true) grants every operation, unconditionally, to
+-- any authenticated user — canWrite()/canDelete() are purely cosmetic for
+-- the SKU catalog. "role_select_viewer" is also qual=true despite its name;
+-- it doesn't check role and is redundant with select_all below. Confirmed
+-- via: select policyname, cmd, roles, qual, with_check from pg_policies
+-- where tablename = 'skus';  (run together with the user, 2026-07-24)
+
+drop policy if exists "auth_all" on public.skus;
+drop policy if exists "role_select_viewer" on public.skus;
+create policy "select_all" on public.skus
+  for select to authenticated using (true);
+create policy "insert_admins" on public.skus
+  for insert to authenticated
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "update_admins" on public.skus
+  for update to authenticated
+  using (get_user_role() = any (array['dba','admin']))
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "delete_dba" on public.skus
+  for delete to authenticated using (get_user_role() = 'dba');
