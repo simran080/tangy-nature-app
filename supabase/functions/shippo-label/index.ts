@@ -100,10 +100,9 @@ Deno.serve(async (req: Request) => {
   const { data: { user }, error: authErr } = await supabase.auth.getUser();
   if (authErr || !user) return json(req, { error: "Invalid or expired session" }, 401);
 
-  // Buying labels spends money — restrict to owner/admin (prefer tamper-proof app_metadata)
-  const role = (user.app_metadata as any)?.role
-    || (user.user_metadata as any)?.role
-    || "user";
+  // Buying labels spends money — restrict to owner/admin. app_metadata is the
+  // only trustworthy source now (user_metadata is self-editable by the user).
+  const role = (user.app_metadata as any)?.role || "user";
   if (role !== "dba" && role !== "admin") {
     return json(req, { error: "Your role is not permitted to buy shipping labels" }, 403);
   }
