@@ -17,3 +17,6 @@ A mobile-friendly PWA for tracking camera gear purchases, sales, SKUs, and expen
 
 ## Edge Functions
 See `supabase/functions/*/README.md` for setup and deploy instructions for each function.
+
+## Tests
+`node --test` — see `tests/README.md` for scope.
