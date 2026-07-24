@@ -878,7 +878,13 @@
     </div>
     <button class="sheet-close" aria-label="Close manage users" onclick="closeSheet('users-sheet')"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round"/></svg></button>
   </div>
-  <div class="sheet-body" id="users-body"></div>
+  <div class="sheet-body">
+    <div class="search-wrap-inner" style="margin-bottom:14px;">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" id="users-search" placeholder="Search by email…" oninput="renderUsersList()">
+    </div>
+    <div id="users-body"></div>
+  </div>
 </div>
 
 <!-- SHIPPING LABEL SHEET -->

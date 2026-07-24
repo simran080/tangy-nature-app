@@ -19,6 +19,8 @@ function canManageUsers() { return _userRole === 'dba'; }
 
 async function openUsersSheet() {
   openSheet('users-sheet');
+  const searchEl = document.getElementById('users-search');
+  if (searchEl) searchEl.value = '';
   const body = document.getElementById('users-body');
   body.innerHTML = '<div class="loading-state" style="padding:36px;text-align:center;color:var(--text2);">Loading users…</div>';
   try {
@@ -32,11 +34,17 @@ async function openUsersSheet() {
 
 function renderUsersList() {
   const body = document.getElementById('users-body');
+  const q = (document.getElementById('users-search')?.value || '').trim().toLowerCase();
+  const filtered = q ? _usersCache.filter(u => (u.email || '').toLowerCase().includes(q)) : _usersCache;
   if (!_usersCache.length) {
     body.innerHTML = '<div class="empty"><div class="empty-text">No users found</div></div>';
     return;
   }
-  body.innerHTML = _usersCache.map(u => `
+  if (!filtered.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-text">No users match your search</div></div>';
+    return;
+  }
+  body.innerHTML = filtered.map(u => `
     <div class="list-item" style="align-items:flex-start;">
       <div class="item-body">
         <div class="item-name">${esc(u.email || '(no email)')}</div>
