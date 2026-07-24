@@ -213,8 +213,11 @@ async function savePurchase() {
       // Keep any trade linkage on the first unit only, to avoid double-counting
       tradeSaleIds: JSON.stringify(i === 0 ? _selectedTradeSaleIds : []),
     }));
-    const saved = [];
-    for (const p of rows) saved.push(await DB.savePurchase(p));
+    // One request for the whole batch — PostgREST runs a multi-row insert
+    // as a single transaction, so a network failure can't leave a partial
+    // batch the way qty sequential single-row inserts could.
+    const saved = await DB.savePurchases(rows);
+    saved.sort((a, b) => purchaseIdNum(a.id) - purchaseIdNum(b.id));
     await loadAll();
     closeSheet('purchase-sheet');
     renderPurchases();

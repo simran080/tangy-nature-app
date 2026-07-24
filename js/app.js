@@ -16,6 +16,7 @@ const DB = {
   async saveSku(row)      { return this._upsert('skus', { id: row.id, brand: row.brand, type: row.type, product: row.product }); },
   async saveProductDetails(row) { return this._upsert('product_details', { id: row.id, sensor: row.sensor, mp: row.mp, fps: row.fps, video: row.video, lensType: row.lensType, aperture: row.aperture }); },
   async savePurchase(row) { return this._upsert('purchases', row, true); },
+  async savePurchases(rows) { return this._upsertMany('purchases', rows, true); },
   async saveSale(row)     { return this._upsert('sales', row, true); },
   async saveExpense(row)  { return this._upsert('expenses', row); },
   async deleteSku(id)      { return this._delete('skus', id); },
@@ -626,6 +627,19 @@ DB._upsert = async function(table, row, returning) {
   });
   if (!r.ok) throw new Error(await r.text());
   return returning ? (await r.json())[0] : undefined;
+};
+// Insert multiple rows as one request — PostgREST runs a single POST with
+// a JSON array body as one atomic transaction, so a network failure partway
+// through can't leave a partial batch the way N sequential single-row
+// inserts could.
+DB._upsertMany = async function(table, rows, returning) {
+  const r = await _authedFetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Prefer': `resolution=merge-duplicates,return=${returning ? 'representation' : 'minimal'}` },
+    body: JSON.stringify(rows)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return returning ? await r.json() : undefined;
 };
 DB._delete = async function(table, id) {
   const r = await _authedFetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE' });
