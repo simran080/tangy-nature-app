@@ -350,6 +350,9 @@ function applyRoleUI() {
   // Data export is owner-only
   const exp = document.getElementById('dash-export');
   if (exp) exp.style.display = canWrite() ? 'block' : 'none';
+  // Manage users is dba-only
+  const manageUsersBtn = document.getElementById('manage-users-btn');
+  if (manageUsersBtn) manageUsersBtn.style.display = (typeof canManageUsers === 'function' && canManageUsers()) ? 'block' : 'none';
   // Role badge in sign-out area
   const badge = document.getElementById('role-badge');
   if (badge) {
