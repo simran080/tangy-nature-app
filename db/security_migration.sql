@@ -186,3 +186,46 @@ create policy "write_admins" on public.expenses
   with check (get_user_role() = any (array['dba','admin']));
 create policy "delete_dba" on public.expenses
   for delete to authenticated using (get_user_role() = 'dba');
+
+
+-- ----------------------------------------------------------------------------
+-- SECTION 5 — Fix: 'write_admins' (FOR ALL) let admin delete too
+-- ----------------------------------------------------------------------------
+-- Why: Postgres RLS policies are permissive-by-default and OR'd together per
+-- command. "write_admins" in Section 4 is declared FOR ALL, which includes
+-- DELETE — so even though "delete_dba" only allows 'dba', an admin can still
+-- delete via write_admins' own ALL grant. The delete_dba policy was never
+-- actually narrowing anything. Fix: split write_admins into INSERT-only and
+-- UPDATE-only policies, so DELETE is governed exclusively by delete_dba.
+-- Caught independently by two rounds of external (Codex) review.
+--
+-- NOTE: product_details/skus have this exact same "write_admins FOR ALL"
+-- pattern too (it's what Section 4 was modeled on) and have the same bug,
+-- but weren't in scope here — ask if you want those fixed the same way.
+
+drop policy if exists "write_admins" on public.sales;
+create policy "insert_admins" on public.sales
+  for insert to authenticated
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "update_admins" on public.sales
+  for update to authenticated
+  using (get_user_role() = any (array['dba','admin']))
+  with check (get_user_role() = any (array['dba','admin']));
+
+drop policy if exists "write_admins" on public.purchases;
+create policy "insert_admins" on public.purchases
+  for insert to authenticated
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "update_admins" on public.purchases
+  for update to authenticated
+  using (get_user_role() = any (array['dba','admin']))
+  with check (get_user_role() = any (array['dba','admin']));
+
+drop policy if exists "write_admins" on public.expenses;
+create policy "insert_admins" on public.expenses
+  for insert to authenticated
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "update_admins" on public.expenses
+  for update to authenticated
+  using (get_user_role() = any (array['dba','admin']))
+  with check (get_user_role() = any (array['dba','admin']));

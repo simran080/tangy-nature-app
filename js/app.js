@@ -3,30 +3,11 @@ const SUPABASE_URL = 'https://euulsabzjzrdrhmgzxfu.supabase.co';
 const ANON_KEY = 'sb_publishable_JcUZCgJXGT6DjS3wFOEJkg_DeUwU-tB';
 
 // ─── DB LAYER (Supabase) ──────────────────────────────────
+// _get/_upsert/_delete are defined further down (search "Override DB") using
+// the caller's own auth token with proactive refresh + a 401 retry — that's
+// the version actually used everywhere, since it always loads before any
+// of these methods can be called. Only the table-level methods live here.
 const DB = {
-  async _get(table, order) {
-    let url = `${SUPABASE_URL}/rest/v1/${table}?select=*`;
-    if (order) url += `&order=${order}`;
-    const res = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  },
-  async _upsert(table, row, returning) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-      method: 'POST',
-      headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': `resolution=merge-duplicates,return=${returning ? 'representation' : 'minimal'}` },
-      body: JSON.stringify(row)
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return returning ? (await res.json())[0] : undefined;
-  },
-  async _delete(table, id) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }
-    });
-    if (!res.ok) throw new Error(await res.text());
-  },
   async getSkus()          { return this._get('skus', 'id.asc'); },
   async getProductDetails(){ return this._get('product_details', 'id.asc'); },
   async getPurchases() { return this._get('purchases_v', 'date.desc'); },
@@ -725,6 +706,9 @@ function openQuoteTool() {
 
 function showQuoteFab() {
   const fab = document.getElementById('quote-fab');
-  if (fab) fab.style.display = 'flex';
+  // Only staff who can actually log a purchase/sale need the live quote
+  // tool — no reason to show a viewer/user role a button to a private,
+  // network-local address they couldn't act on anyway.
+  if (fab) fab.style.display = canWrite() ? 'flex' : 'none';
 }
 
