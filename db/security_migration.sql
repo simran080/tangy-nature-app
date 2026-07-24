@@ -136,3 +136,53 @@ alter table public.purchases
   alter column id set default 'P-' || lpad(nextval('public.purchase_id_seq')::text, 5, '0');
 alter table public.sales
   alter column id set default 'S-' || lpad(nextval('public.sale_id_seq')::text, 5, '0');
+
+
+-- ----------------------------------------------------------------------------
+-- SECTION 4 — Role-scoped RLS policies on sales/purchases/expenses
+-- ----------------------------------------------------------------------------
+-- Why: canWrite()/canDelete() in the app only hide buttons — they were never
+-- enforced by the database for these three tables. sales/purchases/expenses
+-- only had a blanket "auth_all" policy (ALL commands, any authenticated user,
+-- no role check), so any logged-in account — including 'user' or 'viewer' —
+-- could INSERT/UPDATE/DELETE these directly via the API, bypassing the UI
+-- entirely. product_details and skus already had the correct pattern
+-- (separate policies per operation, checking get_user_role()); this section
+-- replicates that same pattern here. Discovered 2026-07-23 while reviewing
+-- Supabase Dashboard → Database → Policies together with the user.
+--
+-- The old "auth_all" policy must be dropped, not just left alongside the new
+-- ones — RLS policies are OR'd together (permissive by default), so as long
+-- as an unconditional blanket policy exists, any more-restrictive policy
+-- added alongside it has no effect.
+
+drop policy if exists "auth_all" on public.sales;
+drop policy if exists "auth_all" on public.purchases;
+drop policy if exists "auth_all" on public.expenses;
+
+create policy "select_all" on public.sales
+  for select to authenticated using (true);
+create policy "write_admins" on public.sales
+  for all to authenticated
+  using (get_user_role() = any (array['dba','admin']))
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "delete_dba" on public.sales
+  for delete to authenticated using (get_user_role() = 'dba');
+
+create policy "select_all" on public.purchases
+  for select to authenticated using (true);
+create policy "write_admins" on public.purchases
+  for all to authenticated
+  using (get_user_role() = any (array['dba','admin']))
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "delete_dba" on public.purchases
+  for delete to authenticated using (get_user_role() = 'dba');
+
+create policy "select_all" on public.expenses
+  for select to authenticated using (true);
+create policy "write_admins" on public.expenses
+  for all to authenticated
+  using (get_user_role() = any (array['dba','admin']))
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "delete_dba" on public.expenses
+  for delete to authenticated using (get_user_role() = 'dba');
