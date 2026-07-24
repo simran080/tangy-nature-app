@@ -320,11 +320,9 @@ let _userEmail = '';
 function parseRole(token) {
   try {
     const p = JSON.parse(atob(token.split('.')[1]));
-    // Prefer app_metadata (admin-only, tamper-proof); fall back to user_metadata
-    // during the migration window.
-    return (p.app_metadata && p.app_metadata.role)
-        || (p.user_metadata && p.user_metadata.role)
-        || 'user';
+    // app_metadata is admin-only/tamper-proof; user_metadata is self-editable
+    // and must never be trusted for role.
+    return (p.app_metadata && p.app_metadata.role) || 'user';
   } catch { return 'user'; }
 }
 
