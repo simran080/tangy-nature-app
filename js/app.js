@@ -528,6 +528,54 @@ function signOut() {
   document.getElementById('login-email').value = '';
 }
 
+// ─── CHANGE PASSWORD ─────────────────────────────────────────
+function openPasswordSheet() {
+  document.getElementById('password-new').value = '';
+  document.getElementById('password-confirm').value = '';
+  document.getElementById('password-error').style.display = 'none';
+  openSheet('password-sheet');
+}
+
+async function savePassword() {
+  const pw = document.getElementById('password-new').value;
+  const confirm = document.getElementById('password-confirm').value;
+  const errEl = document.getElementById('password-error');
+  errEl.style.display = 'none';
+
+  if (pw.length < 8) {
+    errEl.textContent = 'Password must be at least 8 characters.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (pw !== confirm) {
+    errEl.textContent = 'Passwords do not match.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.querySelector('#password-btn-row .btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+  try {
+    await ensureValidToken();
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: 'PUT',
+      headers: { apikey: ANON_KEY, Authorization: `Bearer ${_authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error_description || data.msg || data.error || `Request failed (${res.status})`);
+    closeSheet('password-sheet');
+    toast('Password updated');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Update Password';
+  }
+}
+
 // ─── THEME (light/dark) ─────────────────────────────────────
 function currentTheme() {
   const explicit = document.documentElement.getAttribute('data-theme');
