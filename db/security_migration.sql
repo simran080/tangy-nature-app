@@ -229,3 +229,13 @@ create policy "update_admins" on public.expenses
   for update to authenticated
   using (get_user_role() = any (array['dba','admin']))
   with check (get_user_role() = any (array['dba','admin']));
+
+drop policy if exists "write_admins" on public.product_details;
+create policy "insert_admins" on public.product_details
+  for insert to authenticated
+  with check (get_user_role() = any (array['dba','admin']));
+create policy "update_admins" on public.product_details
+  for update to authenticated
+  using (get_user_role() = any (array['dba','admin']))
+  with check (get_user_role() = any (array['dba','admin']));
+-- delete_dba and select_all on product_details are unchanged and already correct.
